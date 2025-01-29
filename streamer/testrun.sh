@@ -19,6 +19,7 @@ echo "Starting the container..."
 docker run \
     -it \
     --rm \
+    --env NO_LOOP=$1 \
     --network="host" \
     --name gstreamer-instance \
 $IMAGE_NAME
