@@ -1,15 +1,14 @@
-name: CI
+name: Streamer CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "master" ]
   pull_request:
-    branches:
-      - main
+    branches: [ "master" ]
 
 jobs:
-  run-script:
+  build:
+
     runs-on: ubuntu-latest
 
     steps:
@@ -21,5 +20,3 @@ jobs:
 
     - name: Run run.sh
       run: ./testrun.sh "no loop"
-      env:
-        SAMPLES_DIR: /path/to/samples

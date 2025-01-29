@@ -1,4 +1,4 @@
-name: Android CI
+name: Control App CI
 
 on:
   push:
