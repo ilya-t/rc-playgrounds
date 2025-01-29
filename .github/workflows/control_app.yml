@@ -3,8 +3,12 @@ name: Control App CI
 on:
   push:
     branches: [ "master" ]
+    paths:
+      - 'control_app'
   pull_request:
     branches: [ "master" ]
+    paths:
+      - 'control_app'
 
 jobs:
   build:

@@ -3,8 +3,12 @@ name: Streamer CI
 on:
   push:
     branches: [ "master" ]
+    paths:
+      - 'streamer'
   pull_request:
     branches: [ "master" ]
+    paths:
+      - 'streamer'
 
 jobs:
   build:
@@ -19,4 +23,4 @@ jobs:
       uses: docker/setup-buildx-action@v1
 
     - name: Run run.sh
-      run: ./testrun.sh "no loop"
+      run: cd streamer && ./testrun.sh "no loop"
