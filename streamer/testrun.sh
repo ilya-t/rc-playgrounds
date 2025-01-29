@@ -7,12 +7,6 @@ then
     exit 1
 fi
 
-SAMPLES_DIR=$1
-if [ -z "$SAMPLES_DIR" ]; then
-    echo "Usage: $0 <path_to_samples_dis>"
-    exit 1
-fi
-
 # Image name
 IMAGE_NAME="gstreamer-container"
 
@@ -24,7 +18,6 @@ docker build -t $IMAGE_NAME .
 echo "Starting the container..."
 docker run \
     -it \
-    --volume "$SAMPLES_DIR:/samples" \
     --rm \
     --network="host" \
     --name gstreamer-instance \
