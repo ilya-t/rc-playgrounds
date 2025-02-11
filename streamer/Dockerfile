@@ -22,4 +22,4 @@ COPY app /app
 RUN chmod +x /app/*.sh
 
 # Set the working directory as the entry point
-ENTRYPOINT ["/bin/bash", "/app/entrypoint.sh"]
+ENTRYPOINT ["/bin/bash", "./entrypoint.sh"]
