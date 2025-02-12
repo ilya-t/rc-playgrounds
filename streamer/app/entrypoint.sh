@@ -22,7 +22,7 @@ playback() {
         queue ! \
         h264parse config-interval=1 ! \
         rtph264pay config-interval=1 pt=96 ! \
-        udpsink host=127.0.0.1 port=12345
+        udpsink host=$TARGET port=$PORT
 }
 
 if [ -z "$NO_LOOP" ]; then
