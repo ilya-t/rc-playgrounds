@@ -1,3 +1,6 @@
+import java.text.SimpleDateFormat
+import java.util.Date
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -33,7 +36,8 @@ android {
 
         names.forEach {
             getByName(it) {
-                buildConfigField("String", "EXPERIMENT_NAME", "\"??\"")
+                val currentTime = SimpleDateFormat("HH:mm:ss").format(Date())
+                buildConfigField("String", "EXPERIMENT_NAME", "\"$currentTime\"")
             }
         }
     }
@@ -45,6 +49,11 @@ android {
 dependencies {
     implementation("androidx.media3:media3-ui:1.5.1")
     implementation("androidx.media3:media3-exoplayer:1.5.1")
+    implementation("androidx.media3:media3-exoplayer-rtsp:1.5.1")
+    implementation("org.videolan.android:libvlc-all:3.5.1")
+    implementation("androidx.media3:media3-exoplayer-hls:1.5.1")
+//    implementation("com.creativa77:android_streaming_client:1.0.+")
+
     androidTestImplementation("androidx.test.espresso:espresso-core:3.1.0") {
         exclude(group = "com.android.support", module = "support-annotations")
     }

@@ -26,6 +26,8 @@ public class Static {
     };
 
     public static void output(String text) {
-        tvOutput.setText(text);
+        tvOutput.post(() -> {
+                tvOutput.setText(text);
+        });
     }
 }
