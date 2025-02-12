@@ -16,7 +16,6 @@ class StreamingProcess(
     )
 
     fun start(streamUri:Uri) {
-
         surfaceView.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {
                 streamReceiver.play(streamUri)

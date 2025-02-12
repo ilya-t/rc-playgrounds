@@ -2,6 +2,7 @@ package rc.playgrounds
 
 import android.content.Context
 import android.net.Uri
+import android.view.SurfaceHolder
 import android.view.SurfaceView
 import org.videolan.libvlc.LibVLC
 import org.videolan.libvlc.Media
@@ -10,10 +11,11 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 
-class StreamReceiver(context: Context, surfaceView: SurfaceView) {
+class StreamReceiver(context: Context,
+                     private val surfaceView: SurfaceView) {
     private val libVLC: LibVLC
     private val mediaPlayer: MediaPlayer
-
+    private val sizeChangeObservation: SurfaceHolder.Callback
     init {
         // VLC configuration for low latency and UDP streaming
         val options = ArrayList<String>()
@@ -23,10 +25,31 @@ class StreamReceiver(context: Context, surfaceView: SurfaceView) {
         options.add("--log-verbose") // Ensure logs are detailed
         libVLC = LibVLC(context, options)
         mediaPlayer = MediaPlayer(libVLC)
+        mediaPlayer.vlcVout.apply {
+            setWindowSize(surfaceView.width, surfaceView.height)
+            setVideoView(surfaceView)
+            attachViews()
+        }
+        sizeChangeObservation = object : SurfaceHolder.Callback {
+            override fun surfaceCreated(holder: SurfaceHolder) {
+            }
 
-        val vout = mediaPlayer.vlcVout
-        vout.setVideoView(surfaceView)
-        vout.attachViews()
+            override fun surfaceChanged(
+                holder: SurfaceHolder,
+                format: Int,
+                width: Int,
+                height: Int
+            ) {
+                mediaPlayer.vlcVout.setWindowSize(width, height)
+            }
+
+            override fun surfaceDestroyed(holder: SurfaceHolder) {
+            }
+        }
+
+        surfaceView.holder.addCallback(sizeChangeObservation)
+        mediaPlayer.aspectRatio = null
+        mediaPlayer.scale = 0f // Automatic scaling
     }
 
 
@@ -77,5 +100,7 @@ class StreamReceiver(context: Context, surfaceView: SurfaceView) {
     fun release() {
         mediaPlayer.release()
         libVLC.release()
+        surfaceView.holder.removeCallback(sizeChangeObservation)
+
     }
 }
