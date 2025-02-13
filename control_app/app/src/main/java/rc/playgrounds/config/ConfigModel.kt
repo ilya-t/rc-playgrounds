@@ -22,7 +22,7 @@ class ConfigModel(
 
     fun updateConfig(json: String) {
         scope.launch {
-            if (_configFlow.value?.rawJson == json) {
+            if (_configFlow.value.rawJson == json) {
                 return@launch
             }
 
