@@ -35,8 +35,6 @@ class ActivityComponent(
         a.lifecycleScope,
     )
     init {
-        start()
-
         a.lifecycleScope.launch {
             appComponent.configModel.configFlow.collect {
                 doReset()
@@ -64,10 +62,11 @@ class ActivityComponent(
     private fun start() {
         val url: String = appComponent.configModel.configFlow.value.streamUrl ?: run {
             Static.output("No stream url passed!")
+            android.util.Log.i("VLC", "No stream url passed!")
             return
         }
         streamingProcess?.release()
-        streamingProcess = StreamingProcess(a, surfaceView)
+        streamingProcess = StreamingProcess(a, textureView, playerView, surfaceView)
         streamingProcess?.start(Uri.parse(url))
         Static.output("Receiving stream at: $url")
     }

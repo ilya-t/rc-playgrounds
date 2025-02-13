@@ -1,19 +1,32 @@
 package rc.playgrounds.stream
 
+import android.annotation.SuppressLint
 import android.net.Uri
 import android.view.SurfaceHolder
 import android.view.SurfaceView
+import android.view.TextureView
 import androidx.appcompat.app.AppCompatActivity
-import rc.playgrounds.StreamReceiver
+import androidx.media3.ui.PlayerView
 
 class StreamingProcess(
     private val activity: AppCompatActivity,
+    private val textureView: TextureView,
+    private val playerView: PlayerView,
     private val surfaceView: SurfaceView,
 ) {
-    private var streamReceiver = StreamReceiver(
-        activity,
-        surfaceView
-    )
+    private var streamReceiver = createReceiver()
+
+    @SuppressLint("UnsafeOptInUsageError")
+    private fun createReceiver(): StreamReceiver {
+//        return ExoReceiver(
+//            activity,
+//            playerView,
+//        )
+        return VLCStreamReceiver(
+            activity,
+            surfaceView
+        )
+    }
 
     fun start(streamUri:Uri) {
         surfaceView.holder.addCallback(object : SurfaceHolder.Callback {
@@ -27,7 +40,7 @@ class StreamingProcess(
 
             override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
                 streamReceiver.release()
-                streamReceiver = StreamReceiver(activity, surfaceView)
+                streamReceiver = createReceiver()
                 streamReceiver.play(streamUri)
             }
         })
@@ -39,6 +52,6 @@ class StreamingProcess(
     }
 
     fun release() {
-        streamReceiver.release()
+        streamReceiver.release()///this???
     }
 }

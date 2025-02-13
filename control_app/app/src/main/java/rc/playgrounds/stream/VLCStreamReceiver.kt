@@ -1,7 +1,8 @@
-package rc.playgrounds
+package rc.playgrounds.stream
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import org.videolan.libvlc.LibVLC
@@ -11,12 +12,14 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 
-class StreamReceiver(context: Context,
-                     private val surfaceView: SurfaceView) {
+class VLCStreamReceiver(context: Context,
+                        private val surfaceView: SurfaceView) : StreamReceiver {
     private val libVLC: LibVLC
     private val mediaPlayer: MediaPlayer
     private val sizeChangeObservation: SurfaceHolder.Callback
     init {
+        Log.d("VLC", "VLC INSTANTIATED!")
+
         // VLC configuration for low latency and UDP streaming
         val options = ArrayList<String>()
         val logFile = File(context.filesDir, "vlc.log")
@@ -79,28 +82,53 @@ class StreamReceiver(context: Context,
         return null
     }
 
-    fun play(uri: Uri?) {
-//        Uri sdpUri = Uri.parse(
-//                "udp://@:12345" //WORKS when: ffmpeg -re -i ./sample.mp4 -c:v libx264 -preset ultrafast -tune zerolatency -b:v 1500k -maxrate 1500k -bufsize 3000k -c:a aac -b:a 128k -f mpegts udp://192.168.1.232:12345
-////                "file://" + sdpFilePath
-//        );
+    override fun play(uri: Uri) {
         val media = Media(libVLC, uri)
+
+        // Ensure correct H.264 processing
+        media.addOption(":demux=h264")
+
+        // **Reduce Buffering & Improve Latency**
+        media.addOption(":network-caching=0")   // Minimum possible caching (default: 1000ms)
+        media.addOption(":live-caching=0")      // Lower live cache
+        media.addOption(":file-caching=0")       // No file caching
+        media.addOption(":disc-caching=0")       // No disc caching
+        media.addOption(":rtsp-caching=0")       // No RTSP caching
+
+        // **Fix Decoder Issues**
+        media.addOption(":codec=avcodec")
+//        media.addOption(":avcodec-hw=none")      // Disable hardware decoding (debug first)
+//        media.addOption(":no-mediacodec-dr")     // Disable MediaCodec direct rendering
+        media.addOption(":no-mediacodec-hurry-up") // Disable hardware decoder rush mode
+        media.addOption(":no-opencl")            // Disable OpenCL (causes instability sometimes)
+
+        // **Handle Sync & Frame Dropping**
+        media.addOption(":clock-jitter=0")       // Disable jitter correction
+        media.addOption(":clock-synchro=0")      // Prevent VLC from syncing frames unnecessarily
+        media.addOption(":drop-late-frames")     // Drop delayed frames instead of buffering
+        media.addOption(":skip-frames")          // Skip frames if needed to maintain playback speed
+
+        // **Fix UDP Packet Truncation**
+        media.addOption(":mtu=1500")             // Fix MTU size mismatch issue
+        media.addOption(":udp-buffer=1048576")   // Increase UDP buffer size
+
+        // **Enable Logging for Debugging**
         media.addOption(":verbose")
         media.addOption(":log-verbose")
-        //        media.addOption(":rtp-client-port=12345");
-//        media.addOption(":network-caching=500");
-//        media.addOption(":sout-rtp-caching=300");
-//        media.addOption(":demux=live555");
+
         media.setHWDecoderEnabled(true, false)
+
         mediaPlayer.media = media
         media.release()
         mediaPlayer.play()
+        Log.d("VLC", "VLC is playback started: $uri!")
     }
 
-    fun release() {
+
+    override fun release() {
+        Log.d("VLC", "VLC RELEASED! ${RuntimeException().stackTraceToString()}")
+        surfaceView.holder.removeCallback(sizeChangeObservation)
         mediaPlayer.release()
         libVLC.release()
-        surfaceView.holder.removeCallback(sizeChangeObservation)
-
     }
 }

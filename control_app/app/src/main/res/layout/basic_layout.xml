@@ -9,12 +9,38 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="[RESET]"/>
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Surface"/>
     <SurfaceView
         android:id="@+id/surface_view"
         android:layout_width="match_parent"
         android:layout_height="140dp">
     </SurfaceView>
 
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Texture"/>
+    <TextureView
+        android:id="@+id/texture_view"
+        android:layout_width="match_parent"
+        android:layout_height="140dp">
+
+    </TextureView>
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="PlayerView"/>
+    <androidx.media3.ui.PlayerView
+        android:id="@+id/player_view"
+        android:layout_width="match_parent"
+        android:layout_height="140dp"
+        />
     <androidx.appcompat.widget.AppCompatEditText
         android:id="@+id/config_input"
         android:layout_width="match_parent"
@@ -26,30 +52,5 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="[SAVE]"/>
-    <TextureView
-        android:id="@+id/texture_view"
-        android:layout_width="match_parent"
-        android:layout_height="140dp">
-
-    </TextureView>
-
-    <androidx.media3.ui.PlayerView
-        android:id="@+id/player_view"
-        android:layout_width="match_parent"
-        android:layout_height="140dp"
-        android:visibility="gone"
-        />
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="8dp">
-
-    </View>
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="8dp">
-
-    </View>
 
 </LinearLayout>
