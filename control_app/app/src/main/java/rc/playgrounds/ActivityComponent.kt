@@ -4,31 +4,48 @@ import android.net.Uri
 import android.view.SurfaceView
 import android.view.TextureView
 import android.view.View
+import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.AppCompatEditText
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import androidx.media3.ui.PlayerView
 import com.testspace.R
+import com.testspace.core.Static
+import kotlinx.coroutines.launch
+import rc.playgrounds.config.ConfigView
 import rc.playgrounds.stream.StreamingProcess
 
 class ActivityComponent(
+    private val appComponent: AppComponent,
     private val a: AppCompatActivity,
 ) {
     private val playerView = a.findViewById<PlayerView>(R.id.player_view)
     private val surfaceView = a.findViewById<SurfaceView>(R.id.surface_view)
     private val textureView = a.findViewById<TextureView>(R.id.texture_view)
     private val resetButton = a.findViewById<View>(R.id.reset_button)
+    private val saveButton = a.findViewById<Button>(R.id.save_button)
+    private val configInput: AppCompatEditText = a.findViewById(R.id.config_input)
     private var streamingProcess: StreamingProcess? = null
-    val streamUri = Uri.parse(
-        "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"
-//        "udp://@:12345"
+    private val configView = ConfigView(
+        configInput,
+        saveButton,
+        appComponent.configModel,
+        a.lifecycleScope,
     )
     init {
         start()
 
+        a.lifecycleScope.launch {
+            appComponent.configModel.configFlow.collect {
+                doReset()
+            }
+        }
+
+
         resetButton.setOnClickListener {
-            release()
-            start()
+            doReset()
         }
 
         a.lifecycle.addObserver(object : DefaultLifecycleObserver {
@@ -39,10 +56,20 @@ class ActivityComponent(
         })
     }
 
+    private fun doReset() {
+        release()
+        start()
+    }
+
     private fun start() {
+        val url: String = appComponent.configModel.configFlow.value.streamUrl ?: run {
+            Static.output("No stream url passed!")
+            return
+        }
         streamingProcess?.release()
         streamingProcess = StreamingProcess(a, surfaceView)
-        streamingProcess?.start(streamUri)
+        streamingProcess?.start(Uri.parse(url))
+        Static.output("Receiving stream at: $url")
     }
 
     private fun release() {

@@ -5,6 +5,7 @@ import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
 import com.testspace.core.ExperimentActivity
 import rc.playgrounds.ActivityComponent
+import rc.playgrounds.AppComponent
 
 
 class MainActivity : ExperimentActivity() {
@@ -14,7 +15,7 @@ class MainActivity : ExperimentActivity() {
     @OptIn(UnstableApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        component = ActivityComponent(this)
+        component = ActivityComponent(AppComponent.instance, this)
 //        testSampleStream(playerView)
 //        testRTSP(playerView)
 //        testRtp(surfaceView)
@@ -29,5 +30,3 @@ class MainActivity : ExperimentActivity() {
     //    testVLCReceiverV2()
     }
 }
-
-const val HOST_IP = "10.0.2.2"

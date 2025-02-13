@@ -13,9 +13,19 @@
         android:id="@+id/surface_view"
         android:layout_width="match_parent"
         android:layout_height="140dp">
-
     </SurfaceView>
 
+    <androidx.appcompat.widget.AppCompatEditText
+        android:id="@+id/config_input"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Paste JSON Config here"
+        />
+    <Button
+        android:id="@+id/save_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="[SAVE]"/>
     <TextureView
         android:id="@+id/texture_view"
         android:layout_width="match_parent"
@@ -27,6 +37,7 @@
         android:id="@+id/player_view"
         android:layout_width="match_parent"
         android:layout_height="140dp"
+        android:visibility="gone"
         />
 
     <View
