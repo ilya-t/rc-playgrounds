@@ -1,6 +1,6 @@
 import json
 import socket
-import pigpio
+import argparse
 
 UDP_IP = "0.0.0.0"  # All interfaces
 UDP_PORT = 12346
@@ -21,14 +21,24 @@ PWM_MAX_LONG = 1700
 def scale_pwm(value):
     return int(PWM_MIN + (value + 1) * 0.5 * (PWM_MAX - PWM_MIN))
 
-pi = pigpio.pi()
-if not pi.connected:
-    print("Error: could not connect to pigpio. Make sure pigpiod is run.")
-    exit(1)
+# Argument parsing
+parser = argparse.ArgumentParser()
+parser.add_argument("--dry-run", action="store_true", help="Run script without controlling pigpio")
+args = parser.parse_args()
 
-# PWM pins setup
-for pin in [PWM_YAW_PIN, PWM_PITCH_PIN, PWM_STEER_PIN, PWM_LONG_PIN]:
-    pi.set_PWM_frequency(pin, PWM_FREQUENCY)
+dry_run = args.dry_run
+
+if not dry_run:
+    import pigpio
+    pi = pigpio.pi()
+    if not pi.connected:
+        print("Error: could not connect to pigpio. Make sure pigpiod is run.")
+        exit(1)
+    # PWM pins setup
+    for pin in [PWM_YAW_PIN, PWM_PITCH_PIN, PWM_STEER_PIN, PWM_LONG_PIN]:
+        pi.set_PWM_frequency(pin, PWM_FREQUENCY)
+else:
+    print("Running in --dry-run mode. No pigpio interaction.")
 
 # UDP socket creation
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -57,14 +67,14 @@ try:
             pwm_steer = scale_pwm(steer)
             pwm_long = int(PWM_MIN_LONG + (long + 1) * 0.5 * (PWM_MAX_LONG - PWM_MIN_LONG))
 
-            pi.set_servo_pulsewidth(PWM_YAW_PIN, pwm_yaw)
-            pi.set_servo_pulsewidth(PWM_PITCH_PIN, pwm_pitch)
-            pi.set_servo_pulsewidth(PWM_STEER_PIN, pwm_steer)
-            pi.set_servo_pulsewidth(PWM_LONG_PIN, pwm_long)
-            
-            print("pwm_long: ", pwm_long)
-
-            print(f"Received: yaw={yaw}, pitch={pitch}, steer={steer}, long={long} => PWM: {pwm_yaw}, {pwm_pitch}, {pwm_steer}, {pwm_long}")
+            if dry_run:
+                print(f"Dry-run: Received yaw={yaw}, pitch={pitch}, steer={steer}, long={long} => PWM: {pwm_yaw}, {pwm_pitch}, {pwm_steer}, {pwm_long}")
+            else:
+                pi.set_servo_pulsewidth(PWM_YAW_PIN, pwm_yaw)
+                pi.set_servo_pulsewidth(PWM_PITCH_PIN, pwm_pitch)
+                pi.set_servo_pulsewidth(PWM_STEER_PIN, pwm_steer)
+                pi.set_servo_pulsewidth(PWM_LONG_PIN, pwm_long)
+                print(f"Received: yaw={yaw}, pitch={pitch}, steer={steer}, long={long} => PWM: {pwm_yaw}, {pwm_pitch}, {pwm_steer}, {pwm_long}")
 
         except json.JSONDecodeError:
             print("JSON parsing error:", data.decode("utf-8"))
@@ -72,7 +82,8 @@ try:
 except KeyboardInterrupt:
     print("\nEnding...")
     sock.close()
-    for pin in [PWM_YAW_PIN, PWM_PITCH_PIN, PWM_STEER_PIN, PWM_LONG_PIN]:
-        pi.set_servo_pulsewidth(pin, 0)
-    pi.stop()
-    print("PWM cleared and pigpio connection closed.")
+    if not dry_run:
+        for pin in [PWM_YAW_PIN, PWM_PITCH_PIN, PWM_STEER_PIN, PWM_LONG_PIN]:
+            pi.set_servo_pulsewidth(pin, 0)
+        pi.stop()
+        print("PWM cleared and pigpio connection closed.")

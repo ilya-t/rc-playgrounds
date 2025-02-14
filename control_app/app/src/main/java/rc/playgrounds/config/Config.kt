@@ -22,7 +22,8 @@ class Config(
         runCatching {
             val t = json.getJSONObject("telemetry")
             Telemetry(
-                Uri.parse(t.getString("url")),
+                address = t.getString("address"),
+                port = t.getInt("port")
             )
 
         }.getOrNull()
