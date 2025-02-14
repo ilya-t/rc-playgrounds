@@ -1,6 +1,8 @@
 package rc.playgrounds
 
 import android.net.Uri
+import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.SurfaceView
 import android.view.TextureView
 import android.view.View
@@ -15,6 +17,7 @@ import com.testspace.R
 import com.testspace.core.Static
 import kotlinx.coroutines.launch
 import rc.playgrounds.config.ConfigView
+import rc.playgrounds.telemetry.gamepad.GamepadEventEmitter
 import rc.playgrounds.stream.StreamingProcess
 
 class ActivityComponent(
@@ -34,6 +37,8 @@ class ActivityComponent(
         appComponent.configModel,
         a.lifecycleScope,
     )
+    private var gamepadEventEmitter = GamepadEventEmitter(appComponent.gamepadEventStream)
+
     init {
         a.lifecycleScope.launch {
             appComponent.configModel.configFlow.collect {
@@ -69,11 +74,21 @@ class ActivityComponent(
         streamingProcess = StreamingProcess(a, textureView, playerView, surfaceView)
         streamingProcess?.start(Uri.parse(url))
         Static.output("Receiving stream at: $url")
+
+        gamepadEventEmitter.restart()
     }
 
     private fun release() {
         streamingProcess?.release()
         streamingProcess = null
 
+    }
+
+    fun onGenericMotionEvent(event: MotionEvent): Boolean {
+        return gamepadEventEmitter.onGenericMotionEvent(event)
+    }
+
+    fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        return gamepadEventEmitter.onKeyDown(keyCode, event)
     }
 }
