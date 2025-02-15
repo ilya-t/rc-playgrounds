@@ -1,4 +1,4 @@
-package rc.playgrounds.telemetry.gamepad
+package rc.playgrounds.control.gamepad
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

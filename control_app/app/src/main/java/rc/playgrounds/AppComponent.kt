@@ -5,9 +5,9 @@ import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import rc.playgrounds.config.ConfigModel
-import rc.playgrounds.telemetry.gamepad.GamepadEventStream
+import rc.playgrounds.control.SteeringController
+import rc.playgrounds.control.gamepad.GamepadEventStream
 import rc.playgrounds.storage.PersistentStorage
-import rc.playgrounds.telemetry.TelemetryController
 
 class AppComponent(app: App) {
     private val scope = CoroutineScope(Dispatchers.IO + CoroutineName("AppScope"))
@@ -18,7 +18,7 @@ class AppComponent(app: App) {
     )
 
     val gamepadEventStream = GamepadEventStream()
-    private val telemetryEmitter = TelemetryController(
+    private val steeringController = SteeringController(
         gamepadEventStream,
         scope,
         configModel,

@@ -1,4 +1,4 @@
-package rc.playgrounds.telemetry.gamepad
+package rc.playgrounds.control.gamepad
 
 import android.view.InputDevice
 import android.view.KeyEvent

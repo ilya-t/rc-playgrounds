@@ -1,4 +1,4 @@
-package rc.playgrounds.telemetry
+package rc.playgrounds.control
 
 import android.graphics.PointF
 import android.view.animation.AccelerateInterpolator
@@ -19,10 +19,10 @@ import org.json.JSONObject
 import rc.playgrounds.config.Config
 import rc.playgrounds.config.ConfigModel
 import rc.playgrounds.config.model.ControlOffsets
+import rc.playgrounds.config.model.ControlServer
 import rc.playgrounds.config.model.ControlTuning
-import rc.playgrounds.config.model.Telemetry
-import rc.playgrounds.telemetry.gamepad.GamepadEvent
-import rc.playgrounds.telemetry.gamepad.GamepadEventStream
+import rc.playgrounds.control.gamepad.GamepadEvent
+import rc.playgrounds.control.gamepad.GamepadEventStream
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetAddress
@@ -30,37 +30,37 @@ import kotlin.math.absoluteValue
 import kotlin.math.sign
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class TelemetryController(
+class SteeringController(
     private val gamepadEventStream: GamepadEventStream,
     private val scope: CoroutineScope,
     private val configModel: ConfigModel,
     ) {
 
-    private val telemetry = MutableStateFlow<Telemetry?>(null)
-    private var emitter: TelemetryEmitter? = null
+    private val controlServer = MutableStateFlow<ControlServer?>(null)
+    private var emitter: SteeringEmitter? = null
 
     init {
         scope.launch {
             configModel.configFlow.collect {
-                if (telemetry.value != it.telemetry) {
-                    telemetry.value = it.telemetry
+                if (controlServer.value != it.controlServer) {
+                    controlServer.value = it.controlServer
                 }
             }
         }
 
         scope.launch(Dispatchers.IO.limitedParallelism(1)) {
-            telemetry.collect {
+            controlServer.collect {
                 restart(it)
             }
         }
     }
 
-    private fun restart(t: Telemetry?) {
+    private fun restart(c: ControlServer?) {
         emitter?.stop()
         emitter = null
-        t?.let {
-            emitter = TelemetryEmitter(
-                t,
+        c?.let {
+            emitter = SteeringEmitter(
+                c,
                 scope,
                 gamepadEventStream,
                 configModel.configFlow,
@@ -69,8 +69,8 @@ class TelemetryController(
     }
 }
 
-private class TelemetryEmitter(
-    val config: Telemetry,
+private class SteeringEmitter(
+    val config: ControlServer,
     private val scope: CoroutineScope,
     private val gamepadEventStream: GamepadEventStream,
     private val configFlow: StateFlow<Config>,
@@ -81,7 +81,7 @@ private class TelemetryEmitter(
         configFlow.map {
             it.controlTuning.asInterpolation()
         }
-    ) { offsets, event, interpolation -> asTelemetryEvent(event, offsets, interpolation) }
+    ) { offsets, event, interpolation -> asSteeringEvent(event, offsets, interpolation) }
     private val job = scope.launch {
         var messageStream: Job? = null
         messages.collect { m ->
@@ -110,7 +110,7 @@ private class TelemetryEmitter(
         }
     }
 
-    private fun asTelemetryEvent(
+    private fun asSteeringEvent(
         event: GamepadEvent,
         offsets: ControlOffsets,
         interpolation: ControlInterpolation,

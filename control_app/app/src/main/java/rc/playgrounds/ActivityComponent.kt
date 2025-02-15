@@ -17,8 +17,8 @@ import com.testspace.R
 import com.testspace.core.Static
 import kotlinx.coroutines.launch
 import rc.playgrounds.config.ConfigView
+import rc.playgrounds.control.gamepad.GamepadEventEmitter
 import rc.playgrounds.stream.StreamingProcess
-import rc.playgrounds.telemetry.gamepad.GamepadEventEmitter
 
 class ActivityComponent(
     private val appComponent: AppComponent,

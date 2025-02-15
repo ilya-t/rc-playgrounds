@@ -3,8 +3,8 @@ package rc.playgrounds.config
 import android.graphics.PointF
 import org.json.JSONObject
 import rc.playgrounds.config.model.ControlOffsets
+import rc.playgrounds.config.model.ControlServer
 import rc.playgrounds.config.model.ControlTuning
-import rc.playgrounds.config.model.Telemetry
 
 class Config(
     val rawJson: String,
@@ -20,10 +20,10 @@ class Config(
                 json.getJSONObject("stream").getString("url")
             }.getOrNull()
 
-    val telemetry: Telemetry? by lazy {
+    val controlServer: ControlServer? by lazy {
         runCatching {
-            val t = json.getJSONObject("telemetry")
-            Telemetry(
+            val t = json.getJSONObject("control_server")
+            ControlServer(
                 address = t.getString("address"),
                 port = t.getInt("port")
             )

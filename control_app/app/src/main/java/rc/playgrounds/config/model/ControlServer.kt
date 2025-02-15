@@ -1,8 +1,6 @@
 package rc.playgrounds.config.model
 
-import android.net.Uri
-
-data class Telemetry(
+data class ControlServer(
     val address: String,
     val port: Int,
 )

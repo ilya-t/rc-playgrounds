@@ -46,8 +46,8 @@ private const val DEFAULT_CONFIG = """
   "stream": {
     "url": "udp://@:12345"
   },
-  "telemetry": {
-    "address": "192.168.1.2",
+  "control_server": {
+    "address": "192.168.2.2",
     "port": 12346
   },
   "control_offsets": {

@@ -1,6 +1,4 @@
-package rc.playgrounds.telemetry.gamepad
-
-import kotlinx.coroutines.flow.Flow
+package rc.playgrounds.control.gamepad
 
 data class GamepadEvent(
     val leftTrigger: Float,
