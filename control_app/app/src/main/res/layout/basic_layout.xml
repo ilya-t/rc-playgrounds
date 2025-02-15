@@ -17,29 +17,33 @@
     <SurfaceView
         android:id="@+id/surface_view"
         android:layout_width="match_parent"
-        android:layout_height="140dp">
+        android:layout_height="400dp">
     </SurfaceView>
 
 
     <androidx.appcompat.widget.AppCompatTextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Texture"/>
+        android:text="Texture"
+        android:visibility="gone"/>
     <TextureView
         android:id="@+id/texture_view"
         android:layout_width="match_parent"
-        android:layout_height="140dp">
+        android:layout_height="140dp"
+        android:visibility="gone">
 
     </TextureView>
 
     <androidx.appcompat.widget.AppCompatTextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="PlayerView"/>
+        android:text="PlayerView"
+        android:visibility="gone"/>
     <androidx.media3.ui.PlayerView
         android:id="@+id/player_view"
         android:layout_width="match_parent"
         android:layout_height="140dp"
+        android:visibility="gone"
         />
     <androidx.appcompat.widget.AppCompatEditText
         android:id="@+id/config_input"
