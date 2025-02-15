@@ -31,14 +31,14 @@ class GamepadEventEmitter(
             eventStream.emit(e)
 
             // Log or use the values
-            Static.output(
-                "- Left Stick: (${e.leftStickX}, ${e.leftStickY})"+
-                "\n- Right Stick: (${e.rightStickX}, ${e.rightStickY})"+
-                "\n- Triggers: L=${e.leftTrigger} R=${e.rightTrigger}"
-            )
+//            Static.output(
+//                "- Left Stick: (${e.leftStickX}, ${e.leftStickY})"+
+//                "\n- Right Stick: (${e.rightStickX}, ${e.rightStickY})"+
+//                "\n- Triggers: L=${e.leftTrigger} R=${e.rightTrigger}"
+//            )
             return false
         }
-        Static.output(MotionEvent.actionToString(event.action))
+//        Static.output(MotionEvent.actionToString(event.action))
         return false
     }
 

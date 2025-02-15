@@ -1,7 +1,7 @@
 package rc.playgrounds.config
 
-import android.net.Uri
 import org.json.JSONObject
+import rc.playgrounds.config.model.ControlOffsets
 import rc.playgrounds.config.model.Telemetry
 
 class Config(
@@ -27,5 +27,24 @@ class Config(
             )
 
         }.getOrNull()
+    }
+
+    val controlOffsets: ControlOffsets by lazy {
+        runCatching {
+            val t = json.getJSONObject("control_offsets")
+            ControlOffsets(
+                pitch = t.getDouble("pitch").toFloat(),
+                yaw = t.getDouble("yaw").toFloat(),
+                steer = t.getDouble("steer").toFloat(),
+                long = t.getDouble("long").toFloat(),
+            )
+        }.getOrElse {
+            ControlOffsets(
+                pitch = 0f,
+                yaw = 0f,
+                steer = 0f,
+                long = 0f,
+            )
+        }
     }
 }

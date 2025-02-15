@@ -17,8 +17,8 @@ import com.testspace.R
 import com.testspace.core.Static
 import kotlinx.coroutines.launch
 import rc.playgrounds.config.ConfigView
-import rc.playgrounds.telemetry.gamepad.GamepadEventEmitter
 import rc.playgrounds.stream.StreamingProcess
+import rc.playgrounds.telemetry.gamepad.GamepadEventEmitter
 
 class ActivityComponent(
     private val appComponent: AppComponent,
@@ -71,7 +71,7 @@ class ActivityComponent(
             return
         }
         streamingProcess?.release()
-        streamingProcess = StreamingProcess(a, textureView, playerView, surfaceView)
+//        streamingProcess = StreamingProcess(a, textureView, playerView, surfaceView)
         streamingProcess?.start(Uri.parse(url))
         Static.output("Receiving stream at: $url")
 

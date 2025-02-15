@@ -5,6 +5,18 @@
     android:orientation="vertical"
     >
     <Button
+        android:id="@+id/save_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="[SAVE]"/>
+    <androidx.appcompat.widget.AppCompatEditText
+        android:id="@+id/config_input"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Paste JSON Config here"
+        />
+
+    <Button
         android:id="@+id/reset_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -17,7 +29,7 @@
     <SurfaceView
         android:id="@+id/surface_view"
         android:layout_width="match_parent"
-        android:layout_height="400dp">
+        android:layout_height="300dp">
     </SurfaceView>
 
 
@@ -45,16 +57,5 @@
         android:layout_height="140dp"
         android:visibility="gone"
         />
-    <androidx.appcompat.widget.AppCompatEditText
-        android:id="@+id/config_input"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Paste JSON Config here"
-        />
-    <Button
-        android:id="@+id/save_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="[SAVE]"/>
 
 </LinearLayout>
