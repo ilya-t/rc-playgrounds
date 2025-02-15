@@ -1,11 +1,13 @@
 package rc.playgrounds.telemetry
 
+import android.graphics.PointF
 import android.view.animation.AccelerateInterpolator
 import com.testspace.core.Static
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -83,12 +85,13 @@ private class TelemetryEmitter(
     private val job = scope.launch {
         var messageStream: Job? = null
         messages.collect { m ->
-//            Log.i("_debug_", "===> NEW STATE: $m")
             Static.output(JSONObject(m).toString(4))
             messageStream?.cancel()
             messageStream = scope.launch {
                 while (isActive) {
                     send(m)
+                    //TODO: to config
+                    delay(50L) // 20hz
                 }
             }
         }
@@ -113,12 +116,14 @@ private class TelemetryEmitter(
         interpolation: ControlInterpolation,
     ): String {
         val rawPitch = -event.rightStickY + offsets.pitch
-        val rawYaw = -event.rightStickX + offsets.yaw
-        val rawSteer = event.leftStickX + offsets.steer
-        val longTrigger = if (event.leftTrigger > event.rightTrigger) {
+        val rawYaw = event.rightStickX + offsets.yaw
+        val rawSteer = -event.leftStickX + offsets.steer
+        val breakTrigger = event.leftTrigger
+        val rightTrigger = event.rightTrigger
+        val longTrigger = if (breakTrigger > rightTrigger) {
             event.leftTrigger
         } else {
-            event.rightTrigger
+            -rightTrigger
         }
         val rawLong = -longTrigger + offsets.long
 
@@ -137,40 +142,51 @@ private class TelemetryEmitter(
 
 private class ControlInterpolation(
     private val pitch: AccelerateInterpolator?,
+    private val pitchTranslator: (Float) -> Float,
     private val yaw: AccelerateInterpolator?,
+    private val yawTranslator: (Float) -> Float,
     private val steer: AccelerateInterpolator?,
+    private val steerTranslator: (Float) -> Float,
     private val long: AccelerateInterpolator?,
+    private val longTranslator: (Float) -> Float,
 ) {
     fun fixPitch(value: Float): Float {
-        return fix(pitch, value)
+        return fix(pitch, pitchTranslator, value)
     }
 
     fun fixYaw(value: Float): Float {
-        return fix(yaw, value)
+        return fix(yaw, yawTranslator, value)
     }
     fun fixSteer(value: Float): Float {
-        return fix(steer, value)
+        return fix(steer, steerTranslator, value)
     }
     fun fixLong(value: Float): Float {
-        return fix(long, value)
+        return fix(long, longTranslator, value)
     }
 
-    private fun fix(interpolator: AccelerateInterpolator?, value: Float): Float {
+    private fun fix(interpolator: AccelerateInterpolator?,
+                    translator: (Float) -> Float,
+                    value: Float): Float {
+        val translatedValue = translator(value)
         if (interpolator == null) {
-            return value
+            return translatedValue
         }
 
-        val sign = sign(value)
-        val interpolated = interpolator.getInterpolation(value.absoluteValue)
+        val sign = sign(translatedValue)
+        val interpolated = interpolator.getInterpolation(translatedValue.absoluteValue)
         return interpolated * sign
     }
 }
 
 private fun ControlTuning.asInterpolation() = ControlInterpolation(
     pitch = create(pitchFactor),
+    pitchTranslator = create(pitchZone),
     yaw = create(yawFactor),
+    yawTranslator = create(yawZone),
     steer = create(steerFactor),
+    steerTranslator = create(steerZone),
     long = create(longFactor),
+    longTranslator = create(longZone),
 )
 
 private fun create(factor: Float?): AccelerateInterpolator? {
@@ -184,3 +200,23 @@ private fun create(factor: Float?): AccelerateInterpolator? {
 
     return AccelerateInterpolator((factor))
 }
+
+private fun create(zone: PointF?): (Float) -> Float {
+    if (zone == null) {
+        return { it }
+    }
+    if (zone.x.isNaN() || zone.y.isNaN()) {
+        return { it }
+    }
+
+    return { input ->
+        val s = input.sign
+        translate(valueX = input.absoluteValue, x1 = 0f, x2 = 1f, y1 = zone.x,  y2 = zone.y) * s
+    }
+}
+
+fun translate(valueX: Float, x1: Float, x2: Float, y1: Float, y2: Float): Float {
+    val raw = y1 + (valueX - x1) * (y2 - y1) / (x2 - x1)
+    return raw.coerceIn(y1, y2)
+}
+

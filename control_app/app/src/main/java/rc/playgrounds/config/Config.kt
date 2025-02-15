@@ -1,5 +1,6 @@
 package rc.playgrounds.config
 
+import android.graphics.PointF
 import org.json.JSONObject
 import rc.playgrounds.config.model.ControlOffsets
 import rc.playgrounds.config.model.ControlTuning
@@ -54,17 +55,43 @@ class Config(
             val t = json.getJSONObject("control_tuning")
             ControlTuning(
                 pitchFactor = t.optDouble("pitch_factor").toFloat(),
+                pitchZone = parseZone(t.optString("pitch_zone")),
                 yawFactor = t.optDouble("yaw_factor").toFloat(),
+                yawZone = parseZone(t.optString("yaw_zone")),
                 steerFactor = t.optDouble("steer_factor").toFloat(),
+                steerZone = parseZone(t.optString("steer_zone")),
                 longFactor = t.optDouble("long_factor").toFloat(),
+                longZone = parseZone(t.optString("long_zone")),
             )
         }.getOrElse {
             ControlTuning(
                 pitchFactor = null,
+                pitchZone = null,
                 yawFactor = null,
+                yawZone = null,
                 steerFactor = null,
+                steerZone = null,
                 longFactor = null,
+                longZone = null,
             )
         }
     }
+}
+
+private fun parseZone(zone: String): PointF? {
+    val minAndMax = zone.split("..")
+    if (minAndMax.size != 2) {
+        return null
+    }
+
+    val rawPoint = PointF(
+        minAndMax[0].toFloat(),
+        minAndMax[1].toFloat(),
+    )
+
+    if (rawPoint.x >= rawPoint.y) {
+        return null
+    }
+
+    return rawPoint
 }

@@ -58,9 +58,13 @@ private const val DEFAULT_CONFIG = """
   },
   "control_tuning": {
     "pitch_factor": 1.0,
+    "pitch_zone": "0..0.5",
     "yaw_factor": 1.0,
+    "yaw_zone": "0..0.5",
     "steer_factor": 1.0,
-    "long_factor": 1.0
+    "steer_zone": "0..1.0",
+    "long_factor": 1.0,
+    "long_zone": "0.10..0.8"
   }
 }    
 """
