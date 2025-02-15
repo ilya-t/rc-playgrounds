@@ -4,12 +4,18 @@ import com.testspace.core.Static
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import rc.playgrounds.config.Config
 import rc.playgrounds.config.ConfigModel
+import rc.playgrounds.config.model.ControlOffsets
 import rc.playgrounds.config.model.Telemetry
 import rc.playgrounds.telemetry.gamepad.GamepadEvent
 import rc.playgrounds.telemetry.gamepad.GamepadEventStream
@@ -63,11 +69,22 @@ private class TelemetryEmitter(
     private val gamepadEventStream: GamepadEventStream,
     private val configFlow: StateFlow<Config>,
 ) {
+    private val messages: Flow<String> = combine(
+        configFlow.map { it.controlOffsets },
+        gamepadEventStream.events
+    ) { offsets, event -> asTelemetryEvent(event, offsets) }
     private val job = scope.launch {
-        gamepadEventStream.events.collect {
-            val message = asTelemetryEvent(it)
-            Static.output(JSONObject(message).toString(4))
-            send(message)
+        var messageStream: Job? = null
+        messages.collect { m ->
+//            Log.i("_debug_", "===> NEW STATE: $m")
+            Static.output(JSONObject(m).toString(4))
+            messageStream?.cancel()
+            messageStream = scope.launch {
+                while (isActive) {
+//                    Log.i("_debug_", "     streaming: $m")
+                    send(m)
+                }
+            }
         }
     }
 
@@ -83,13 +100,8 @@ private class TelemetryEmitter(
             e.printStackTrace()
         }
     }
-    private fun asTelemetryEvent(event: GamepadEvent): String {
-//            yaw = msg.get("yaw", 0)       # -1..1
-//            pitch = msg.get("pitch", 0)
-//            steer = msg.get("steer", 0)
-//            long = msg.get("long", 0) + 0.18    #
-        val offsets = configFlow.value.controlOffsets
 
+    private fun asTelemetryEvent(event: GamepadEvent, offsets: ControlOffsets): String {
         val json = JSONObject()
             .put("pitch", -event.rightStickY + offsets.pitch) // -1..1
             .put("yaw", -event.rightStickX + offsets.yaw)
