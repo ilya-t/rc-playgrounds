@@ -2,6 +2,7 @@ package rc.playgrounds.config
 
 import org.json.JSONObject
 import rc.playgrounds.config.model.ControlOffsets
+import rc.playgrounds.config.model.ControlTuning
 import rc.playgrounds.config.model.Telemetry
 
 class Config(
@@ -44,6 +45,25 @@ class Config(
                 yaw = 0f,
                 steer = 0f,
                 long = 0f,
+            )
+        }
+    }
+
+    val controlTuning: ControlTuning by lazy {
+        runCatching {
+            val t = json.getJSONObject("control_tuning")
+            ControlTuning(
+                pitchFactor = t.optDouble("pitch_factor").toFloat(),
+                yawFactor = t.optDouble("yaw_factor").toFloat(),
+                steerFactor = t.optDouble("steer_factor").toFloat(),
+                longFactor = t.optDouble("long_factor").toFloat(),
+            )
+        }.getOrElse {
+            ControlTuning(
+                pitchFactor = null,
+                yawFactor = null,
+                steerFactor = null,
+                longFactor = null,
             )
         }
     }
