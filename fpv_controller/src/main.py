@@ -2,6 +2,7 @@ import json
 import socket
 import argparse
 import time
+import subprocess
 
 UDP_IP = "0.0.0.0"  # All interfaces
 UDP_PORT = 12346
@@ -20,6 +21,18 @@ PWM_MIN_LONG = 1200
 PWM_MAX_LONG = 1700  
 
 NO_DATA_TIMEOUT = 0.25
+
+# Launching the stream in the background
+def start_stream():
+    print('===> Starting stream')
+    command = (
+        'raspivid -pf baseline -awb cloud -fl -g 1 -w 320 -h 240 '
+        '--nopreview -fps 30/1 -t 0 -o - | '
+        'gst-launch-1.0 fdsrc ! h264parse ! rtph264pay ! '
+        'udpsink host=192.168.2.5 port=12345 >> /tmp/fpv_controller_control_stream.log &'
+    )
+    
+    subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 def stop_servo_pulse():
     for pin in [PWM_YAW_PIN, PWM_PITCH_PIN, PWM_STEER_PIN, PWM_LONG_PIN]:
@@ -69,13 +82,16 @@ if not dry_run:
     import pigpio
     pi = pigpio.pi()
     if not pi.connected:
-        print("Error: could not connect to pigpio. Make sure pigpiod is run.")
+        print("Error: could not connect to pigpio. Make sure pigpiod is running.")
         exit(1)
     # PWM pins setup
     for pin in [PWM_YAW_PIN, PWM_PITCH_PIN, PWM_STEER_PIN, PWM_LONG_PIN]:
         pi.set_PWM_frequency(pin, PWM_FREQUENCY)
 else:
     print("Running in --dry-run mode. No pigpio interaction.")
+
+# Start the stream
+start_stream()
 
 # UDP socket creation
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
