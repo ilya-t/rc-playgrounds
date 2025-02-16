@@ -98,8 +98,8 @@ class Controller:
                 self.pi.set_servo_pulsewidth(PWM_LONG_PIN, pwm_long)
                 print(f"Received: yaw={yaw}, pitch={pitch}, steer={steer}, long={long} => PWM: {pwm_yaw}, {pwm_pitch}, {pwm_steer}, {pwm_long}")
 
-            if stream_cmd and len(stream_cmd) > 0 and stream_cmd != self.last_stream_cmd:
-                self.start_stream(stream_cmd)
+            # if stream_cmd and len(stream_cmd) > 0 and stream_cmd != self.last_stream_cmd:
+            #     self.start_stream(stream_cmd)
         except json.JSONDecodeError:
             print("JSON parsing error:", data.decode("utf-8"))
 
