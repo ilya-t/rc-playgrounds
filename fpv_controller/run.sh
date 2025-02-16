@@ -17,9 +17,6 @@ echo "===> Starting service at $SCRIPT_DIR" >> /tmp/fpv_controller.log
 # Navigate to the script directory
 cd "$SCRIPT_DIR"
 
-echo "===> Starting control service"
-python3 src/main.py >> /tmp/fpv_controller_control.log 2>&1 &
-
 echo "===> Starting stream"
 raspivid \
     -pf baseline \
@@ -41,3 +38,5 @@ gst-launch-1.0 \
     port=12345 \
 >> /tmp/fpv_controller_control_stream.log &
 
+echo "===> Starting control service"
+python3 src/main.py >> /tmp/fpv_controller_control.log
