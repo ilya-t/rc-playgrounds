@@ -51,12 +51,11 @@ class Controller:
                 'gst-launch-1.0 fdsrc ! h264parse ! rtph264pay ! '
                 'udpsink host=192.168.2.5 port=12345'
             )
-        # else:
-            # command = command # + ' >> /tmp/fpv_controller_stream.log &'
         
         self.stop_stream()
         print(f'===> Starting stream with command: {command}')
-        self.stream_process = subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        with open("/tmp/fpv_controller_stream.log", "a") as log_file:
+            self.stream_process = subprocess.Popen(command, shell=True, stdout=log_file, stderr=log_file)
 
     def stop_stream(self):
         if self.stream_process:
