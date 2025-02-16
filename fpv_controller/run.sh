@@ -10,7 +10,4 @@ echo "===> Starting service at $SCRIPT_DIR"
 # Navigate to the script directory
 cd "$SCRIPT_DIR"
 echo "===> Starting control service"
-python3 src/main.py >> $FPV_CONTROL_LOG &
-
-echo "See logs: "
-echo "    tail $FPV_CONTROL_LOG"
+python3 src/main.py
