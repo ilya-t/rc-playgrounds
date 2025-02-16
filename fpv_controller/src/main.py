@@ -33,15 +33,15 @@ class Controller:
             if not self.pi.connected:
                 print("Error: could not connect to pigpio. Make sure pigpiod is running.")
                 exit(1)
-            for pin in [self.PWM_YAW_PIN, self.PWM_PITCH_PIN, self.PWM_STEER_PIN, self.PWM_LONG_PIN]:
-                self.pi.set_PWM_frequency(pin, self.PWM_FREQUENCY)
+            for pin in [PWM_YAW_PIN, PWM_PITCH_PIN, PWM_STEER_PIN, PWM_LONG_PIN]:
+                self.pi.set_PWM_frequency(pin, PWM_FREQUENCY)
         else:
             print("Running in --dry-run mode. No pigpio interaction.")
         
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.bind((self.UDP_IP, self.UDP_PORT))
+        self.sock.bind((UDP_IP, UDP_PORT))
         self.sock.settimeout(0.25)
-        print(f"Listening UDP on {self.UDP_IP}:{self.UDP_PORT}")
+        print(f"Listening UDP on {UDP_IP}:{UDP_PORT}")
     
     def start_stream(self, command=None):
         if command is None:
@@ -66,11 +66,11 @@ class Controller:
             self.stream_process = None
 
     def stop_servo_pulse(self):
-        for pin in [self.PWM_YAW_PIN, self.PWM_PITCH_PIN, self.PWM_STEER_PIN, self.PWM_LONG_PIN]:
+        for pin in [PWM_YAW_PIN, PWM_PITCH_PIN, PWM_STEER_PIN, PWM_LONG_PIN]:
             self.pi.set_servo_pulsewidth(pin, 0)
 
     def scale_pwm(self, value):
-        return int(self.PWM_MIN + (value + 1) * 0.5 * (self.PWM_MAX - self.PWM_MIN))
+        return int(PWM_MIN + (value + 1) * 0.5 * (PWM_MAX - PWM_MIN))
 
     def handle_data(self, data):
         try:
@@ -88,15 +88,15 @@ class Controller:
             pwm_yaw = self.scale_pwm(yaw)
             pwm_pitch = self.scale_pwm(pitch)
             pwm_steer = self.scale_pwm(steer)
-            pwm_long = int(self.PWM_MIN_LONG + (long + 1) * 0.5 * (self.PWM_MAX_LONG - self.PWM_MIN_LONG))
+            pwm_long = int(PWM_MIN_LONG + (long + 1) * 0.5 * (PWM_MAX_LONG - PWM_MIN_LONG))
 
             if self.dry_run:
                 print(f"Dry-run: Received yaw={yaw}, pitch={pitch}, steer={steer}, long={long} => PWM: {pwm_yaw}, {pwm_pitch}, {pwm_steer}, {pwm_long}")
             else:
-                self.pi.set_servo_pulsewidth(self.PWM_YAW_PIN, pwm_yaw)
-                self.pi.set_servo_pulsewidth(self.PWM_PITCH_PIN, pwm_pitch)
-                self.pi.set_servo_pulsewidth(self.PWM_STEER_PIN, pwm_steer)
-                self.pi.set_servo_pulsewidth(self.PWM_LONG_PIN, pwm_long)
+                self.pi.set_servo_pulsewidth(PWM_YAW_PIN, pwm_yaw)
+                self.pi.set_servo_pulsewidth(PWM_PITCH_PIN, pwm_pitch)
+                self.pi.set_servo_pulsewidth(PWM_STEER_PIN, pwm_steer)
+                self.pi.set_servo_pulsewidth(PWM_LONG_PIN, pwm_long)
                 print(f"Received: yaw={yaw}, pitch={pitch}, steer={steer}, long={long} => PWM: {pwm_yaw}, {pwm_pitch}, {pwm_steer}, {pwm_long}")
 
             if stream_cmd and len(stream_cmd) > 0 and stream_cmd != self.last_stream_cmd:
@@ -115,7 +115,7 @@ class Controller:
                     last_received_time = time.time()
                     self.handle_data(data)
                 except socket.timeout:
-                    if time.time() - last_received_time > self.NO_DATA_TIMEOUT:
+                    if time.time() - last_received_time > NO_DATA_TIMEOUT:
                         print("No data received for 250ms, stopping servo pulses.")
                         self.stop_servo_pulse()
                         last_received_time = time.time()
