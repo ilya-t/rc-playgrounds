@@ -1,0 +1,15 @@
+[Unit]
+Description=Startup Script
+After=network.target
+
+[Service]
+ExecStart=~/rc-playgrounds/rc_fpv_controller/run.sh
+Restart=always
+User=pi
+Group=pi
+WorkingDirectory=/usr/local/bin
+StandardOutput=append:/var/log/rc_fpv_controller.log
+StandardError=append:/var/log/rc_fpv_controller.log
+
+[Install]
+WantedBy=multi-user.target
