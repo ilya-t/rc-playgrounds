@@ -12,7 +12,7 @@ HEIGHT=240
 # Resolve the directory of the script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-echo "===> Starting service at $SCRIPT_DIR" >> /tmp/fpv_controller.log
+echo "===> Starting service at $SCRIPT_DIR" >> $FPV_CONTROLLER_LOG
 
 # Navigate to the script directory
 cd "$SCRIPT_DIR"
@@ -26,7 +26,7 @@ raspivid \
     -w $WIDTH \
     -h $HEIGHT \
     --nopreview \
-    -fps 90/1  \
+    -fps $FPS/1  \
     -t 0 \
     -o - | \
 gst-launch-1.0 \
@@ -36,7 +36,12 @@ gst-launch-1.0 \
     udpsink \
     host=192.168.2.5 \
     port=12345 \
->> /tmp/fpv_controller_control_stream.log &
+>> $FPV_CONTROLLER_CONTROL_STREAM_LOG &
 
 echo "===> Starting control service"
-python3 src/main.py >> /tmp/fpv_controller_control.log
+python3 src/main.py >> $FPV_CONTROLLER_CONTROL_LOG &
+
+echo "Logs: "
+echo "    tail $FPV_CONTROLLER_CONTROL_STREAM_LOG"
+echo "    tail $FPV_CONTROLLER_CONTROL_LOG"
+echo "    tail $FPV_CONTROLLER_LOG"

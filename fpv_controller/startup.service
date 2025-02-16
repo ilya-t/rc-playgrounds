@@ -3,6 +3,7 @@ Description=Startup Script
 After=network.target
 
 [Service]
+Type=oneshot
 ExecStart=/home/pi/rc-playgrounds/fpv_controller/run.sh
 Restart=always
 User=pi
