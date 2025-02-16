@@ -29,7 +29,7 @@ def start_stream():
         'raspivid -pf baseline -awb cloud -fl -g 1 -w 320 -h 240 '
         '--nopreview -fps 30/1 -t 0 -o - | '
         'gst-launch-1.0 fdsrc ! h264parse ! rtph264pay ! '
-        'udpsink host=192.168.2.5 port=12345 >> /tmp/fpv_controller_control_stream.log &'
+        'udpsink host=192.168.2.5 port=12345 >> /tmp/fpv_controller_stream.log &'
     )
     
     subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
