@@ -105,7 +105,7 @@ class Controller:
 
     def start(self):
         last_received_time = time.time()
-        self.start_stream()
+        # self.start_stream()
 
         try:
             while True:

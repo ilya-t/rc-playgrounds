@@ -1,9 +1,38 @@
 #!/bin/bash
 set -e
-FPV_CONTROL_LOG=/tmp/fpv_controller_control.log
+# FPS=90
+# FPS=60
+FPS=30
+# WIDTH=640
+# HEIGHT=480
+
+WIDTH=320
+HEIGHT=240
+
 
 # Resolve the directory of the script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+echo "===> Starting stream"
+raspivid \
+    -pf baseline \
+    -awb cloud \
+    -fl \
+    -g 1 \
+    -w $WIDTH \
+    -h $HEIGHT \
+    --nopreview \
+    -fps $FPS/1  \
+    -t 0 \
+    -o - | \
+gst-launch-1.0 \
+    fdsrc ! \
+    h264parse ! \
+    rtph264pay ! \
+    udpsink \
+    host=192.168.2.5 \
+    port=12345 \
+>> /tmp/fpv_controller_stream.log &
 
 echo "===> Starting service at $SCRIPT_DIR"
 
