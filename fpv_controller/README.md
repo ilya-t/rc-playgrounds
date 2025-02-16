@@ -30,3 +30,9 @@ sudo cp fpv_controller/startup.service /etc/systemd/system/startup.service
 sudo systemctl daemon-reload
 sudo systemctl enable startup.service
 ```
+
+
+```sh
+sudo systemctl restart startup.service
+sudo systemctl status startup.service
+```
