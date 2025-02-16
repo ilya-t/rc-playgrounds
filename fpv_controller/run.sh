@@ -18,7 +18,8 @@ cd "$SCRIPT_DIR"
 echo "===> Starting control service (see logs: /tmp/fpv_controller.log)"
 python3 src/main.py > /tmp/fpv_controller.log &
 
-echo "===> Starting stream"
+echo "===> Starting stream with delay"
+sleep 10
 raspivid \
     -pf baseline \
     -awb cloud \
