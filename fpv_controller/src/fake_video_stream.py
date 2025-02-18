@@ -14,4 +14,5 @@ if __name__ == "__main__":
     raspivid_binary = python_script_path+"/raspivid.out"
     if not os.path.exists(raspivid_binary):
         raise FileNotFoundError(f"Binary stream file '{raspivid_binary}' does not exist! Please put it from https://disk.yandex.ru/d/eiMV64VesqTdpw")
-    stream_file_limited(raspivid_binary)
+    while True:
+        stream_file_limited(raspivid_binary)
