@@ -9,7 +9,8 @@
 ```
 [Unit]
 Description=Startup Script
-After=network.target
+After=network.target wg-quick@wg0.service
+Wants=wg-quick@wg0.service
 
 [Service]
 ExecStart=/home/pi/rc-playgrounds/fpv_controller/run.sh
@@ -35,4 +36,17 @@ sudo systemctl enable startup.service
 ```sh
 sudo systemctl restart startup.service
 sudo systemctl status startup.service
+```
+
+## Fake video stream from existing raspberry binary
+```sh
+cd src
+python3 fake_video_stream.py |
+gst-launch-1.0 \
+    fdsrc ! \
+    h264parse ! \
+    rtph264pay ! \
+    udpsink \
+    host=192.168.1.48 \
+    port=12345 \
 ```
