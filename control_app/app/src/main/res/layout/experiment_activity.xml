@@ -2,12 +2,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     >
-
     <FrameLayout
         android:id="@+id/layout_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingTop="64dp"
         android:layout_above="@+id/tv_output">
         <include layout="@layout/basic_layout"/>
     </FrameLayout>

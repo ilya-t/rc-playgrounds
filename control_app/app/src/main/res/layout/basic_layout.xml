@@ -39,38 +39,7 @@
         </LinearLayout>
     </RelativeLayout>
 
-    <RelativeLayout
-        android:id="@+id/layer_main"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        >
+    <include layout="@layout/layer_main"/>
 
-        <org.freedesktop.gstreamer.GStreamerSurfaceView
-            android:id="@+id/g_surface_view"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_above="@+id/controls"/>
 
-        <LinearLayout
-            android:id="@+id/controls"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:weightSum="2"
-            android:layout_alignParentBottom="true">
-            <Button
-                android:id="@+id/reset_button"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="[RESET]"/>
-            <Button
-                android:id="@+id/configure_button"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="[CONFIGURE]"
-                android:layout_weight="1"
-                />
-        </LinearLayout>
-    </RelativeLayout>
 </FrameLayout>
