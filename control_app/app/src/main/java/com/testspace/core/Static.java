@@ -19,11 +19,6 @@ public class Static {
     public static Context c;
     public static Resources r;
     static TextView tvOutput;
-    static Experiment experiment;
-
-    public static <T extends Experiment> T experiment() {
-        return (T) experiment;
-    };
 
     public static void output(String text) {
         if (tvOutput != null) {

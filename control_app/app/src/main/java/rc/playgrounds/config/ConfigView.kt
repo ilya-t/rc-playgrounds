@@ -8,12 +8,15 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import rc.playgrounds.navigation.NaiveNavigator
 
 class ConfigView(
     private val configInput: AppCompatEditText,
     private val saveButton: Button,
+    private val backButton: Button,
     private val configModel: ConfigModel,
     private val scope: CoroutineScope,
+    private val navigator: NaiveNavigator,
     ) {
     init {
         scope.launch {
@@ -29,8 +32,11 @@ class ConfigView(
         saveButton.setOnClickListener {
             configModel.updateConfig(configInput.text.toString())
             saveButton.isEnabled = false
-
         }
+        backButton.setOnClickListener {
+            navigator.openMain()
+        }
+
         configInput.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
 

@@ -11,7 +11,6 @@ import rc.playgrounds.AppComponent
 
 
 class MainActivity : ExperimentActivity() {
-    override fun createExperiment() = CurrentExperiment(this)
     private lateinit var component: ActivityComponent
 
     @OptIn(UnstableApi::class)

@@ -1,74 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:keepScreenOn="true"
     >
-    <Button
-        android:id="@+id/save_button"
+    <RelativeLayout
+        android:id="@+id/layer_config"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="[SAVE]"/>
-    <androidx.appcompat.widget.AppCompatEditText
-        android:id="@+id/config_input"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Paste JSON Config here"
-        android:maxLines="4"
-        android:imeOptions="actionDone"
-
-        />
-
-    <Button
-        android:id="@+id/reset_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="[RESET]"/>
-
-    <androidx.appcompat.widget.AppCompatTextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="GSurface"/>
-    <org.freedesktop.gstreamer.GStreamerSurfaceView
-        android:id="@+id/g_surface_view"
-        android:layout_width="match_parent"
-        android:layout_height="300dp">
-    </org.freedesktop.gstreamer.GStreamerSurfaceView>
-
-    <androidx.appcompat.widget.AppCompatTextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Surface"/>
-    <SurfaceView
-        android:id="@+id/surface_view"
-        android:layout_width="match_parent"
-        android:layout_height="300dp">
-    </SurfaceView>
-
-    <androidx.appcompat.widget.AppCompatTextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Texture"
-        android:visibility="gone"/>
-    <TextureView
-        android:id="@+id/texture_view"
-        android:layout_width="match_parent"
-        android:layout_height="140dp"
+        android:layout_height="match_parent"
         android:visibility="gone">
+        <androidx.appcompat.widget.AppCompatEditText
+            android:id="@+id/config_input"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:hint="Paste JSON Config here"
+            android:imeOptions="actionDone"
+            android:layout_above="@+id/config_controls"
+            />
+        <LinearLayout
+            android:id="@+id/config_controls"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="2"
+            android:layout_alignParentBottom="true">
+            <Button
+                android:id="@+id/back_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="[BACK]"/>
+            <Button
+                android:id="@+id/save_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="[APPLY]"/>
+        </LinearLayout>
+    </RelativeLayout>
 
-    </TextureView>
-
-    <androidx.appcompat.widget.AppCompatTextView
+    <RelativeLayout
+        android:id="@+id/layer_main"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="PlayerView"
-        android:visibility="gone"/>
-    <androidx.media3.ui.PlayerView
-        android:id="@+id/player_view"
-        android:layout_width="match_parent"
-        android:layout_height="140dp"
-        android:visibility="gone"
-        />
+        android:layout_height="match_parent"
+        >
 
-</LinearLayout>
+        <org.freedesktop.gstreamer.GStreamerSurfaceView
+            android:id="@+id/g_surface_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_above="@+id/controls"/>
+
+        <LinearLayout
+            android:id="@+id/controls"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="2"
+            android:layout_alignParentBottom="true">
+            <Button
+                android:id="@+id/reset_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="[RESET]"/>
+            <Button
+                android:id="@+id/configure_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="[CONFIGURE]"
+                android:layout_weight="1"
+                />
+        </LinearLayout>
+    </RelativeLayout>
+</FrameLayout>

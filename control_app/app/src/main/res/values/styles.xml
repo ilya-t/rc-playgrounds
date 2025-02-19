@@ -1,8 +1,22 @@
 <resources>
+    <color name="colorPrimary">#1D3557</color> <!-- Darker muted teal -->
+    <color name="colorPrimaryVariant">#457B9D</color> <!-- Brighter teal -->
+    <color name="colorAccent">#F1FAEE</color> <!-- Soft off-white -->
 
-    <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat">
-        <!-- Customize your theme here. -->
+    <!-- New text color for better contrast -->
+    <color name="textColorPrimary">#E5E5E5</color> <!-- Light gray for high contrast text -->
+    <color name="textColorSecondary">#A8DADC</color> <!-- Soft muted blue-gray for secondary text -->
+
+    <!-- Base application theme -->
+    <style name="AppTheme" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryVariant">@color/colorPrimaryVariant</item>
+        <item name="colorAccent">@color/colorAccent</item>
+
+        <!-- Set text color attributes -->
+        <item name="colorOnBackground">@color/textColorPrimary</item>
+        <item name="colorOnSurface">@color/textColorPrimary</item>
+        <item name="colorOnPrimary">@color/textColorPrimary</item>
+        <item name="colorOnSecondary">@color/textColorSecondary</item>
     </style>
-
 </resources>

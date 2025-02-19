@@ -2,15 +2,15 @@ package com.rc.playgrounds.gstreamer;
 
 import android.content.Context;
 import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 
 import androidx.annotation.NonNull;
 
 import org.freedesktop.gstreamer.GStreamer;
-import org.freedesktop.gstreamer.GStreamerSurfaceView;
 
 public class GStreamerFacade {
     private final Logger logger;
-    private final GStreamerSurfaceView surfaceView;
+    private final SurfaceView surfaceView;
     private final SurfaceHolder.Callback surfaceCallbacks = new SurfaceHolder.Callback() {
         @Override
         public void surfaceChanged(@NonNull SurfaceHolder holder, int format, int width,
@@ -46,7 +46,7 @@ public class GStreamerFacade {
     // Called when the activity is first created.
     public GStreamerFacade(
             Context context,
-            GStreamerSurfaceView surfaceView,
+            SurfaceView surfaceView,
             Logger logger) {
         this.logger = logger;
         this.surfaceView = surfaceView;

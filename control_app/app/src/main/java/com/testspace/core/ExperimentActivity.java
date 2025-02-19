@@ -2,7 +2,6 @@ package com.testspace.core;
 
 import android.os.Bundle;
 import android.view.KeyEvent;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -11,7 +10,6 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.testspace.BuildConfig;
 import com.testspace.R;
 
 import java.util.ArrayList;
@@ -19,13 +17,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class ExperimentActivity extends AppCompatActivity {
+public class ExperimentActivity extends AppCompatActivity {
     private LinearLayout layoutActions;
     public TextView tvOutput;
     private ArrayList<Trigger> cmdList = new ArrayList<>();
     private Map<View, Trigger> cmdMap = new HashMap<>();
-
-    private Experiment experiment;
 
     private View.OnClickListener cmdClick = new View.OnClickListener() {
         @Override
@@ -68,24 +64,9 @@ public abstract class ExperimentActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.experiment_activity);
-        layoutActions = findViewById(R.id.layout_actions);
         FrameLayout container = findViewById(R.id.layout_container);
         tvOutput = findViewById(R.id.tv_output);
         injectStatic();
-
-        experiment = createExperiment();
-
-        if (experiment == null) {
-            return;
-        }
-        setTitle("Experiment: " + BuildConfig.EXPERIMENT_NAME);
-
-        int experimentLayout = experiment.getExperimentLayout();
-        if (experimentLayout > 0) {
-            container.addView(
-                    LayoutInflater.from(this).inflate(experimentLayout, null)
-            );
-        }
     }
 
     private void injectStatic() {
@@ -93,7 +74,6 @@ public abstract class ExperimentActivity extends AppCompatActivity {
         Static.r = getResources();
         Static.a = this;
         Static.tvOutput = tvOutput;
-        Static.experiment = experiment;
     }
 
     public void addTriggers(Trigger... commands) {
@@ -118,12 +98,6 @@ public abstract class ExperimentActivity extends AppCompatActivity {
             layoutActions.addView(button);
             index++;
         }
-    }
-
-    protected abstract Experiment createExperiment();
-
-    public Experiment getExperiment() {
-        return experiment;
     }
 }
 
