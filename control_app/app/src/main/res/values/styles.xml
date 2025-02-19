@@ -6,7 +6,7 @@
     <!-- New text color for better contrast -->
     <color name="textColorPrimary">#E5E5E5</color> <!-- Light gray for high contrast text -->
     <color name="textColorSecondary">#A8DADC</color> <!-- Soft muted blue-gray for secondary text -->
-
+    <color name="backgroundColor">#000000</color> <!-- Pure black background -->
     <!-- Base application theme -->
     <style name="AppTheme" parent="Theme.Material3.Dark.NoActionBar">
         <item name="colorPrimary">@color/colorPrimary</item>
@@ -18,5 +18,8 @@
         <item name="colorOnSurface">@color/textColorPrimary</item>
         <item name="colorOnPrimary">@color/textColorPrimary</item>
         <item name="colorOnSecondary">@color/textColorSecondary</item>
+        <item name="android:windowBackground">@color/backgroundColor</item>
+        <item name="android:colorBackground">@color/backgroundColor</item>
+        <item name="colorSurface">@color/backgroundColor</item>
     </style>
 </resources>
