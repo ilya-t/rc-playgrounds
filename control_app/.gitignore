@@ -3,3 +3,4 @@
 .idea
 /build
 buildSrc/build
+local.properties
