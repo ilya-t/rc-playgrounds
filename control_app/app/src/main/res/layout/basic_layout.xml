@@ -15,6 +15,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Paste JSON Config here"
+        android:maxLines="4"
+        android:imeOptions="actionDone"
+
         />
 
     <Button
@@ -26,13 +29,22 @@
     <androidx.appcompat.widget.AppCompatTextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:text="GSurface"/>
+    <org.freedesktop.gstreamer.GStreamerSurfaceView
+        android:id="@+id/g_surface_view"
+        android:layout_width="match_parent"
+        android:layout_height="300dp">
+    </org.freedesktop.gstreamer.GStreamerSurfaceView>
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:text="Surface"/>
     <SurfaceView
         android:id="@+id/surface_view"
         android:layout_width="match_parent"
         android:layout_height="300dp">
     </SurfaceView>
-
 
     <androidx.appcompat.widget.AppCompatTextView
         android:layout_width="match_parent"

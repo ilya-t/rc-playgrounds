@@ -7,13 +7,20 @@ import android.view.SurfaceView
 import android.view.TextureView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.media3.ui.PlayerView
+import org.freedesktop.gstreamer.GStreamerSurfaceView
 
 class StreamingProcess(
     private val activity: AppCompatActivity,
     private val textureView: TextureView,
     private val playerView: PlayerView,
     private val surfaceView: SurfaceView,
+    private val gSurfaceView: GStreamerSurfaceView,
 ) {
+    // GStreamerReceiver currently cannot survive release.
+    private val gStreamerReceiverSingleton = GStreamerReceiver(
+        activity,
+        gSurfaceView,
+    )
     private var streamReceiver = createReceiver()
 
     @SuppressLint("UnsafeOptInUsageError")
@@ -22,10 +29,11 @@ class StreamingProcess(
 //            activity,
 //            playerView,
 //        )
-        return VLCStreamReceiver(
-            activity,
-            surfaceView
-        )
+//        return VLCStreamReceiver(
+//            activity,
+//            surfaceView
+//        )
+        return gStreamerReceiverSingleton
     }
 
     fun start(streamUri:Uri) {
@@ -52,6 +60,6 @@ class StreamingProcess(
     }
 
     fun release() {
-        streamReceiver.release()///this???
+        streamReceiver.release()
     }
 }

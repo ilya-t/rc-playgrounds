@@ -16,6 +16,7 @@ import androidx.media3.ui.PlayerView
 import com.testspace.R
 import com.testspace.core.Static
 import kotlinx.coroutines.launch
+import org.freedesktop.gstreamer.GStreamerSurfaceView
 import rc.playgrounds.config.ConfigView
 import rc.playgrounds.control.gamepad.GamepadEventEmitter
 import rc.playgrounds.stream.StreamingProcess
@@ -26,6 +27,7 @@ class ActivityComponent(
 ) {
     private val playerView = a.findViewById<PlayerView>(R.id.player_view)
     private val surfaceView = a.findViewById<SurfaceView>(R.id.surface_view)
+    private val gSurfaceView = a.findViewById<GStreamerSurfaceView>(R.id.g_surface_view)
     private val textureView = a.findViewById<TextureView>(R.id.texture_view)
     private val resetButton = a.findViewById<View>(R.id.reset_button)
     private val saveButton = a.findViewById<Button>(R.id.save_button)
@@ -71,7 +73,11 @@ class ActivityComponent(
             return
         }
         streamingProcess?.release()
-//        streamingProcess = StreamingProcess(a, textureView, playerView, surfaceView)
+        streamingProcess = StreamingProcess(a,
+            textureView,
+            playerView,
+            surfaceView,
+            gSurfaceView)
         streamingProcess?.start(Uri.parse(url))
         Static.output("Receiving stream at: $url")
 
