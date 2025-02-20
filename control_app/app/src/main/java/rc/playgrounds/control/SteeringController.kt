@@ -2,6 +2,7 @@ package rc.playgrounds.control
 
 import android.graphics.PointF
 import android.view.animation.AccelerateInterpolator
+import androidx.annotation.AttrRes
 import com.testspace.core.Static
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -76,12 +77,15 @@ private class SteeringEmitter(
     private val configFlow: StateFlow<Config>,
 ) {
     private val messages: Flow<String> = combine(
-        configFlow.map { it.controlOffsets },
+        configFlow,
         gamepadEventStream.events,
-        configFlow.map {
-            it.controlTuning.asInterpolation()
-        }
-    ) { offsets, event, interpolation -> asSteeringEvent(event, offsets, interpolation) }
+    ) { config: Config, event: GamepadEvent ->
+        asSteeringEvent(event,
+            offsets = config.controlOffsets,
+            interpolation = config.controlTuning.asInterpolation(),
+            streamCmd = config.remoteStreamCmd,
+        )
+    }
     private val job = scope.launch {
         var messageStream: Job? = null
         messages.collect { m ->
@@ -114,6 +118,7 @@ private class SteeringEmitter(
         event: GamepadEvent,
         offsets: ControlOffsets,
         interpolation: ControlInterpolation,
+        streamCmd: String,
     ): String {
         val rawPitch = -event.rightStickY + offsets.pitch
         val rawYaw = event.rightStickX + offsets.yaw
@@ -132,6 +137,7 @@ private class SteeringEmitter(
             .put("yaw", interpolation.fixYaw(rawYaw))
             .put("steer", interpolation.fixSteer(rawSteer)) // -1..1
             .put("long", interpolation.fixLong(rawLong)) // -1..1
+            .put("stream_cmd", streamCmd)
         return json.toString()
     }
 

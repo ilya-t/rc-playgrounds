@@ -7,8 +7,9 @@ import os
 
 UDP_IP = "0.0.0.0"  # All interfaces
 UDP_PORT = 12346
-# STREAM_DST_IP = '192.168.2.5'
-STREAM_DST_IP = '192.168.1.181'
+STREAM_DST_IP = '192.168.2.5'
+# STREAM_DST_IP = '192.168.1.181'
+# STREAM_DST_IP = '0.0.0.0'
 
 PWM_YAW_PIN = 18    # GPIO18 (PWM0)
 PWM_PITCH_PIN = 12  # GPIO19 (PWM1)
@@ -31,7 +32,7 @@ class Controller:
             self._pi_handler = EmptyHandler()
         else:
             self._pi_handler = PiHandler()
-        self.last_stream_cmd = ""
+        self._last_stream_cmd = ""
         self.stream_process = None
         
         if not self._pi_handler.connected():
@@ -47,9 +48,7 @@ class Controller:
 
     def _get_default_stream_command(self) -> str:
         if self._dry_run:
-            python_script_path = os.path.dirname(__file__)
             return (
-                    f'cd {python_script_path} && '
                     'python3 fake_video_stream.py |'
                     'gst-launch-1.0 --verbose '
                     '    fdsrc ! '
@@ -73,8 +72,11 @@ class Controller:
         
         self.stop_stream()
         print(f'===> Starting stream with command: {command}')
+        python_script_path = os.path.dirname(__file__)
         with open("/tmp/fpv_controller_stream.log", "a") as log_file:
-            self.stream_process = subprocess.Popen(command, shell=True, stdout=log_file, stderr=log_file)
+            self.stream_process = subprocess.Popen(command, shell=True, 
+                                                   stdout=log_file, stderr=log_file,
+                                                   cwd=python_script_path)
 
     def stop_stream(self):
         if self.stream_process:
@@ -114,8 +116,9 @@ class Controller:
             self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(PWM_LONG_PIN, pwm_long))
             print(f"Received: yaw={yaw}, pitch={pitch}, steer={steer}, long={long} => PWM: {pwm_yaw}, {pwm_pitch}, {pwm_steer}, {pwm_long}")
 
-            if stream_cmd and len(stream_cmd) > 0 and stream_cmd != self.last_stream_cmd:
+            if stream_cmd and len(stream_cmd) > 0 and stream_cmd != self._last_stream_cmd:
                 self.start_stream(stream_cmd)
+                self._last_stream_cmd = stream_cmd
         except json.JSONDecodeError:
             print("JSON parsing error:", data.decode("utf-8"))
 

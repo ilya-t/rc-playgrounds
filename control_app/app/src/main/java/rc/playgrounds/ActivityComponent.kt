@@ -68,11 +68,6 @@ class ActivityComponent(
             navigator.openConfig()
         }
 
-        saveButton.setOnClickListener {
-            navigator.openMain()
-            doReset()
-        }
-
         navigator.openMain()
     }
 

@@ -40,14 +40,22 @@ class ConfigModel(
 }
 
 private const val STORAGE_KEY = "config"
+private const val SERVER_ADDR = "10.0.2.2"
+private const val SERVER_STREAM_TARGET = "0.0.0.0"
+//private const val SERVER_ADDR = "192.168.2.2"
+//private const val SERVER_STREAM_TARGET = "192.168.2.5"
+private const val RASPIVID_SRC_STREAM_CMD = "raspivid -pf baseline -awb cloud -fl -g 1 -w 320 -h 240 --nopreview -fps 30/1 -t 0 -o - | gst-launch-1.0 fdsrc ! h264parse ! rtph264pay ! udpsink host=$SERVER_STREAM_TARGET port=12345"
+private const val FAKE_SRC_STREAM_CMD = "python3 fake_video_stream.py | gst-launch-1.0 --verbose fdsrc ! h264parse ! rtph264pay ! udpsink host=$SERVER_STREAM_TARGET port=12345"
+private const val REMOTE_CMD = FAKE_SRC_STREAM_CMD
 @Language("Json")
 private const val DEFAULT_CONFIG = """
 {
   "stream": {
-    "url": "udp://@:12345"
+    "url": "udp://@:12345",
+    "remote_cmd": "$REMOTE_CMD"
   },
   "control_server": {
-    "address": "192.168.2.2",
+    "address": "$SERVER_ADDR",
     "port": 12346
   },
   "control_offsets": {
@@ -63,8 +71,8 @@ private const val DEFAULT_CONFIG = """
     "yaw_zone": "0..0.5",
     "steer_factor": 1.0,
     "steer_zone": "0..1.0",
-    "long_factor": 1.0,
-    "long_zone": "0.10..0.8"
+    "long_factor": 0.7,
+    "long_zone": "0.01..08"
   }
 }    
 """
