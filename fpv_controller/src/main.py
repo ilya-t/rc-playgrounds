@@ -7,6 +7,8 @@ import os
 
 UDP_IP = "0.0.0.0"  # All interfaces
 UDP_PORT = 12346
+# STREAM_DST_IP = '192.168.2.5'
+STREAM_DST_IP = '192.168.1.181'
 
 PWM_YAW_PIN = 18    # GPIO18 (PWM0)
 PWM_PITCH_PIN = 12  # GPIO19 (PWM1)
@@ -20,37 +22,54 @@ PWM_MAX = 2500
 PWM_MIN_LONG = 1200      
 PWM_MAX_LONG = 1700  
 NO_DATA_TIMEOUT = 0.25
+
 class Controller:
 
-    def __init__(self, dry_run=False):
-        self.dry_run = dry_run
+    def __init__(self, dry_run: bool):
+        self._dry_run = dry_run
+        if self._dry_run:
+            self._pi_handler = EmptyHandler()
+        else:
+            self._pi_handler = PiHandler()
         self.last_stream_cmd = ""
         self.stream_process = None
         
-        if not self.dry_run:
-            import pigpio
-            self.pi = pigpio.pi()
-            if not self.pi.connected:
-                print("Error: could not connect to pigpio. Make sure pigpiod is running.")
-                exit(1)
-            for pin in [PWM_YAW_PIN, PWM_PITCH_PIN, PWM_STEER_PIN, PWM_LONG_PIN]:
-                self.pi.set_PWM_frequency(pin, PWM_FREQUENCY)
-        else:
-            print("Running in --dry-run mode. No pigpio interaction.")
+        if not self._pi_handler.connected():
+            print("Error: could not connect to pigpio. Make sure pigpiod is running.")
+            exit(1)
+        for pin in [PWM_YAW_PIN, PWM_PITCH_PIN, PWM_STEER_PIN, PWM_LONG_PIN]:
+            self._pi_handler.do(lambda pi: pi.set_PWM_frequency(pin, PWM_FREQUENCY))
         
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind((UDP_IP, UDP_PORT))
         self.sock.settimeout(0.25)
         print(f"Listening UDP on {UDP_IP}:{UDP_PORT}")
-    
-    def start_stream(self, command=None):
-        if command is None:
-            command = (
+
+    def _get_default_stream_command(self) -> str:
+        if self._dry_run:
+            python_script_path = os.path.dirname(__file__)
+            return (
+                    f'cd {python_script_path} && '
+                    'python3 fake_video_stream.py |'
+                    'gst-launch-1.0 --verbose '
+                    '    fdsrc ! '
+                    '    h264parse ! '
+                    '    rtph264pay ! '
+                    '    udpsink '
+                    f'    host={STREAM_DST_IP} '
+                    '    port=12345 '
+            )
+
+        return (
                 'raspivid -pf baseline -awb cloud -fl -g 1 -w 320 -h 240 '
                 '--nopreview -fps 30/1 -t 0 -o - | '
                 'gst-launch-1.0 fdsrc ! h264parse ! rtph264pay ! '
-                'udpsink host=192.168.2.5 port=12345'
-            )
+                f'udpsink host={STREAM_DST_IP} port=12345'
+        )
+    
+    def start_stream(self, command=None):
+        if command is None:
+            command = self._get_default_stream_command()
         
         self.stop_stream()
         print(f'===> Starting stream with command: {command}')
@@ -66,7 +85,7 @@ class Controller:
 
     def stop_servo_pulse(self):
         for pin in [PWM_YAW_PIN, PWM_PITCH_PIN, PWM_STEER_PIN, PWM_LONG_PIN]:
-            self.pi.set_servo_pulsewidth(pin, 0)
+            self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(pin, 0));
 
     def scale_pwm(self, value):
         return int(PWM_MIN + (value + 1) * 0.5 * (PWM_MAX - PWM_MIN))
@@ -89,23 +108,20 @@ class Controller:
             pwm_steer = self.scale_pwm(steer)
             pwm_long = int(PWM_MIN_LONG + (long + 1) * 0.5 * (PWM_MAX_LONG - PWM_MIN_LONG))
 
-            if self.dry_run:
-                print(f"Dry-run: Received yaw={yaw}, pitch={pitch}, steer={steer}, long={long} => PWM: {pwm_yaw}, {pwm_pitch}, {pwm_steer}, {pwm_long}")
-            else:
-                self.pi.set_servo_pulsewidth(PWM_YAW_PIN, pwm_yaw)
-                self.pi.set_servo_pulsewidth(PWM_PITCH_PIN, pwm_pitch)
-                self.pi.set_servo_pulsewidth(PWM_STEER_PIN, pwm_steer)
-                self.pi.set_servo_pulsewidth(PWM_LONG_PIN, pwm_long)
-                print(f"Received: yaw={yaw}, pitch={pitch}, steer={steer}, long={long} => PWM: {pwm_yaw}, {pwm_pitch}, {pwm_steer}, {pwm_long}")
+            self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(PWM_YAW_PIN, pwm_yaw))
+            self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(PWM_PITCH_PIN, pwm_pitch))
+            self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(PWM_STEER_PIN, pwm_steer))
+            self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(PWM_LONG_PIN, pwm_long))
+            print(f"Received: yaw={yaw}, pitch={pitch}, steer={steer}, long={long} => PWM: {pwm_yaw}, {pwm_pitch}, {pwm_steer}, {pwm_long}")
 
-            # if stream_cmd and len(stream_cmd) > 0 and stream_cmd != self.last_stream_cmd:
-            #     self.start_stream(stream_cmd)
+            if stream_cmd and len(stream_cmd) > 0 and stream_cmd != self.last_stream_cmd:
+                self.start_stream(stream_cmd)
         except json.JSONDecodeError:
             print("JSON parsing error:", data.decode("utf-8"))
 
     def start(self):
         last_received_time = time.time()
-        # self.start_stream()
+        self.start_stream()
 
         try:
             while True:
@@ -120,18 +136,38 @@ class Controller:
                         last_received_time = time.time()
         except KeyboardInterrupt:
             print("\nEnding...")
+            self.stop_stream()
             self.sock.close()
-            if not self.dry_run:
-                self.stop_servo_pulse()
-                self.pi.stop()
-                print("PWM cleared and pigpio connection closed.")
+            self.stop_servo_pulse()
+            self._pi_handler.do(lambda pi: pi.stop())
+            print("PWM cleared and pigpio connection closed.")
+
+class PiHandler:
+    def __init__(self):
+        import pigpio
+        self._pi = pigpio.pi()
+
+    def connected(self) -> bool:
+        return self._pi.connected
+
+    def do(self, action):
+        action(self._pi)
+
+
+class EmptyHandler:
+    def connected(self) -> bool:
+        return True
+
+    def do(self, action):
+        pass
+    
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dry-run", action="store_true", help="Run script without controlling pigpio")
     args = parser.parse_args()
-    controller = Controller(dry_run=args.dry_run)
+    controller = Controller(args.dry_run)
     controller.start()
 
 if __name__ == "__main__":
