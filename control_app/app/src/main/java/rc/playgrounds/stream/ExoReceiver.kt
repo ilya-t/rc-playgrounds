@@ -22,6 +22,7 @@ import androidx.media3.ui.PlayerView
 class ExoReceiver(
     private val activity: Activity,
     private val playerView: PlayerView,
+    private val uri: Uri,
 ) : StreamReceiver {
     //Create a default TrackSelector
     private val trackSelector = DefaultTrackSelector(activity, AdaptiveTrackSelection.Factory())
@@ -33,7 +34,7 @@ class ExoReceiver(
 
         .build()
 
-    override fun play(uri: Uri) {
+    override fun play() {
         playerView.player = player
         playerView.requestFocus()
 

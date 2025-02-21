@@ -29,7 +29,7 @@ class GStreamerReceiver(
         pipeline,
     )
 
-    override fun play(uri: Uri) {
+    override fun play() {
         gStreamerFacade.play()
     }
 

@@ -36,10 +36,10 @@ class StreamingProcess(
         return gStreamerReceiverSingleton
     }
 
-    fun start(streamUri:Uri) {
+    fun start() {
         gSurfaceView.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {
-                streamReceiver.play(streamUri)
+                streamReceiver.play()
             }
 
             override fun surfaceDestroyed(holder: SurfaceHolder) {
@@ -49,12 +49,12 @@ class StreamingProcess(
             override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
                 streamReceiver.release()
                 streamReceiver = createReceiver()
-                streamReceiver.play(streamUri)
+                streamReceiver.play()
             }
         })
 
         if (!gSurfaceView.holder.isCreating) {
-            streamReceiver.play(streamUri)
+            streamReceiver.play()
         }
 
     }

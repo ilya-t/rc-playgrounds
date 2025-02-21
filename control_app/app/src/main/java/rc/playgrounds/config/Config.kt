@@ -14,12 +14,6 @@ class Config(
             JSONObject(rawJson)
         }.getOrElse { JSONObject() }
     }
-
-    val streamUrl: String?
-        get() = runCatching {
-                json.getJSONObject("stream").getString("url")
-            }.getOrNull()
-
     val remoteStreamCmd: String
         get() = runCatching {
             json.getJSONObject("stream").getString("remote_cmd")

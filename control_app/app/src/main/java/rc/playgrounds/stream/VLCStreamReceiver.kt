@@ -13,7 +13,9 @@ import java.io.FileOutputStream
 import java.io.IOException
 
 class VLCStreamReceiver(context: Context,
-                        private val surfaceView: SurfaceView) : StreamReceiver {
+                        private val surfaceView: SurfaceView,
+                        private var uri: Uri,
+) : StreamReceiver {
     private val libVLC: LibVLC
     private val mediaPlayer: MediaPlayer
     private val sizeChangeObservation: SurfaceHolder.Callback
@@ -58,7 +60,8 @@ class VLCStreamReceiver(context: Context,
 
     fun playFromAsset(c: Context, path: String) {
         val assetPath = copyAsset(c, path)
-        play(Uri.parse("file://$assetPath"))
+        uri = Uri.parse("file://$assetPath")
+        play()
     }
 
     private fun copyAsset(context: Context, assetFileName: String): String? {
@@ -82,7 +85,7 @@ class VLCStreamReceiver(context: Context,
         return null
     }
 
-    override fun play(uri: Uri) {
+    override fun play() {
         val media = Media(libVLC, uri)
 
         // Ensure correct H.264 processing

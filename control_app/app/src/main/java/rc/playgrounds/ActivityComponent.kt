@@ -77,11 +77,6 @@ class ActivityComponent(
     }
 
     private fun start() {
-        val url: String = appComponent.configModel.configFlow.value.streamUrl ?: run {
-            Static.output("No stream url passed!")
-            android.util.Log.i("VLC", "No stream url passed!")
-            return
-        }
         streamingProcess?.release()
         streamingProcess = StreamingProcess(
             appComponent.configModel,
@@ -89,11 +84,10 @@ class ActivityComponent(
 //            textureView,
 //            playerView,
 //            surfaceView,
-            gSurfaceView)
-        streamingProcess?.start(Uri.parse(url))
-        Static.output("Receiving stream at: $url")
             gSurfaceView,
             )
+        streamingProcess?.start()
+        Static.output("Receiving stream!")
 
         gamepadEventEmitter.restart()
     }
