@@ -25,6 +25,11 @@ class Config(
             json.getJSONObject("stream").getString("remote_cmd")
         }.getOrElse { "" }
 
+    val streamLocalCmd: String
+        get() = runCatching {
+            json.getJSONObject("stream").getString("local_cmd")
+        }.getOrElse { "" }
+
     val controlServer: ControlServer? by lazy {
         runCatching {
             val t = json.getJSONObject("control_server")

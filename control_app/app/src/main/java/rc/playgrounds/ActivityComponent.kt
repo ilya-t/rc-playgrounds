@@ -83,13 +83,17 @@ class ActivityComponent(
             return
         }
         streamingProcess?.release()
-        streamingProcess = StreamingProcess(a,
+        streamingProcess = StreamingProcess(
+            appComponent.configModel,
+            a,
 //            textureView,
 //            playerView,
 //            surfaceView,
             gSurfaceView)
         streamingProcess?.start(Uri.parse(url))
         Static.output("Receiving stream at: $url")
+            gSurfaceView,
+            )
 
         gamepadEventEmitter.restart()
     }

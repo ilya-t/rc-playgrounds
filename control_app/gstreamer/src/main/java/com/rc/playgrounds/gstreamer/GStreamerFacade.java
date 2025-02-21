@@ -32,7 +32,7 @@ public class GStreamerFacade {
         }
     };
 
-    private native void nativeInit();     // Initialize native code, build pipeline, etc
+    private native void nativeInit(String pipelineDesc);// Initialize native code, build pipeline, etc
     private native void nativeFinalize(); // Destroy pipeline and shutdown native code
     private native void nativePlay();     // Set pipeline to PLAYING
     private native void nativePause();    // Set pipeline to PAUSED
@@ -47,7 +47,8 @@ public class GStreamerFacade {
     public GStreamerFacade(
             Context context,
             SurfaceView surfaceView,
-            Logger logger) {
+            Logger logger,
+            String pipeline) {
         this.logger = logger;
         this.surfaceView = surfaceView;
         // Initialize GStreamer and warn if it fails
@@ -59,9 +60,7 @@ public class GStreamerFacade {
         }
 
         surfaceView.getHolder().addCallback(surfaceCallbacks);
-        nativeInit();
-
-
+        nativeInit(pipeline);
     }
 
     public void play() {

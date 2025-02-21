@@ -10,6 +10,7 @@ import com.testspace.core.Static
 class GStreamerReceiver(
     activity: AppCompatActivity,
     surfaceView: SurfaceView,
+    pipeline: String,
 ) : StreamReceiver {
     private val logger = object : Logger {
         override fun logError(e: Exception) {
@@ -25,6 +26,7 @@ class GStreamerReceiver(
         activity,
         surfaceView,
         logger,
+        pipeline,
     )
 
     override fun play(uri: Uri) {

@@ -32,6 +32,7 @@ typedef struct _CustomData {
   gboolean initialized;   /* To avoid informing the UI multiple times about the initialization */
   GstElement *video_sink; /* The video sink element which receives XOverlay commands */
   ANativeWindow *native_window; /* The Android native window where video will be rendered */
+  gchar *pipeline_description; /* Pipeline description string */
 } CustomData;
 
 /* These global variables cache values which are not changing during execution */
@@ -157,7 +158,9 @@ static void *app_function (void *userdata) {
 
   /* Build pipeline */
   // pipeline suitable for receiving stream: `gst-launch-1.0 fdsrc ! h264parse ! rtph264pay ! udpsink host=192.168.1.48 port=12345`
-  data->pipeline = gst_parse_launch("udpsrc port=12345 caps=\"application/x-rtp, media=video, encoding-name=H264, payload=96\" ! rtph264depay ! h264parse ! decodebin ! videoconvert ! autovideosink", &error);
+  /* Build pipeline from provided description */
+  data->pipeline = gst_parse_launch(data->pipeline_description, &error);
+//  data->pipeline = gst_parse_launch("udpsrc port=12345 caps=\"application/x-rtp, media=video, encoding-name=H264, payload=96\" ! rtph264depay ! h264parse ! decodebin ! videoconvert ! autovideosink", &error);
   if (error) {
     gchar *message = g_strdup_printf("Unable to build pipeline: %s", error->message);
     g_clear_error (&error);
@@ -200,16 +203,13 @@ static void *app_function (void *userdata) {
   gst_element_set_state (data->pipeline, GST_STATE_NULL);
   gst_object_unref (data->video_sink);
   gst_object_unref (data->pipeline);
+  g_free (data->pipeline_description);
 
   return NULL;
 }
 
-/*
- * Java Bindings
- */
-
-/* Instruct the native code to create its internal data structure, pipeline and thread */
-static void gst_native_init (JNIEnv* env, jobject thiz) {
+/* Instruct the native code to create its internal data structure, pipeline, and thread */
+static void gst_native_init(JNIEnv* env, jobject thiz, jstring pipeline_desc) {
   CustomData *data = g_new0 (CustomData, 1);
   SET_CUSTOM_DATA (env, thiz, custom_data_field_id, data);
   GST_DEBUG_CATEGORY_INIT (debug_category, "rtsp-example", 0, "Android RTSP example");
@@ -217,6 +217,11 @@ static void gst_native_init (JNIEnv* env, jobject thiz) {
   GST_DEBUG ("Created CustomData at %p", data);
   data->app = (*env)->NewGlobalRef (env, thiz);
   GST_DEBUG ("Created GlobalRef for app object at %p", data->app);
+
+  const char *pipeline_cstr = (*env)->GetStringUTFChars(env, pipeline_desc, NULL);
+  data->pipeline_description = g_strdup(pipeline_cstr);
+  (*env)->ReleaseStringUTFChars(env, pipeline_desc, pipeline_cstr);
+
   pthread_create (&gst_app_thread, NULL, &app_function, data);
 }
 
@@ -310,7 +315,7 @@ static void gst_native_surface_finalize (JNIEnv *env, jobject thiz) {
 
 /* List of implemented native methods */
 static JNINativeMethod native_methods[] = {
-  { "nativeInit", "()V", (void *) gst_native_init},
+  { "nativeInit", "(Ljava/lang/String;)V", (void *) gst_native_init},
   { "nativeFinalize", "()V", (void *) gst_native_finalize},
   { "nativePlay", "()V", (void *) gst_native_play},
   { "nativePause", "()V", (void *) gst_native_pause},

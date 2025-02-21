@@ -5,8 +5,10 @@ import android.net.Uri
 import android.view.SurfaceHolder
 import androidx.appcompat.app.AppCompatActivity
 import org.freedesktop.gstreamer.GStreamerSurfaceView
+import rc.playgrounds.config.ConfigModel
 
 class StreamingProcess(
+    private val configModel: ConfigModel,
     private val activity: AppCompatActivity,
 //    private val textureView: TextureView,
 //    private val playerView: PlayerView,
@@ -17,6 +19,7 @@ class StreamingProcess(
     private val gStreamerReceiverSingleton = GStreamerReceiver(
         activity,
         gSurfaceView,
+        configModel.configFlow.value.streamLocalCmd,
     )
     private var streamReceiver = createReceiver()
 

@@ -56,7 +56,6 @@ private const val REMOTE_CMD = FAKE_SRC_STREAM_CMD
 private const val DEFAULT_CONFIG = """
 {
   "stream": {
-    "url": "udp://@:12345",
     "remote_cmd": "$REMOTE_CMD",
     "local_cmd": "udpsrc port=12345 caps=\"application/x-rtp, media=video, encoding-name=H264, payload=96\" ! rtph264depay ! h264parse ! decodebin ! videoconvert ! autovideosink"
   },
