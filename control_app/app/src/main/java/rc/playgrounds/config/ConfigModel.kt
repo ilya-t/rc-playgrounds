@@ -40,10 +40,15 @@ class ConfigModel(
 }
 
 private const val STORAGE_KEY = "config"
-private const val SERVER_ADDR = "10.0.2.2"
-private const val SERVER_STREAM_TARGET = "0.0.0.0"
+
+// m1+pixel setup
+private const val SERVER_ADDR = "192.168.1.182"
+private const val SERVER_STREAM_TARGET = "192.168.1.181"
+
+// defaults setup
 //private const val SERVER_ADDR = "192.168.2.2"
 //private const val SERVER_STREAM_TARGET = "192.168.2.5"
+
 private const val RASPIVID_SRC_STREAM_CMD = "raspivid -pf baseline -awb cloud -fl -g 1 -w 320 -h 240 --nopreview -fps 30/1 -t 0 -o - | gst-launch-1.0 fdsrc ! h264parse ! rtph264pay ! udpsink host=$SERVER_STREAM_TARGET port=12345"
 private const val FAKE_SRC_STREAM_CMD = "python3 fake_video_stream.py | gst-launch-1.0 --verbose fdsrc ! h264parse ! rtph264pay ! udpsink host=$SERVER_STREAM_TARGET port=12345"
 private const val REMOTE_CMD = FAKE_SRC_STREAM_CMD
@@ -52,7 +57,8 @@ private const val DEFAULT_CONFIG = """
 {
   "stream": {
     "url": "udp://@:12345",
-    "remote_cmd": "$REMOTE_CMD"
+    "remote_cmd": "$REMOTE_CMD",
+    "local_cmd": "udpsrc port=12345 caps=\"application/x-rtp, media=video, encoding-name=H264, payload=96\" ! rtph264depay ! h264parse ! decodebin ! videoconvert ! autovideosink"
   },
   "control_server": {
     "address": "$SERVER_ADDR",
