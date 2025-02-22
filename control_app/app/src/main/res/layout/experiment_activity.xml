@@ -17,6 +17,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:layout_alignParentBottom="true"
+        android:maxLines="1"
         android:paddingBottom="16dp"
         />
 </RelativeLayout>

@@ -89,7 +89,7 @@ private class SteeringEmitter(
     private val job = scope.launch {
         var messageStream: Job? = null
         messages.collect { m ->
-            Static.output(JSONObject(m).toString(4))
+            Static.output(JSONObject(m).toString())
             messageStream?.cancel()
             messageStream = scope.launch {
                 while (isActive) {

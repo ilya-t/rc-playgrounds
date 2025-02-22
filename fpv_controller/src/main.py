@@ -7,8 +7,8 @@ import os
 
 UDP_IP = "0.0.0.0"  # All interfaces
 UDP_PORT = 12346
-# STREAM_DST_IP = '192.168.2.5'
-STREAM_DST_IP = '192.168.1.181'
+STREAM_DST_IP = '192.168.2.5'
+# STREAM_DST_IP = '192.168.1.181'
 # STREAM_DST_IP = '0.0.0.0'
 
 PWM_YAW_PIN = 18    # GPIO18 (PWM0)
