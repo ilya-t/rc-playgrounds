@@ -1,7 +1,7 @@
 package rc.playgrounds.stream
 
-import android.net.Uri
 import android.view.SurfaceView
+import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import com.rc.playgrounds.gstreamer.GStreamerFacade
 import com.rc.playgrounds.gstreamer.Logger
@@ -9,7 +9,7 @@ import com.testspace.core.Static
 
 class GStreamerReceiver(
     activity: AppCompatActivity,
-    surfaceView: SurfaceView,
+    private val surfaceContainer: ViewGroup,
     pipeline: String,
 ) : StreamReceiver {
     private val logger = object : Logger {
@@ -21,6 +21,8 @@ class GStreamerReceiver(
             Static.output("GStreamer: " + message)
         }
     }
+
+    private val surfaceView = createSurfaceAt(surfaceContainer)
 
     private val gStreamerFacade = GStreamerFacade(
         activity,
@@ -34,7 +36,15 @@ class GStreamerReceiver(
     }
 
     override fun release() {
-        // Runtime release not yet supported :(
-//        gStreamerFacade.close()
+        gStreamerFacade.close()
+        surfaceContainer.removeAllViews()
     }
+}
+
+private fun createSurfaceAt(container: ViewGroup): SurfaceView {
+    container.removeAllViews()
+    val surfaceView = SurfaceView(container.context)
+    container.addView(surfaceView, ViewGroup.LayoutParams(
+        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+    return surfaceView
 }

@@ -1,9 +1,9 @@
 package rc.playgrounds
 
-import android.net.Uri
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatEditText
@@ -13,7 +13,6 @@ import androidx.lifecycle.lifecycleScope
 import com.testspace.R
 import com.testspace.core.Static
 import kotlinx.coroutines.launch
-import org.freedesktop.gstreamer.GStreamerSurfaceView
 import rc.playgrounds.config.ConfigView
 import rc.playgrounds.control.gamepad.GamepadEventEmitter
 import rc.playgrounds.navigation.NaiveNavigator
@@ -23,10 +22,7 @@ class ActivityComponent(
     private val appComponent: AppComponent,
     private val a: AppCompatActivity,
 ) {
-//    private val playerView = a.findViewById<PlayerView>(R.id.player_view)
-//    private val surfaceView = a.findViewById<SurfaceView>(R.id.surface_view)
-    private val gSurfaceView = a.findViewById<GStreamerSurfaceView>(R.id.g_surface_view)
-//    private val textureView = a.findViewById<TextureView>(R.id.texture_view)
+    private val surfaceContainer = a.findViewById<ViewGroup>(R.id.surface_container)
     private val resetButton = a.findViewById<View>(R.id.reset_button)
     private val saveButton = a.findViewById<Button>(R.id.save_button)
     private val backButton = a.findViewById<Button>(R.id.back_button)
@@ -81,10 +77,7 @@ class ActivityComponent(
         streamingProcess = StreamingProcess(
             appComponent.configModel,
             a,
-//            textureView,
-//            playerView,
-//            surfaceView,
-            gSurfaceView,
+            surfaceContainer,
             )
         streamingProcess?.start()
         Static.output("Receiving stream!")

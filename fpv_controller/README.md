@@ -50,3 +50,8 @@ gst-launch-1.0 \
     host=192.168.1.48 \
     port=12345 \
 ```
+
+Or:
+```sh
+./run --dry-run
+```

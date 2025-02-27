@@ -1,26 +1,35 @@
 package rc.playgrounds.stream
 
+import a.debug.stuff.ControlPanel
 import android.annotation.SuppressLint
 import android.net.Uri
 import android.view.SurfaceHolder
+import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
+import com.testspace.core.Static
 import org.freedesktop.gstreamer.GStreamerSurfaceView
 import rc.playgrounds.config.ConfigModel
 
 class StreamingProcess(
     private val configModel: ConfigModel,
     private val activity: AppCompatActivity,
-//    private val textureView: TextureView,
-//    private val playerView: PlayerView,
-//    private val surfaceView: SurfaceView,
-    private val gSurfaceView: GStreamerSurfaceView,
+    private val surfaceContainer: ViewGroup,
 ) {
-    // GStreamerReceiver currently cannot survive release.
-    private val gStreamerReceiverSingleton = GStreamerReceiver(
-        activity,
-        gSurfaceView,
-        configModel.configFlow.value.streamLocalCmd,
-    )
+    init {
+        ControlPanel.setup(activity)
+            .trigger("release") {
+                streamReceiver.release()
+                ControlPanel.setup(activity).print("RELEASED!")
+            }
+            .trigger("create") {
+                streamReceiver = createReceiver()
+                ControlPanel.setup(activity).print("CREATED!")
+            }
+            .trigger("play") {
+                streamReceiver.play()
+                ControlPanel.setup(activity).print("PLAYING!")
+            }
+    }
     private var streamReceiver = createReceiver()
 
     @SuppressLint("UnsafeOptInUsageError")
@@ -33,30 +42,16 @@ class StreamingProcess(
 //            activity,
 //            surfaceView
 //        )
-        return gStreamerReceiverSingleton
+
+        return GStreamerReceiver(
+            activity,
+            surfaceContainer,
+            configModel.configFlow.value.streamLocalCmd,
+        )
     }
 
     fun start() {
-        gSurfaceView.holder.addCallback(object : SurfaceHolder.Callback {
-            override fun surfaceCreated(holder: SurfaceHolder) {
-                streamReceiver.play()
-            }
-
-            override fun surfaceDestroyed(holder: SurfaceHolder) {
-                streamReceiver.release()
-            }
-
-            override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
-                streamReceiver.release()
-                streamReceiver = createReceiver()
-                streamReceiver.play()
-            }
-        })
-
-        if (!gSurfaceView.holder.isCreating) {
-            streamReceiver.play()
-        }
-
+        streamReceiver.play()
     }
 
     fun release() {
