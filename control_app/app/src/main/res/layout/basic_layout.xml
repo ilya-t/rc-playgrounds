@@ -8,7 +8,15 @@
         android:id="@+id/layer_config"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:paddingTop="48dp"
         android:visibility="gone">
+        <Button
+            android:id="@+id/ok_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:text="[OK]"/>
+
         <androidx.appcompat.widget.AppCompatEditText
             android:id="@+id/config_input"
             android:layout_width="match_parent"
@@ -16,6 +24,7 @@
             android:hint="Paste JSON Config here"
             android:imeOptions="actionDone"
             android:layout_above="@+id/config_controls"
+            android:layout_below="@+id/ok_button"
             />
         <LinearLayout
             android:id="@+id/config_controls"

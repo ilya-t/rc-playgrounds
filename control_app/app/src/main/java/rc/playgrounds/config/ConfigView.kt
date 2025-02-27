@@ -1,7 +1,10 @@
 package rc.playgrounds.config
 
+import android.content.Context
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import androidx.appcompat.widget.AppCompatEditText
 import kotlinx.coroutines.CoroutineScope
@@ -12,6 +15,7 @@ import rc.playgrounds.navigation.NaiveNavigator
 
 class ConfigView(
     private val configInput: AppCompatEditText,
+    private val okButton: Button,
     private val saveButton: Button,
     private val backButton: Button,
     private val configModel: ConfigModel,
@@ -35,6 +39,13 @@ class ConfigView(
         }
         backButton.setOnClickListener {
             navigator.openMain()
+            hideKeyboard(configInput)
+        }
+        okButton.setOnClickListener {
+            configModel.updateConfig(configInput.text.toString())
+            saveButton.isEnabled = false
+            navigator.openMain()
+            hideKeyboard(configInput)
         }
 
         configInput.addTextChangedListener(object : TextWatcher {
@@ -53,4 +64,8 @@ class ConfigView(
 
         })
     }
-}
+
+    private fun hideKeyboard(view: View) {
+        val imm = view.context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+        imm?.hideSoftInputFromWindow(view.windowToken, 0)
+    }}

@@ -26,12 +26,14 @@ class ActivityComponent(
     private val resetButton = a.findViewById<View>(R.id.reset_button)
     private val saveButton = a.findViewById<Button>(R.id.save_button)
     private val backButton = a.findViewById<Button>(R.id.back_button)
+    private val okButton = a.findViewById<Button>(R.id.ok_button)
     private val configureButton = a.findViewById<Button>(R.id.configure_button)
     private val configInput: AppCompatEditText = a.findViewById(R.id.config_input)
     private var streamingProcess: StreamingProcess? = null
     private val navigator = NaiveNavigator(a)
     private val configView = ConfigView(
         configInput,
+        okButton,
         saveButton,
         backButton,
         appComponent.configModel,
