@@ -12,6 +12,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.testspace.R
 import com.testspace.core.Static
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import rc.playgrounds.config.ConfigView
 import rc.playgrounds.control.gamepad.GamepadEventEmitter
@@ -69,7 +70,12 @@ class ActivityComponent(
     private fun doReset() {
         release()
         start()
-        appComponent.streamCmdHash.invalidate()
+        a.lifecycleScope.launch {
+            // Give a small delay before stream restart on remote
+            // so our stream receiver won't miss first frame.
+            delay(500L)
+            appComponent.streamCmdHash.invalidate()
+        }
     }
 
     private fun start() {
