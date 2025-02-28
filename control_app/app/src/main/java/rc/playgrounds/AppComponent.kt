@@ -7,6 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import rc.playgrounds.config.ConfigModel
 import rc.playgrounds.control.SteeringController
 import rc.playgrounds.control.gamepad.GamepadEventStream
+import rc.playgrounds.stream.StreamCmdHash
 import rc.playgrounds.storage.PersistentStorage
 
 class AppComponent(app: App) {
@@ -18,10 +19,12 @@ class AppComponent(app: App) {
     )
 
     val gamepadEventStream = GamepadEventStream()
+    val streamCmdHash = StreamCmdHash()
     private val steeringController = SteeringController(
         gamepadEventStream,
         scope,
         configModel,
+        streamCmdHash,
     )
 
     companion object {

@@ -4,6 +4,7 @@ import argparse
 import time
 import subprocess
 import os
+import signal
 
 UDP_IP = "0.0.0.0"  # All interfaces
 UDP_PORT = 12346
@@ -33,6 +34,7 @@ class Controller:
         else:
             self._pi_handler = PiHandler()
         self._last_stream_cmd = ""
+        self._stream_cmd_hash = ""
         self.stream_process = None
         
         if not self._pi_handler.connected():
@@ -74,15 +76,20 @@ class Controller:
         print(f'===> Starting stream with command: {command}')
         python_script_path = os.path.dirname(__file__)
         with open("/tmp/fpv_controller_stream.log", "a") as log_file:
-            self.stream_process = subprocess.Popen(command, shell=True, 
-                                                   stdout=log_file, stderr=log_file,
-                                                   cwd=python_script_path)
+            self.stream_process = subprocess.Popen(
+                command, shell=True, stdout=log_file, stderr=log_file,
+                cwd=python_script_path, preexec_fn=os.setpgrp
+            )
 
     def stop_stream(self):
         if self.stream_process:
             print("===> Stopping stream")
-            self.stream_process.terminate()
-            self.stream_process.wait()
+            try:
+                os.killpg(self.stream_process.pid, signal.SIGTERM)  # Kill the process group
+            except ProcessLookupError:
+                pass  # Process may have already exited
+
+            self.stream_process.wait()  # Ensure process is fully terminated
             self.stream_process = None
 
     def stop_servo_pulse(self):
@@ -100,6 +107,7 @@ class Controller:
             steer = msg.get("steer", 0)   # -1..1
             long = msg.get("long", 0) + 0.18    # -1..1
             stream_cmd = msg.get("stream_cmd", "") 
+            stream_cmd_hash = msg.get("stream_cmd_hash", "") 
 
             if not all(-1 <= v <= 1 for v in [yaw, pitch, steer, long]):
                 print(f"Incorrect data: {msg}")
@@ -116,11 +124,21 @@ class Controller:
             self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(PWM_LONG_PIN, pwm_long))
             print(f"Received: yaw={yaw}, pitch={pitch}, steer={steer}, long={long} => PWM: {pwm_yaw}, {pwm_pitch}, {pwm_steer}, {pwm_long}")
 
-            if stream_cmd and len(stream_cmd) > 0 and stream_cmd != self._last_stream_cmd:
-                self.start_stream(stream_cmd)
-                self._last_stream_cmd = stream_cmd
+            self._try_update_stream(stream_cmd, stream_cmd_hash)
+            
         except json.JSONDecodeError:
             print("JSON parsing error:", data.decode("utf-8"))
+
+    def _try_update_stream(self, cmd: str, hash: str) -> None:
+        if not cmd or len(cmd) == 0:
+            return
+        
+        if hash == self._stream_cmd_hash and cmd == self._last_stream_cmd:
+            return
+        
+        self._stream_cmd_hash = hash
+        self._last_stream_cmd = cmd
+        self.start_stream(cmd)
 
     def start(self):
         last_received_time = time.time()

@@ -2,7 +2,6 @@ package rc.playgrounds.control
 
 import android.graphics.PointF
 import android.view.animation.AccelerateInterpolator
-import androidx.annotation.AttrRes
 import com.testspace.core.Static
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -13,7 +12,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.json.JSONObject
@@ -24,6 +22,7 @@ import rc.playgrounds.config.model.ControlServer
 import rc.playgrounds.config.model.ControlTuning
 import rc.playgrounds.control.gamepad.GamepadEvent
 import rc.playgrounds.control.gamepad.GamepadEventStream
+import rc.playgrounds.stream.StreamCmdHash
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetAddress
@@ -35,7 +34,8 @@ class SteeringController(
     private val gamepadEventStream: GamepadEventStream,
     private val scope: CoroutineScope,
     private val configModel: ConfigModel,
-    ) {
+    private val streamCmdHash: StreamCmdHash,
+) {
 
     private val controlServer = MutableStateFlow<ControlServer?>(null)
     private var emitter: SteeringEmitter? = null
@@ -65,6 +65,7 @@ class SteeringController(
                 scope,
                 gamepadEventStream,
                 configModel.configFlow,
+                streamCmdHash.hash,
             )
         }
     }
@@ -75,15 +76,18 @@ private class SteeringEmitter(
     private val scope: CoroutineScope,
     private val gamepadEventStream: GamepadEventStream,
     private val configFlow: StateFlow<Config>,
+    private val streamCmdHash: Flow<String>,
 ) {
     private val messages: Flow<String> = combine(
         configFlow,
         gamepadEventStream.events,
-    ) { config: Config, event: GamepadEvent ->
+        streamCmdHash,
+    ) { config: Config, event: GamepadEvent, streamHash: String ->
         asSteeringEvent(event,
             offsets = config.controlOffsets,
             interpolation = config.controlTuning.asInterpolation(),
             streamCmd = config.remoteStreamCmd,
+            streamCmdHash = streamHash,
         )
     }
     private val job = scope.launch {
@@ -119,6 +123,7 @@ private class SteeringEmitter(
         offsets: ControlOffsets,
         interpolation: ControlInterpolation,
         streamCmd: String,
+        streamCmdHash: String,
     ): String {
         val rawPitch = -event.rightStickY + offsets.pitch
         val rawYaw = event.rightStickX + offsets.yaw
@@ -138,6 +143,7 @@ private class SteeringEmitter(
             .put("steer", interpolation.fixSteer(rawSteer)) // -1..1
             .put("long", interpolation.fixLong(rawLong)) // -1..1
             .put("stream_cmd", streamCmd)
+            .put("stream_cmd_hash", streamCmdHash)
         return json.toString()
     }
 

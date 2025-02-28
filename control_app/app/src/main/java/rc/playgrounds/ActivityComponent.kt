@@ -49,7 +49,6 @@ class ActivityComponent(
             }
         }
 
-
         resetButton.setOnClickListener {
             doReset()
         }
@@ -58,9 +57,7 @@ class ActivityComponent(
             override fun onDestroy(owner: LifecycleOwner) {
                 release()
             }
-
         })
-
 
         configureButton.setOnClickListener {
             navigator.openConfig()
@@ -72,6 +69,7 @@ class ActivityComponent(
     private fun doReset() {
         release()
         start()
+        appComponent.streamCmdHash.invalidate()
     }
 
     private fun start() {
