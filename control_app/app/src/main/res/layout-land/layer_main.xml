@@ -23,6 +23,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:focusable="false"
             android:text="R\nE\nS\nE\nT" />
 
         <Button
@@ -30,6 +31,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:focusable="false"
             android:text="C\nO\nN\nF\nI\nG\nU\nR\nE" />
     </LinearLayout>
 </RelativeLayout>
