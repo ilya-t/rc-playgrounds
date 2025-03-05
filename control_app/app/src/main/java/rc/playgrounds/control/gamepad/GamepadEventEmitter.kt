@@ -11,7 +11,7 @@ class GamepadEventEmitter(
 ) {
 
     fun restart() {
-//        TODO("Not yet implemented")
+        eventStream.emit(GamepadEvent.INITIAL)
     }
 
     fun onGenericMotionEvent(event: MotionEvent): Boolean {
