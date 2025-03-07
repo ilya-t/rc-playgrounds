@@ -80,10 +80,10 @@ private const val DEFAULT_CONFIG = """
     "steer_factor": 1.0,
     "steer_zone": "0..0.7",
     "long_factor": 0.5,
-    "long_zone": "0.01..1.0",
     "long_zones": {
-        "0": "0.01",
-        "1": "0.7"
+        "0.0": "0.01",
+        "0.5": "0.2",
+        "1.0": "0.7"
     }
   }
 }    

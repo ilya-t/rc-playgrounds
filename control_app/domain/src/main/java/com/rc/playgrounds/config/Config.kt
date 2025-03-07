@@ -69,7 +69,6 @@ class Config(
                 steerFactor = t.optDouble("steer_factor").toFloat(),
                 steerZone = parseZone(t.optString("steer_zone")),
                 longFactor = t.optDouble("long_factor").toFloat(),
-                longZone = parseZone(t.optString("long_zone")),
                 longZones = parseZones(t.optJSONObject("long_zones")),
             )
         }
@@ -83,7 +82,6 @@ class Config(
                 steerFactor = null,
                 steerZone = null,
                 longFactor = null,
-                longZone = null,
                 longZones = emptyList(),
             )
         }

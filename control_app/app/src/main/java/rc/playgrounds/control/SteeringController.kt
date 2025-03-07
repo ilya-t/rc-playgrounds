@@ -79,18 +79,31 @@ private class SteeringEmitter(
         gamepadEventStream.events,
         streamCmdHash,
     ) { config: com.rc.playgrounds.config.Config, event: GamepadEvent, streamHash: String ->
-        asSteeringEvent(
+        val steeringEvent: JSONObject = asSteeringEvent(
             event,
             offsets = config.controlOffsets,
             interpolation = config.controlTuning.asInterpolation(),
             streamCmd = config.remoteStreamCmd,
             streamCmdHash = streamHash,
         )
+        printEvent(steeringEvent, event)
+        steeringEvent.toString()
     }
+
+    // long: 0.1 (raw: 0.5) steer: 0.0 (raw: 0.0) pitch: ... yaw: ...
+    private fun printEvent(se: JSONObject, e: GamepadEvent) {
+        val long: Double = se.optDouble("long")
+        val text =
+            "long: %.2f (raw: %.2f) ".format(long, if (long > 0) e.rightTrigger else e.leftTrigger) +
+            "steer: %.2f (raw: %.2f) ".format(se.optDouble("steer"), -e.leftStickX) +
+            "pitch: %.2f (raw: %.2f) ".format(se.optDouble("pitch"), -e.rightStickY) +
+            "yaw: %.2f (raw: %.2f)".format(se.optDouble("yaw"), e.rightStickX)
+        Static.output(text)
+    }
+
     private val job = scope.launch {
         var messageStream: Job? = null
         messages.collect { m ->
-            Static.output(JSONObject(m).toString())
             messageStream?.cancel()
             messageStream = scope.launch {
                 while (isActive) {
@@ -121,7 +134,7 @@ private class SteeringEmitter(
         interpolation: ControlInterpolation,
         streamCmd: String,
         streamCmdHash: String,
-    ): String {
+    ): JSONObject {
         val rawPitch = -event.rightStickY + offsets.pitch
         val rawYaw = event.rightStickX + offsets.yaw
         val rawSteer = -event.leftStickX + offsets.steer
@@ -141,7 +154,7 @@ private class SteeringEmitter(
             .put("long", interpolation.fixLong(rawLong)) // -1..1
             .put("stream_cmd", streamCmd)
             .put("stream_cmd_hash", streamCmdHash)
-        return json.toString()
+        return json
     }
 
     fun stop() {
@@ -202,7 +215,7 @@ private fun com.rc.playgrounds.config.model.ControlTuning.asInterpolation() = Co
     longTranslator = if (longZones.isNotEmpty()) {
         create(longZones)
     } else {
-        create(longZone)
+        create(PointF(0f,1f))
     },
 )
 
@@ -211,7 +224,7 @@ fun create(longZones: List<com.rc.playgrounds.config.model.MappingZone>): (Float
         longZones
             .find { input >= it.src.x && input <= it.src.y }
             ?.let {
-                translate(input, it.src.x, it.src.x, it.dst.x, it.dst.y)
+                translate(input, it.src.x, it.src.y, it.dst.x, it.dst.y)
             }
             ?: input
     }

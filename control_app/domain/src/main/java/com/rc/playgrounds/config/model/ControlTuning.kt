@@ -10,6 +10,5 @@ data class ControlTuning(
     val steerFactor: Float?,
     val steerZone: PointF?,
     val longFactor: Float?,
-    val longZone: PointF?,
     val longZones: List<MappingZone>,
 )
