@@ -14,8 +14,12 @@ class ConfigModel(
     scope: CoroutineScope,
     private val storage: PersistentStorage,
 ) {
-    private val _configFlow = MutableStateFlow<Config>(Config(DEFAULT_CONFIG))
-    val configFlow: StateFlow<Config> = _configFlow
+    private val _configFlow = MutableStateFlow<com.rc.playgrounds.config.Config>(
+        com.rc.playgrounds.config.Config(
+            DEFAULT_CONFIG
+        )
+    )
+    val configFlow: StateFlow<com.rc.playgrounds.config.Config> = _configFlow
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val scope = scope + Dispatchers.IO.limitedParallelism(1)
@@ -26,7 +30,7 @@ class ConfigModel(
                 return@launch
             }
 
-            _configFlow.value =  Config(json)
+            _configFlow.value = com.rc.playgrounds.config.Config(json)
             storage.writeString(STORAGE_KEY, json)
         }
     }
@@ -34,7 +38,7 @@ class ConfigModel(
     init {
         scope.launch {
             val config = storage.readString(STORAGE_KEY).takeIf { it?.isNotEmpty() == true } ?: DEFAULT_CONFIG
-            _configFlow.value = Config(config)
+            _configFlow.value = com.rc.playgrounds.config.Config(config)
         }
     }
 }
@@ -76,7 +80,11 @@ private const val DEFAULT_CONFIG = """
     "steer_factor": 1.0,
     "steer_zone": "0..0.7",
     "long_factor": 0.5,
-    "long_zone": "0.01..1.0"
+    "long_zone": "0.01..1.0",
+    "long_zones": {
+        "0": "0.01",
+        "1": "0.7"
+    }
   }
 }    
 """

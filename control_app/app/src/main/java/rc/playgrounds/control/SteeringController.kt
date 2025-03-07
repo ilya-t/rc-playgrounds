@@ -15,11 +15,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.json.JSONObject
-import rc.playgrounds.config.Config
 import rc.playgrounds.config.ConfigModel
-import rc.playgrounds.config.model.ControlOffsets
-import rc.playgrounds.config.model.ControlServer
-import rc.playgrounds.config.model.ControlTuning
 import rc.playgrounds.control.gamepad.GamepadEvent
 import rc.playgrounds.control.gamepad.GamepadEventStream
 import rc.playgrounds.stream.StreamCmdHash
@@ -37,7 +33,7 @@ class SteeringController(
     private val streamCmdHash: StreamCmdHash,
 ) {
 
-    private val controlServer = MutableStateFlow<ControlServer?>(null)
+    private val controlServer = MutableStateFlow<com.rc.playgrounds.config.model.ControlServer?>(null)
     private var emitter: SteeringEmitter? = null
 
     init {
@@ -56,7 +52,7 @@ class SteeringController(
         }
     }
 
-    private fun restart(c: ControlServer?) {
+    private fun restart(c: com.rc.playgrounds.config.model.ControlServer?) {
         emitter?.stop()
         emitter = null
         c?.let {
@@ -72,18 +68,19 @@ class SteeringController(
 }
 
 private class SteeringEmitter(
-    val config: ControlServer,
+    val config: com.rc.playgrounds.config.model.ControlServer,
     private val scope: CoroutineScope,
     private val gamepadEventStream: GamepadEventStream,
-    private val configFlow: StateFlow<Config>,
+    private val configFlow: StateFlow<com.rc.playgrounds.config.Config>,
     private val streamCmdHash: Flow<String>,
 ) {
     private val messages: Flow<String> = combine(
         configFlow,
         gamepadEventStream.events,
         streamCmdHash,
-    ) { config: Config, event: GamepadEvent, streamHash: String ->
-        asSteeringEvent(event,
+    ) { config: com.rc.playgrounds.config.Config, event: GamepadEvent, streamHash: String ->
+        asSteeringEvent(
+            event,
             offsets = config.controlOffsets,
             interpolation = config.controlTuning.asInterpolation(),
             streamCmd = config.remoteStreamCmd,
@@ -120,7 +117,7 @@ private class SteeringEmitter(
 
     private fun asSteeringEvent(
         event: GamepadEvent,
-        offsets: ControlOffsets,
+        offsets: com.rc.playgrounds.config.model.ControlOffsets,
         interpolation: ControlInterpolation,
         streamCmd: String,
         streamCmdHash: String,
@@ -169,16 +166,20 @@ private class ControlInterpolation(
     fun fixYaw(value: Float): Float {
         return fix(yaw, yawTranslator, value)
     }
+
     fun fixSteer(value: Float): Float {
         return fix(steer, steerTranslator, value)
     }
+
     fun fixLong(value: Float): Float {
         return fix(long, longTranslator, value)
     }
 
-    private fun fix(interpolator: AccelerateInterpolator?,
-                    translator: (Float) -> Float,
-                    value: Float): Float {
+    private fun fix(
+        interpolator: AccelerateInterpolator?,
+        translator: (Float) -> Float,
+        value: Float
+    ): Float {
         val translatedValue = translator(value)
         if (interpolator == null) {
             return translatedValue
@@ -190,7 +191,7 @@ private class ControlInterpolation(
     }
 }
 
-private fun ControlTuning.asInterpolation() = ControlInterpolation(
+private fun com.rc.playgrounds.config.model.ControlTuning.asInterpolation() = ControlInterpolation(
     pitch = create(pitchFactor),
     pitchTranslator = create(pitchZone),
     yaw = create(yawFactor),
@@ -198,8 +199,23 @@ private fun ControlTuning.asInterpolation() = ControlInterpolation(
     steer = create(steerFactor),
     steerTranslator = create(steerZone),
     long = create(longFactor),
-    longTranslator = create(longZone),
+    longTranslator = if (longZones.isNotEmpty()) {
+        create(longZones)
+    } else {
+        create(longZone)
+    },
 )
+
+fun create(longZones: List<com.rc.playgrounds.config.model.MappingZone>): (Float) -> Float {
+    return { input ->
+        longZones
+            .find { input >= it.src.x && input <= it.src.y }
+            ?.let {
+                translate(input, it.src.x, it.src.x, it.dst.x, it.dst.y)
+            }
+            ?: input
+    }
+}
 
 private fun create(factor: Float?): AccelerateInterpolator? {
     if (factor == null) {
@@ -223,7 +239,7 @@ private fun create(zone: PointF?): (Float) -> Float {
 
     return { input ->
         val s = input.sign
-        translate(valueX = input.absoluteValue, x1 = 0f, x2 = 1f, y1 = zone.x,  y2 = zone.y) * s
+        translate(valueX = input.absoluteValue, x1 = 0f, x2 = 1f, y1 = zone.x, y2 = zone.y) * s
     }
 }
 

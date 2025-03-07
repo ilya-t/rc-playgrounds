@@ -1,4 +1,4 @@
-package rc.playgrounds.config.model
+package com.rc.playgrounds.config.model
 
 data class ControlOffsets(
     val pitch: Float,

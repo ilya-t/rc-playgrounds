@@ -1,0 +1,85 @@
+package com.rc.playgrounds.config
+
+import com.rc.playgrounds.config.model.MappingZone
+import org.junit.Assert
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+
+@RunWith(RobolectricTestRunner::class)
+class ConfigTest {
+    @Test
+    fun testRemoteStreamCmd_ValidJson() {
+        val json = "{\"stream\": {\"remote_cmd\": \"start\"}}"
+        val config = Config(json)
+        Assert.assertEquals("start", config.remoteStreamCmd)
+    }
+
+    @Test
+    fun testRemoteStreamCmd_InvalidJson() {
+        val json = "{}"
+        val config = Config(json)
+        Assert.assertEquals("", config.remoteStreamCmd)
+    }
+
+    @Test
+    fun `long zones parsing`() {
+        val json = """{
+            "control_tuning": {
+                "long_zones": {
+                    "0": "0.01",
+                    "0.3": "0.21",
+                    "0.7": "0.4",
+                    "0.9": "0.5",
+                    "1": "0.7"
+                }
+            }
+        }""".trimIndent()
+        val config = Config(json) {
+            throw it
+        }
+        val longZones: List<MappingZone> = config.controlTuning.longZones
+        Assert.assertEquals(4, longZones.size)
+
+        Assert.assertEquals(0f, longZones[0].src.x)
+        Assert.assertEquals(0.3f, longZones[0].src.y)
+        Assert.assertEquals(0.01f, longZones[0].dst.x)
+        Assert.assertEquals(0.21f, longZones[0].dst.y)
+
+        Assert.assertEquals(0.3f, longZones[1].src.x)
+        Assert.assertEquals(0.7f, longZones[1].src.y)
+        Assert.assertEquals(0.21f, longZones[1].dst.x)
+        Assert.assertEquals(0.4f, longZones[1].dst.y)
+
+    }
+
+    @Test
+    fun testControlServer_ValidJson() {
+        val json = "{\"control_server\": {\"address\": \"192.168.0.1\", \"port\": 8080}}"
+        val config = Config(json)
+        val server = config.controlServer
+        Assert.assertNotNull(server)
+        Assert.assertEquals("192.168.0.1", server!!.address)
+        Assert.assertEquals(8080, server.port.toLong())
+    }
+
+    @Test
+    fun testControlOffsets_DefaultValues() {
+        val json = "{}"
+        val config = Config(json)
+        val offsets = config.controlOffsets
+        Assert.assertEquals(0.0, offsets.pitch.toDouble(), 0.001)
+        Assert.assertEquals(0.0, offsets.yaw.toDouble(), 0.001)
+        Assert.assertEquals(0.0, offsets.steer.toDouble(), 0.001)
+        Assert.assertEquals(0.0, offsets.long.toDouble(), 0.001)
+    }
+
+    @Test
+    fun testControlTuning_EmptyJson() {
+        val json = "{}"
+        val config = Config(json)
+        val tuning = config.controlTuning
+        Assert.assertNull(tuning.pitchFactor)
+        Assert.assertNull(tuning.pitchZone)
+    }
+}

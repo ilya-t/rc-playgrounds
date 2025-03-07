@@ -1,4 +1,4 @@
-package rc.playgrounds.config.model
+package com.rc.playgrounds.config.model
 
 import android.graphics.PointF
 
@@ -11,4 +11,5 @@ data class ControlTuning(
     val steerZone: PointF?,
     val longFactor: Float?,
     val longZone: PointF?,
+    val longZones: List<MappingZone>,
 )

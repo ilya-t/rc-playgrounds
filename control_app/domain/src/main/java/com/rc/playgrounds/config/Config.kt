@@ -1,13 +1,15 @@
-package rc.playgrounds.config
+package com.rc.playgrounds.config
 
 import android.graphics.PointF
 import org.json.JSONObject
-import rc.playgrounds.config.model.ControlOffsets
-import rc.playgrounds.config.model.ControlServer
-import rc.playgrounds.config.model.ControlTuning
+import com.rc.playgrounds.config.model.ControlOffsets
+import com.rc.playgrounds.config.model.ControlServer
+import com.rc.playgrounds.config.model.ControlTuning
+import com.rc.playgrounds.config.model.MappingZone
 
 class Config(
     val rawJson: String,
+    val errorCollector: (e: Throwable) -> Unit = {},
 ) {
     private val json by lazy {
         runCatching {
@@ -44,6 +46,8 @@ class Config(
                 steer = t.getDouble("steer").toFloat(),
                 long = t.getDouble("long").toFloat(),
             )
+        }.onFailure {
+            errorCollector(it)
         }.getOrElse {
             ControlOffsets(
                 pitch = 0f,
@@ -66,8 +70,11 @@ class Config(
                 steerZone = parseZone(t.optString("steer_zone")),
                 longFactor = t.optDouble("long_factor").toFloat(),
                 longZone = parseZone(t.optString("long_zone")),
+                longZones = parseZones(t.optJSONObject("long_zones")),
             )
-        }.getOrElse {
+        }
+        .onFailure { errorCollector.invoke(it) }
+        .getOrElse {
             ControlTuning(
                 pitchFactor = null,
                 pitchZone = null,
@@ -77,6 +84,7 @@ class Config(
                 steerZone = null,
                 longFactor = null,
                 longZone = null,
+                longZones = emptyList(),
             )
         }
     }
@@ -99,3 +107,45 @@ private fun parseZone(zone: String): PointF? {
 
     return rawPoint
 }
+
+private fun parseZones(zones: JSONObject?): List<MappingZone> {
+    if (zones == null) {
+        return emptyList()
+    }
+    val unsortedMapping = mutableListOf<PointF>()
+    zones.keys().forEach { key ->
+        val value = zones.getString(key)
+        unsortedMapping.add(PointF(key.toFloat(), value.toFloat()))
+    }
+
+    val results = mutableListOf<MappingZone>()
+    var srcZone = PointF(Float.NaN, Float.NaN)
+    var dstZone = PointF(Float.NaN, Float.NaN)
+
+    val mapping = unsortedMapping.sortedBy { it.x }
+    mapping.forEach {
+        if (results.isEmpty()) {
+            results.add(MappingZone(
+                src = PointF(it.x, Float.NaN),
+                dst = PointF(it.y, Float.NaN),
+            ))
+            return@forEach
+        }
+
+        val lastResult = results.last()
+
+        if (lastResult.src.y.isNaN()) {
+            lastResult.src.y = it.x
+            lastResult.dst.y = it.y
+            return@forEach
+        }
+
+        results.add(MappingZone(
+            src = PointF(lastResult.src.y, it.x),
+            dst = PointF(lastResult.dst.y, it.y),
+        ))
+    }
+
+    return results
+}
+
