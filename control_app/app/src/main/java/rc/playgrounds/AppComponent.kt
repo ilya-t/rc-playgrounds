@@ -1,5 +1,6 @@
 package rc.playgrounds
 
+import com.rc.playgrounds.stopwatch.StopwatchModel
 import com.testspace.App
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -25,6 +26,10 @@ class AppComponent(app: App) {
         scope,
         configModel,
         streamCmdHash,
+    )
+
+    val stopwatchModel = StopwatchModel(
+        scope,
     )
 
     companion object {

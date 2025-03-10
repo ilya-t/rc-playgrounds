@@ -7,9 +7,11 @@ import android.view.ViewGroup
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatEditText
+import androidx.appcompat.widget.AppCompatImageButton
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import com.rc.playgrounds.stopwatch.StopwatchView
 import com.testspace.R
 import com.testspace.core.Static
 import kotlinx.coroutines.delay
@@ -40,6 +42,12 @@ class ActivityComponent(
         appComponent.configModel,
         a.lifecycleScope,
         navigator,
+    )
+    private val stopwatchView = StopwatchView(
+        model = appComponent.stopwatchModel,
+        container = a.findViewById<ViewGroup>(R.id.stopwatch_container),
+        stopwatchButton = a.findViewById<AppCompatImageButton>(R.id.stopwatch_button),
+        scope = a.lifecycleScope,
     )
     private var gamepadEventEmitter = GamepadEventEmitter(appComponent.gamepadEventStream)
 
