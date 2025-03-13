@@ -2,6 +2,7 @@ package rc.playgrounds.control
 
 import android.graphics.PointF
 import android.view.animation.AccelerateInterpolator
+import com.rc.playgrounds.config.model.MappingZone
 import com.testspace.core.Static
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -24,6 +25,7 @@ import java.net.DatagramSocket
 import java.net.InetAddress
 import kotlin.math.absoluteValue
 import kotlin.math.sign
+import kotlin.math.withSign
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SteeringController(
@@ -213,19 +215,27 @@ private fun com.rc.playgrounds.config.model.ControlTuning.asInterpolation() = Co
     steerTranslator = create(steerZone),
     long = create(longFactor),
     longTranslator = if (longZones.isNotEmpty()) {
-        create(longZones)
+        val zonesNegative = longZonesNegative.ifEmpty { longZones }
+        create(negative = zonesNegative, positive = longZones)
     } else {
         create(PointF(0f,1f))
     },
 )
 
-fun create(longZones: List<com.rc.playgrounds.config.model.MappingZone>): (Float) -> Float {
+fun create(negative: List<MappingZone>, positive: List<MappingZone>): (Float) -> Float {
     return { input ->
-        longZones
-            .find { input >= it.src.x && input <= it.src.y }
+        val zones = if (input >= 0) {
+            positive
+        } else {
+            negative
+        }
+        val absInput = input.absoluteValue
+        zones
+            .find { absInput >= it.src.x && absInput <= it.src.y }
             ?.let {
-                translate(input, it.src.x, it.src.y, it.dst.x, it.dst.y)
+                translate(absInput, it.src.x, it.src.y, it.dst.x, it.dst.y)
             }
+            ?.withSign(input)
             ?: input
     }
 }

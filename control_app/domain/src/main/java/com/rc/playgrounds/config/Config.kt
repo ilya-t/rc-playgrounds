@@ -70,6 +70,7 @@ class Config(
                 steerZone = parseZone(t.optString("steer_zone")),
                 longFactor = t.optDouble("long_factor").toFloat(),
                 longZones = parseZones(t.optJSONObject("long_zones")),
+                longZonesNegative = parseZones(t.optJSONObject("long_zones_negative")),
             )
         }
         .onFailure { errorCollector.invoke(it) }
@@ -83,6 +84,7 @@ class Config(
                 steerZone = null,
                 longFactor = null,
                 longZones = emptyList(),
+                longZonesNegative = emptyList(),
             )
         }
     }

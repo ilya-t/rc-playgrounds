@@ -84,6 +84,10 @@ private const val DEFAULT_CONFIG = """
         "0.0": "0.01",
         "0.5": "0.2",
         "1.0": "0.7"
+    },
+    "long_zones_negative": {
+        "0.0": "0.01",
+        "1.0": "0.2"
     }
   }
 }    
