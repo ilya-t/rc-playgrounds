@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatEditText
-import androidx.appcompat.widget.AppCompatImageButton
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
@@ -46,7 +45,7 @@ class ActivityComponent(
     private val stopwatchView = StopwatchView(
         model = appComponent.stopwatchModel,
         container = a.findViewById<ViewGroup>(R.id.stopwatch_container),
-        stopwatchButton = a.findViewById<AppCompatImageButton>(R.id.stopwatch_button),
+        stopwatchButton = a.findViewById<Button>(R.id.stopwatch_button),
         scope = a.lifecycleScope,
     )
     private var gamepadEventEmitter = GamepadEventEmitter(appComponent.gamepadEventStream)

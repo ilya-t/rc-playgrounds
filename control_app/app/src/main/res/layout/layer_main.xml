@@ -6,8 +6,8 @@
 
     <FrameLayout
         android:id="@+id/stopwatch_container"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
         android:layout_alignParentTop="true"
         android:visibility="gone"
         />
@@ -26,14 +26,14 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:orientation="horizontal"
-        android:weightSum="10">
+        android:weightSum="2">
 
         <Button
             android:id="@+id/reset_button"
             android:focusable="false"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="4"
+            android:layout_weight="1"
             android:text="[RESET]" />
 
         <Button
@@ -41,16 +41,7 @@
             android:focusable="false"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="4"
+            android:layout_weight="1"
             android:text="[CONFIGURE]" />
-
-        <androidx.appcompat.widget.AppCompatImageButton
-            android:id="@+id/stopwatch_button"
-            android:focusable="false"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="2"
-            android:src="@drawable/outline_timer_24"
-            android:tint="#fff" />
     </LinearLayout>
 </RelativeLayout>

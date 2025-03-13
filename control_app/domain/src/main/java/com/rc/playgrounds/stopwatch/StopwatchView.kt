@@ -1,10 +1,14 @@
 package com.rc.playgrounds.stopwatch
 
+import android.app.Activity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
+import android.widget.Button
+import android.widget.ImageButton
 import android.widget.TextView
-import androidx.appcompat.widget.AppCompatImageButton
+import android.widget.ToggleButton
 import com.rc.playgrounds.domain.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -15,7 +19,7 @@ import kotlinx.coroutines.launch
 class StopwatchView(
     private val model: StopwatchModel,
     private val container: ViewGroup,
-    private val stopwatchButton: AppCompatImageButton,
+    private val stopwatchButton: Button,
     private val scope: CoroutineScope,
 ) {
     private var tvOutput: TextView? = null
@@ -38,14 +42,12 @@ class StopwatchView(
             val resources = stopwatchButton.context.resources
 
             model.state.map { it != null }.distinctUntilChanged().collect { visible ->
-                stopwatchButton.setImageDrawable(
-                    if (visible) {
-                        resources.getDrawable(R.drawable.outline_timer_off_24)
-                    } else {
-                        resources.getDrawable(R.drawable.outline_timer_24)
-                    }
-                )
-
+                val drawable = if (visible) {
+                    resources.getDrawable(R.drawable.outline_timer_off_24)
+                } else {
+                    resources.getDrawable(R.drawable.outline_timer_24)
+                }
+                stopwatchButton.setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null)
             }
         }
     }
@@ -56,6 +58,8 @@ class StopwatchView(
         }
         container.visibility = View.VISIBLE
         tvOutput?.text = text
+        (container.context as Activity).window.attributes.screenBrightness =
+            WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL
     }
 
     private fun doInflate() {
@@ -65,6 +69,8 @@ class StopwatchView(
 
     private fun hide() {
         container.visibility = View.GONE
+        (container.context as Activity).window.attributes.screenBrightness =
+            WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
     }
 
 

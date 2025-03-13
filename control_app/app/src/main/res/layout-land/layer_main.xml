@@ -26,13 +26,13 @@
         android:layout_height="match_parent"
         android:layout_alignParentRight="true"
         android:orientation="vertical"
-        android:weightSum="10">
+        android:weightSum="2">
 
         <Button
             android:id="@+id/reset_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="4"
+            android:layout_weight="1"
             android:focusable="false"
             android:text="R\nE\nS\nE\nT" />
 
@@ -40,17 +40,8 @@
             android:id="@+id/configure_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="4"
+            android:layout_weight="1"
             android:focusable="false"
             android:text="C\nO\nN\nF\nI\nG\nU\nR\nE" />
-
-        <androidx.appcompat.widget.AppCompatImageButton
-            android:id="@+id/stopwatch_button"
-            android:focusable="false"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_weight="2"
-            android:src="@drawable/outline_timer_24"
-            android:tint="#fff" />
     </LinearLayout>
 </RelativeLayout>
