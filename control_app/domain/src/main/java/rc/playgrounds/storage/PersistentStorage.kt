@@ -5,7 +5,6 @@ import android.content.Context.MODE_PRIVATE
 
 class PersistentStorage(
     context: Context,
-
 ) {
     val prefs = context.getSharedPreferences("main_storage", MODE_PRIVATE)
 

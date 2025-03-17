@@ -5,11 +5,13 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import com.rc.playgrounds.status.view.StatusView
 import com.rc.playgrounds.stopwatch.StopwatchView
 import com.testspace.R
 import com.testspace.core.Static
@@ -41,6 +43,11 @@ class ActivityComponent(
         appComponent.configModel,
         a.lifecycleScope,
         navigator,
+    )
+    private val statusView = StatusView(
+        textView = a.findViewById<TextView>(R.id.tv_output),
+        text = appComponent.statusModel.text,
+        scope = a.lifecycleScope,
     )
     private val stopwatchView = StopwatchView(
         model = appComponent.stopwatchModel,

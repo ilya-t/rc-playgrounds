@@ -1,5 +1,6 @@
 package rc.playgrounds
 
+import com.rc.playgrounds.status.view.StatusModel
 import com.rc.playgrounds.stopwatch.StopwatchModel
 import com.testspace.App
 import kotlinx.coroutines.CoroutineName
@@ -30,6 +31,11 @@ class AppComponent(app: App) {
 
     val stopwatchModel = StopwatchModel(
         scope,
+    )
+
+    val statusModel = StatusModel(
+        scope,
+        configModel,
     )
 
     companion object {
