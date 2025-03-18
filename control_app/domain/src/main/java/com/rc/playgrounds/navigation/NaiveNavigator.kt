@@ -1,9 +1,9 @@
-package rc.playgrounds.navigation
+package com.rc.playgrounds.navigation
 
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
-import com.testspace.R
+import com.rc.playgrounds.domain.R
 
 class NaiveNavigator(a: AppCompatActivity) {
     private val mainRoot = a.findViewById<View>(R.id.layer_main)

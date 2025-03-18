@@ -13,14 +13,14 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.rc.playgrounds.status.view.StatusView
 import com.rc.playgrounds.stopwatch.StopwatchView
-import com.testspace.R
 import com.testspace.core.Static
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import rc.playgrounds.config.ConfigView
 import rc.playgrounds.control.gamepad.GamepadEventEmitter
-import rc.playgrounds.navigation.NaiveNavigator
+import com.rc.playgrounds.navigation.NaiveNavigator
 import rc.playgrounds.stream.StreamingProcess
+import com.rc.playgrounds.domain.R
 
 class ActivityComponent(
     private val appComponent: AppComponent,

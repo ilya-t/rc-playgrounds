@@ -76,7 +76,7 @@ private class SteeringEmitter(
     private val configFlow: StateFlow<com.rc.playgrounds.config.Config>,
     private val streamCmdHash: Flow<String>,
 ) {
-    private val messages: Flow<String> = combine(
+    private val messages: Flow<JSONObject> = combine(
         configFlow,
         gamepadEventStream.events,
         streamCmdHash,
@@ -89,7 +89,7 @@ private class SteeringEmitter(
             streamCmdHash = streamHash,
         )
         printEvent(steeringEvent, event)
-        steeringEvent.toString()
+        steeringEvent
     }
 
     // long: 0.1 (raw: 0.5) steer: 0.0 (raw: 0.0) pitch: ... yaw: ...
@@ -109,7 +109,8 @@ private class SteeringEmitter(
             messageStream?.cancel()
             messageStream = scope.launch {
                 while (isActive) {
-                    send(m)
+                    m.put("time", System.currentTimeMillis().toString())
+                    send(m.toString())
                     //TODO: to config
                     delay(50L) // 20hz
                 }

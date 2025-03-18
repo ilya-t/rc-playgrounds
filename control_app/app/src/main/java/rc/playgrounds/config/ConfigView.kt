@@ -11,7 +11,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import rc.playgrounds.navigation.NaiveNavigator
+import com.rc.playgrounds.navigation.NaiveNavigator
 
 class ConfigView(
     private val configInput: AppCompatEditText,

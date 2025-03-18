@@ -10,7 +10,7 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.testspace.R;
+import com.rc.playgrounds.domain.R;
 
 import java.util.ArrayList;
 import java.util.Collections;
