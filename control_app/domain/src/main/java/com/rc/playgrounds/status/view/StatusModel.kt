@@ -53,7 +53,7 @@ private fun asStatus(event: SteeringEvent, ping: String): String {
         "pitch: %.2f (raw: %.2f) ".format(event.pitch, event.rawPitch) +
         "yaw: %.2f (raw: %.2f)".format(event.yaw, event.rawYaw)
 
-    return ping + "\n" + control
+    return ping + " " + control
 }
 
 private class StatusCollector(

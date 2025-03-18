@@ -23,6 +23,7 @@ class AppComponent(app: App) {
 
     val gamepadEventStream = GamepadEventStream()
     private val steeringEventStream = SteeringEventStream(
+        scope,
         configModel,
         gamepadEventStream,
     )
