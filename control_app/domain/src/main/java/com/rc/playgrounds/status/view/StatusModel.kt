@@ -49,7 +49,7 @@ private class StatusCollector(
                     statusReceiver("ping($server): ${duration.inWholeMilliseconds}ms")
                 }
                 .onFailure {
-                    statusReceiver("ping($server): ${it.message ?: "(error)"}")
+                    statusReceiver("ping($server): ${it.message ?: "(error)"} ${SAD_EMOJI.random()}")
                 }
         }
     }
@@ -59,3 +59,24 @@ private class StatusCollector(
         statusJob.cancel()
     }
 }
+
+private val SAD_EMOJI = listOf(
+    "🥲",
+    "🤨",
+    "😟",
+    "😕",
+    "🙁",
+    "☹️",
+    "😣",
+    "😫",
+    "😩",
+    "😢",
+    "😭",
+    "😮‍💨",
+    "😤",
+    "😠",
+    "😥",
+    "🫠",
+    "😵",
+    "😲",
+)
