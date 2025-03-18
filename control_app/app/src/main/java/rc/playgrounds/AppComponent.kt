@@ -1,5 +1,9 @@
 package rc.playgrounds
 
+import com.rc.playgrounds.control.SteeringEventStream
+import com.rc.playgrounds.control.gamepad.GamepadEventStream
+import com.rc.playgrounds.remote.OutputEventStream
+import com.rc.playgrounds.remote.StreamCmdHash
 import com.rc.playgrounds.status.view.StatusModel
 import com.rc.playgrounds.stopwatch.StopwatchModel
 import com.testspace.App
@@ -7,9 +11,6 @@ import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import rc.playgrounds.config.ConfigModel
-import com.rc.playgrounds.remote.OutputEventStream
-import com.rc.playgrounds.control.gamepad.GamepadEventStream
-import com.rc.playgrounds.remote.StreamCmdHash
 import rc.playgrounds.storage.PersistentStorage
 
 class AppComponent(app: App) {
@@ -21,9 +22,13 @@ class AppComponent(app: App) {
     )
 
     val gamepadEventStream = GamepadEventStream()
+    private val steeringEventStream = SteeringEventStream(
+        configModel,
+        gamepadEventStream,
+    )
     val streamCmdHash = StreamCmdHash()
     private val outputEventStream = OutputEventStream(
-        gamepadEventStream,
+        steeringEventStream,
         scope,
         configModel,
         streamCmdHash,
@@ -36,6 +41,7 @@ class AppComponent(app: App) {
     val statusModel = StatusModel(
         scope,
         configModel,
+        steeringEventStream,
     )
 
     companion object {

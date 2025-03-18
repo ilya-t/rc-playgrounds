@@ -1,10 +1,13 @@
 package com.rc.playgrounds.status.view
 
+import com.rc.playgrounds.control.SteeringEvent
+import com.rc.playgrounds.control.SteeringEventStream
 import com.rc.playgrounds.status.PingService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import rc.playgrounds.config.ConfigModel
@@ -13,10 +16,12 @@ import kotlin.time.Duration
 class StatusModel(
     private val scope: CoroutineScope,
     config: ConfigModel,
+    private val steeringEventStream: SteeringEventStream,
 ) {
 
     private val pingTarget: Flow<String?> = config.configFlow.map { it.controlServer?.address }
     private val _text = MutableStateFlow("(?)")
+    private val _ping = MutableStateFlow("(?)")
     val text: StateFlow<String> = _text
 
     init {
@@ -28,11 +33,27 @@ class StatusModel(
                     server = it,
                     scope = scope,
                 ) {
-                    _text.value = it
+                    _ping.value = it
                 }
             }
         }
+
+        scope.launch {
+            combine(steeringEventStream.events, _ping, ::asStatus).collect {
+                _text.value = it
+            }
+        }
     }
+}
+
+private fun asStatus(event: SteeringEvent, ping: String): String {
+    val control =
+        "long: %.2f (raw: %.2f) ".format(event.long, event.rawLong) +
+        "steer: %.2f (raw: %.2f) ".format(event.steer, event.rawSteer) +
+        "pitch: %.2f (raw: %.2f) ".format(event.pitch, event.rawPitch) +
+        "yaw: %.2f (raw: %.2f)".format(event.yaw, event.rawYaw)
+
+    return ping + "\n" + control
 }
 
 private class StatusCollector(
