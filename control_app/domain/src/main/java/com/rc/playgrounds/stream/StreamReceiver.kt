@@ -1,6 +1,4 @@
-package rc.playgrounds.stream
-
-import android.net.Uri
+package com.rc.playgrounds.stream
 
 interface StreamReceiver {
     fun play()

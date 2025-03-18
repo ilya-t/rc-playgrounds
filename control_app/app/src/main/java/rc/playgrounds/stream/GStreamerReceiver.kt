@@ -5,6 +5,7 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import com.rc.playgrounds.gstreamer.GStreamerFacade
 import com.rc.playgrounds.gstreamer.Logger
+import com.rc.playgrounds.stream.StreamReceiver
 import com.testspace.core.Static
 
 class GStreamerReceiver(

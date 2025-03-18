@@ -18,6 +18,7 @@ import com.rc.playgrounds.domain.R
 import com.rc.playgrounds.navigation.NaiveNavigator
 import com.rc.playgrounds.status.view.StatusView
 import com.rc.playgrounds.stopwatch.StopwatchView
+import com.rc.playgrounds.stream.StreamReceiver
 import com.testspace.core.Static
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -26,8 +27,8 @@ import rc.playgrounds.stream.StreamingProcess
 class ActivityComponent(
     private val appComponent: AppComponent,
     private val a: AppCompatActivity,
+    private val streamReceiverFactory: () -> StreamReceiver,
 ) {
-    private val surfaceContainer = a.findViewById<ViewGroup>(R.id.surface_container)
     private val resetButton = a.findViewById<View>(R.id.reset_button)
     private val saveButton = a.findViewById<Button>(R.id.save_button)
     private val backButton = a.findViewById<Button>(R.id.back_button)
@@ -95,11 +96,7 @@ class ActivityComponent(
 
     private fun start() {
         streamingProcess?.release()
-        streamingProcess = StreamingProcess(
-            appComponent.configModel,
-            a,
-            surfaceContainer,
-            )
+        streamingProcess = StreamingProcess(streamReceiverFactory)
         streamingProcess?.start()
         Static.output("Receiving stream!")
 

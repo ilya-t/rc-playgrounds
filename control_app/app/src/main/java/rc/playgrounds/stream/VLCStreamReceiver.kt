@@ -5,6 +5,7 @@ import android.net.Uri
 import android.util.Log
 import android.view.SurfaceHolder
 import android.view.SurfaceView
+import com.rc.playgrounds.stream.StreamReceiver
 import org.videolan.libvlc.LibVLC
 import org.videolan.libvlc.Media
 import org.videolan.libvlc.MediaPlayer
