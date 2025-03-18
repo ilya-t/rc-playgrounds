@@ -1,4 +1,4 @@
-package com.testspace
+package com.rc.playgrounds
 
 import android.annotation.SuppressLint
 import android.os.Bundle
@@ -6,16 +6,14 @@ import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.ViewGroup
 import androidx.annotation.OptIn
+import androidx.appcompat.app.AppCompatActivity
 import androidx.media3.common.util.UnstableApi
-import com.rc.playgrounds.ActivityComponent
-import com.rc.playgrounds.AppComponent
 import com.rc.playgrounds.domain.R
+import com.rc.playgrounds.stream.GStreamerReceiver
 import com.rc.playgrounds.stream.StreamReceiver
-import com.testspace.core.ExperimentActivity
-import rc.playgrounds.stream.GStreamerReceiver
 
 
-class MainActivity : ExperimentActivity() {
+class MainActivity : AppCompatActivity() {
     private lateinit var component: ActivityComponent
 
     @OptIn(UnstableApi::class)

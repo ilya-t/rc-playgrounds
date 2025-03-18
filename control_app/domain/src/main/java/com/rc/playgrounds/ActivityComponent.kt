@@ -27,6 +27,9 @@ class ActivityComponent(
     private val a: AppCompatActivity,
     private val streamReceiverFactory: () -> StreamReceiver,
 ) {
+    init {
+        a.setContentView(R.layout.experiment_activity)
+    }
     private val resetButton = a.findViewById<View>(R.id.reset_button)
     private val saveButton = a.findViewById<Button>(R.id.save_button)
     private val backButton = a.findViewById<Button>(R.id.back_button)

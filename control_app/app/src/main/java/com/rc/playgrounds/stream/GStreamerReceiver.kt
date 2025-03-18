@@ -1,4 +1,4 @@
-package rc.playgrounds.stream
+package com.rc.playgrounds.stream
 
 import android.view.SurfaceView
 import android.view.ViewGroup
@@ -6,7 +6,6 @@ import androidx.appcompat.app.AppCompatActivity
 import com.rc.playgrounds.gstreamer.GStreamerFacade
 import com.rc.playgrounds.gstreamer.Logger
 import com.rc.playgrounds.status.StreamerEvents
-import com.rc.playgrounds.stream.StreamReceiver
 
 class GStreamerReceiver(
     private val streamerEvents: StreamerEvents,
