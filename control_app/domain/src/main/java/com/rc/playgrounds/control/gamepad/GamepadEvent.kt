@@ -1,4 +1,4 @@
-package rc.playgrounds.control.gamepad
+package com.rc.playgrounds.control.gamepad
 
 data class GamepadEvent(
     val leftTrigger: Float,

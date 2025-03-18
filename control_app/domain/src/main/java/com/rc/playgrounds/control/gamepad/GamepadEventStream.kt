@@ -1,4 +1,4 @@
-package rc.playgrounds.control.gamepad
+package com.rc.playgrounds.control.gamepad
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

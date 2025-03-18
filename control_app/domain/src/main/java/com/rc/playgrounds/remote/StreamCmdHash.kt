@@ -1,4 +1,4 @@
-package rc.playgrounds.stream
+package com.rc.playgrounds.remote
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -1,9 +1,8 @@
-package rc.playgrounds.control.gamepad
+package com.rc.playgrounds.control.gamepad
 
 import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.MotionEvent
-import com.testspace.core.Static
 
 
 class GamepadEventEmitter(
@@ -45,19 +44,19 @@ class GamepadEventEmitter(
     fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         when (keyCode) {
             KeyEvent.KEYCODE_BUTTON_A -> {
-                Static.output("Button [A]")
+                //Static.output("Button [A]")
                 return true
             }
             KeyEvent.KEYCODE_BUTTON_B -> {
-                Static.output("Button [B]")
+                //Static.output("Button [B]")
                 return true
             }
             KeyEvent.KEYCODE_BUTTON_X -> {
-                Static.output("Button [X]")
+                //Static.output("Button [X]")
                 return true
             }
             KeyEvent.KEYCODE_BUTTON_Y -> {
-                Static.output("Button [Y]")
+                //Static.output("Button [Y]")
                 return true
             }
         }

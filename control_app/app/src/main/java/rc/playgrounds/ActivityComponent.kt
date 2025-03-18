@@ -17,7 +17,7 @@ import com.testspace.core.Static
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import rc.playgrounds.config.ConfigView
-import rc.playgrounds.control.gamepad.GamepadEventEmitter
+import com.rc.playgrounds.control.gamepad.GamepadEventEmitter
 import com.rc.playgrounds.navigation.NaiveNavigator
 import rc.playgrounds.stream.StreamingProcess
 import com.rc.playgrounds.domain.R

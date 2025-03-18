@@ -1,9 +1,8 @@
-package rc.playgrounds.control
+package com.rc.playgrounds.remote
 
 import android.graphics.PointF
 import android.view.animation.AccelerateInterpolator
 import com.rc.playgrounds.config.model.MappingZone
-import com.testspace.core.Static
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -17,9 +16,8 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import rc.playgrounds.config.ConfigModel
-import rc.playgrounds.control.gamepad.GamepadEvent
-import rc.playgrounds.control.gamepad.GamepadEventStream
-import rc.playgrounds.stream.StreamCmdHash
+import com.rc.playgrounds.control.gamepad.GamepadEvent
+import com.rc.playgrounds.control.gamepad.GamepadEventStream
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetAddress
@@ -28,7 +26,7 @@ import kotlin.math.sign
 import kotlin.math.withSign
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class SteeringController(
+class OutputEventStream(
     private val gamepadEventStream: GamepadEventStream,
     private val scope: CoroutineScope,
     private val configModel: ConfigModel,
@@ -36,7 +34,7 @@ class SteeringController(
 ) {
 
     private val controlServer = MutableStateFlow<com.rc.playgrounds.config.model.ControlServer?>(null)
-    private var emitter: SteeringEmitter? = null
+    private var emitter: EventEmitter? = null
 
     init {
         scope.launch {
@@ -58,7 +56,7 @@ class SteeringController(
         emitter?.stop()
         emitter = null
         c?.let {
-            emitter = SteeringEmitter(
+            emitter = EventEmitter(
                 c,
                 scope,
                 gamepadEventStream,
@@ -69,7 +67,7 @@ class SteeringController(
     }
 }
 
-private class SteeringEmitter(
+private class EventEmitter(
     val config: com.rc.playgrounds.config.model.ControlServer,
     private val scope: CoroutineScope,
     private val gamepadEventStream: GamepadEventStream,
@@ -100,7 +98,7 @@ private class SteeringEmitter(
             "steer: %.2f (raw: %.2f) ".format(se.optDouble("steer"), -e.leftStickX) +
             "pitch: %.2f (raw: %.2f) ".format(se.optDouble("pitch"), -e.rightStickY) +
             "yaw: %.2f (raw: %.2f)".format(se.optDouble("yaw"), e.rightStickX)
-        Static.output(text)
+        //TODO: Static.output(text)
     }
 
     private val job = scope.launch {
