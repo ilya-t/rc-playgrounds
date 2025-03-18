@@ -1,4 +1,4 @@
-package rc.playgrounds.config
+package com.rc.playgrounds.config
 
 import android.content.Context
 import android.text.Editable
@@ -7,11 +7,12 @@ import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import androidx.appcompat.widget.AppCompatEditText
+import com.rc.playgrounds.navigation.NaiveNavigator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.rc.playgrounds.navigation.NaiveNavigator
+import rc.playgrounds.config.ConfigModel
 
 class ConfigView(
     private val configInput: AppCompatEditText,

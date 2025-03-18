@@ -5,9 +5,9 @@ import android.view.KeyEvent
 import android.view.MotionEvent
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
+import com.rc.playgrounds.AppComponent
 import com.testspace.core.ExperimentActivity
 import rc.playgrounds.ActivityComponent
-import rc.playgrounds.AppComponent
 
 
 class MainActivity : ExperimentActivity() {
