@@ -3,6 +3,7 @@ package com.rc.playgrounds.status.view
 import com.rc.playgrounds.control.SteeringEvent
 import com.rc.playgrounds.control.SteeringEventStream
 import com.rc.playgrounds.status.PingService
+import com.rc.playgrounds.status.StreamerEvents
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,6 +18,7 @@ class StatusModel(
     private val scope: CoroutineScope,
     config: ConfigModel,
     private val steeringEventStream: SteeringEventStream,
+    private val streamerEvents: StreamerEvents,
 ) {
 
     private val pingTarget: Flow<String?> = config.configFlow.map { it.controlServer?.address }
@@ -39,21 +41,24 @@ class StatusModel(
         }
 
         scope.launch {
-            combine(steeringEventStream.events, _ping, ::asStatus).collect {
+            combine(steeringEventStream.events, _ping, streamerEvents.events, ::asStatus).collect {
                 _text.value = it
             }
         }
     }
 }
 
-private fun asStatus(event: SteeringEvent, ping: String): String {
+private fun asStatus(event: SteeringEvent,
+                     ping: String,
+                     streamerEvent: Result<String>): String {
     val control =
         "long: %.2f (raw: %.2f) ".format(event.long, event.rawLong) +
         "steer: %.2f (raw: %.2f) ".format(event.steer, event.rawSteer) +
         "pitch: %.2f (raw: %.2f) ".format(event.pitch, event.rawPitch) +
         "yaw: %.2f (raw: %.2f)".format(event.yaw, event.rawYaw)
 
-    return ping + " " + control
+    val streamer = "streamer: ${streamerEvent.getOrElse { exception -> exception.message ?: exception.toString() }}"
+    return ping + "\n" + control + "\n" + streamer
 }
 
 private class StatusCollector(

@@ -22,7 +22,7 @@ class SteeringEventStream(
     private val configModel: ConfigModel,
     private val gamepadEventStream: GamepadEventStream,
 ) {
-    val statelessEvents: Flow<SteeringEvent> = combine(
+    private val statelessEvents: Flow<SteeringEvent> = combine(
         configModel.configFlow.map { it.controlOffsets },
         configModel.configFlow.map { it.controlTuning.asInterpolation() },
         gamepadEventStream.events,

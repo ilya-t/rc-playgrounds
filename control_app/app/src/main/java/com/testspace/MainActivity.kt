@@ -48,10 +48,12 @@ class MainActivity : ExperimentActivity() {
 //        )
 
         val surfaceContainer = findViewById<ViewGroup>(R.id.surface_container)
+        val appComponent = AppComponent.instance
         return GStreamerReceiver(
+            appComponent.streamerEvents,
             this,
             surfaceContainer,
-            AppComponent.instance.configModel.configFlow.value.streamLocalCmd,
+            appComponent.configModel.configFlow.value.streamLocalCmd,
         )
     }
 

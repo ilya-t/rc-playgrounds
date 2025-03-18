@@ -5,6 +5,7 @@ import com.rc.playgrounds.control.SteeringEventStream
 import com.rc.playgrounds.control.gamepad.GamepadEventStream
 import com.rc.playgrounds.remote.OutputEventStream
 import com.rc.playgrounds.remote.StreamCmdHash
+import com.rc.playgrounds.status.StreamerEvents
 import com.rc.playgrounds.status.view.StatusModel
 import com.rc.playgrounds.stopwatch.StopwatchModel
 import kotlinx.coroutines.CoroutineName
@@ -39,10 +40,13 @@ class AppComponent(app: Application) {
         scope,
     )
 
+    val streamerEvents = StreamerEvents()
+
     val statusModel = StatusModel(
         scope,
         configModel,
         steeringEventStream,
+        streamerEvents,
     )
 
     companion object {

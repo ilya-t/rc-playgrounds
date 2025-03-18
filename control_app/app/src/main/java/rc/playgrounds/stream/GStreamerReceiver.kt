@@ -5,21 +5,22 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import com.rc.playgrounds.gstreamer.GStreamerFacade
 import com.rc.playgrounds.gstreamer.Logger
+import com.rc.playgrounds.status.StreamerEvents
 import com.rc.playgrounds.stream.StreamReceiver
-import com.testspace.core.Static
 
 class GStreamerReceiver(
+    private val streamerEvents: StreamerEvents,
     activity: AppCompatActivity,
     private val surfaceContainer: ViewGroup,
     pipeline: String,
 ) : StreamReceiver {
     private val logger = object : Logger {
         override fun logError(e: Exception) {
-            Static.output("GStreamer error: "+e.message)
+            streamerEvents.emit(e)
         }
 
         override fun logMessage(message: String) {
-            Static.output("GStreamer: " + message)
+            streamerEvents.emit(message)
         }
     }
 
