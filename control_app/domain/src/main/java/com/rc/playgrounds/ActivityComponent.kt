@@ -1,4 +1,4 @@
-package rc.playgrounds
+package com.rc.playgrounds
 
 import android.view.KeyEvent
 import android.view.MotionEvent
@@ -11,7 +11,6 @@ import androidx.appcompat.widget.AppCompatEditText
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import com.rc.playgrounds.AppComponent
 import com.rc.playgrounds.config.ConfigView
 import com.rc.playgrounds.control.gamepad.GamepadEventEmitter
 import com.rc.playgrounds.domain.R
@@ -19,10 +18,9 @@ import com.rc.playgrounds.navigation.NaiveNavigator
 import com.rc.playgrounds.status.view.StatusView
 import com.rc.playgrounds.stopwatch.StopwatchView
 import com.rc.playgrounds.stream.StreamReceiver
-import com.testspace.core.Static
+import com.rc.playgrounds.stream.StreamingProcess
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import rc.playgrounds.stream.StreamingProcess
 
 class ActivityComponent(
     private val appComponent: AppComponent,
@@ -98,8 +96,6 @@ class ActivityComponent(
         streamingProcess?.release()
         streamingProcess = StreamingProcess(streamReceiverFactory)
         streamingProcess?.start()
-        Static.output("Receiving stream!")
-
         gamepadEventEmitter.restart()
     }
 

@@ -7,11 +7,11 @@ import android.view.MotionEvent
 import android.view.ViewGroup
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
+import com.rc.playgrounds.ActivityComponent
 import com.rc.playgrounds.AppComponent
 import com.rc.playgrounds.domain.R
 import com.rc.playgrounds.stream.StreamReceiver
 import com.testspace.core.ExperimentActivity
-import rc.playgrounds.ActivityComponent
 import rc.playgrounds.stream.GStreamerReceiver
 
 

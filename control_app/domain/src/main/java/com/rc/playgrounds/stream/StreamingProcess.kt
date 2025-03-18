@@ -1,6 +1,4 @@
-package rc.playgrounds.stream
-
-import com.rc.playgrounds.stream.StreamReceiver
+package com.rc.playgrounds.stream
 
 class StreamingProcess(
     private val receiverFactory: () -> StreamReceiver,
