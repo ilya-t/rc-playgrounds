@@ -30,9 +30,9 @@ class SteeringEventStream(
         interpolation: ControlInterpolation,
         event: GamepadEvent ->
 
-        val rawPitch = -event.rightStickY + offsets.pitch
-        val rawYaw = event.rightStickX + offsets.yaw
-        val rawSteer = -event.leftStickX + offsets.steer
+        val rawPitch = -event.rightStickY
+        val rawYaw = event.rightStickX
+        val rawSteer = -event.leftStickX
         val breakTrigger = event.leftTrigger
         val rightTrigger = event.rightTrigger
         val longTrigger = if (breakTrigger > rightTrigger) {
@@ -43,9 +43,9 @@ class SteeringEventStream(
         val rawLong = -longTrigger + offsets.long
 
         val steeringEvent = SteeringEvent(
-            pitch = interpolation.fixPitch(rawPitch),
-            yaw = interpolation.fixYaw(rawYaw),
-            steer = interpolation.fixSteer(rawSteer),
+            pitch = interpolation.fixPitch(rawPitch + offsets.pitch),
+            yaw = interpolation.fixYaw(rawYaw + offsets.yaw),
+            steer = interpolation.fixSteer(rawSteer + offsets.steer),
             long = interpolation.fixLong(rawLong),
             rawPitch = rawPitch,
             rawYaw = rawYaw,
