@@ -31,6 +31,7 @@ public class GStreamerFacade {
             nativeSurfaceFinalize();
         }
     };
+    private final LogHandler handler;
 
     private native void nativeInit(String pipelineDesc);// Initialize native code, build pipeline, etc
     private native void nativeFinalize(); // Destroy pipeline and shutdown native code
@@ -40,6 +41,7 @@ public class GStreamerFacade {
     private native void nativeSurfaceInit(Object surface);
     private native void nativeSurfaceFinalize();
     private long native_custom_data;      // Native code will use this to keep private data
+    private native void nativeSetLogHandler(Object handler);  // Native method
 
     private boolean is_playing_desired;   // Whether the user asked to go to PLAYING
 
@@ -49,6 +51,11 @@ public class GStreamerFacade {
             SurfaceView surfaceView,
             Logger logger,
             String pipeline) {
+        handler = LogHandler.getInstance();
+        handler.logger = (m) -> {
+          logger.logMessage(m);
+        };
+        nativeSetLogHandler(handler);
         this.logger = logger;
         this.surfaceView = surfaceView;
         // Initialize GStreamer and warn if it fails
@@ -74,6 +81,7 @@ public class GStreamerFacade {
     }
 
     public void close() {
+        handler.logger = (m) -> {};
         surfaceView.getHolder().removeCallback(surfaceCallbacks);
         nativeFinalize();
     }

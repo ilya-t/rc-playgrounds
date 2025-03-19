@@ -5,6 +5,7 @@
 #include <android/native_window.h>
 #include <android/native_window_jni.h>
 #include <gst/gst.h>
+#include <gst/gstinfo.h>
 #include <gst/video/video.h>
 #include <pthread.h>
 
@@ -42,6 +43,9 @@ static JavaVM *java_vm;
 static jfieldID custom_data_field_id;
 static jmethodID set_message_method_id;
 static jmethodID on_gstreamer_initialized_method_id;
+
+static jobject log_handler_object = NULL;
+
 
 /*
  * Private methods
@@ -94,6 +98,62 @@ static void set_ui_message (const gchar *message, CustomData *data) {
     (*env)->ExceptionClear (env);
   }
   (*env)->DeleteLocalRef (env, jmessage);
+}
+
+/* Callback for capturing GStreamer log messages */
+static void gst_debug_log_handler(GstDebugCategory *category,
+                                  GstDebugLevel level,
+                                  const gchar *file, const gchar *function, gint line,
+                                  GObject *object, GstDebugMessage *message, gpointer user_data) {
+    if (!java_vm ) {
+        GST_ERROR("JavaVM or LogHandler not initialized");
+        return;
+    }
+    if ( !log_handler_object) {
+        GST_ERROR("JavaVM or LogHandler not initialized");
+        return;
+    }
+
+    JNIEnv *env;
+    bool attached = false;
+
+    // Attach thread if needed
+    if ((*java_vm)->GetEnv(java_vm, (void**)&env, JNI_VERSION_1_4) != JNI_OK) {
+        if ((*java_vm)->AttachCurrentThread(java_vm, (void**)&env, NULL) != JNI_OK) {
+            GST_ERROR("Failed to attach thread to JVM");
+            return;
+        }
+        attached = true;
+    }
+
+    // Get Java class & method
+    jclass logHandlerClass = (*env)->GetObjectClass(env, log_handler_object);
+    if (!logHandlerClass) {
+        GST_ERROR("Failed to find LogHandler class");
+        goto cleanup;
+    }
+
+    jmethodID logMethod = (*env)->GetMethodID(env, logHandlerClass, "handleLog", "(Ljava/lang/String;)V");
+    if (!logMethod) {
+        GST_ERROR("Failed to find handleLog method");
+        goto cleanup;
+    }
+
+    // Get log message
+    const gchar *log_msg = gst_debug_message_get(message);
+    jstring jLogMsg = (*env)->NewStringUTF(env, log_msg);
+
+    // Call Java method
+    (*env)->CallVoidMethod(env, log_handler_object, logMethod, jLogMsg);
+
+    // Cleanup
+    (*env)->DeleteLocalRef(env, jLogMsg);
+    (*env)->DeleteLocalRef(env, logHandlerClass);
+
+    cleanup:
+    if (attached) {
+        (*java_vm)->DetachCurrentThread(java_vm);
+    }
 }
 
 /* Retrieve errors from the bus and show them on the UI */
@@ -217,12 +277,18 @@ static void gst_native_init(JNIEnv* env, jobject thiz, jstring pipeline_desc) {
   GST_DEBUG ("Created CustomData at %p", data);
   data->app = (*env)->NewGlobalRef (env, thiz);
   GST_DEBUG ("Created GlobalRef for app object at %p", data->app);
+  /* Set GStreamer log handler */
+  gst_debug_add_log_function(gst_debug_log_handler, data, NULL);
 
   const char *pipeline_cstr = (*env)->GetStringUTFChars(env, pipeline_desc, NULL);
   data->pipeline_description = g_strdup(pipeline_cstr);
   (*env)->ReleaseStringUTFChars(env, pipeline_desc, pipeline_cstr);
 
   pthread_create (&gst_app_thread, NULL, &app_function, data);
+}
+
+static void gst_native_set_log_handler(JNIEnv *env, jobject thiz, jobject obj) {
+    log_handler_object = (*env)->NewGlobalRef(env, obj);
 }
 
 /* Quit the main loop, remove the native thread and free resources */
@@ -321,7 +387,8 @@ static JNINativeMethod native_methods[] = {
   { "nativePause", "()V", (void *) gst_native_pause},
   { "nativeSurfaceInit", "(Ljava/lang/Object;)V", (void *) gst_native_surface_init},
   { "nativeSurfaceFinalize", "()V", (void *) gst_native_surface_finalize},
-  { "nativeClassInit", "()Z", (void *) gst_native_class_init}
+  { "nativeClassInit", "()Z", (void *) gst_native_class_init},
+  { "nativeSetLogHandler", "(Ljava/lang/Object;)V", (void *) gst_native_set_log_handler},
 };
 
 /* Library initializer */
