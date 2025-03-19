@@ -58,7 +58,7 @@ private fun asStatus(event: SteeringEvent,
         "yaw: %.2f (raw: %.2f)".format(event.yaw, event.rawYaw)
 
     val streamer = "streamer: ${streamerEvent.getOrElse { exception -> exception.message ?: exception.toString() }}"
-    return ping + "\n" + control + "\n" + streamer
+    return "- " + ping + "\n- " + control + "\n- " + streamer
 }
 
 private class StatusCollector(
@@ -105,4 +105,15 @@ private val SAD_EMOJI = listOf(
     "🫠",
     "😵",
     "😲",
+    "😡",
+    "🤯",
+    "😔",
+    "🤬",
+    "😨",
+    "😰",
+    "😱",
+    "🥶",
+    "🫣",
+    "😴",
+    "🥱",
 )
