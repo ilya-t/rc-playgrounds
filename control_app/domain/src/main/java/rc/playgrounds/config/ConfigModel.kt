@@ -59,7 +59,7 @@ private const val REMOTE_CMD = "raspivid -pf baseline -fl -g 1 -w 320 -h 240 --n
 // "local_cmd": "udpsrc port=12345 ! jpegparse ! jpegdec ! autovideosink"
 //
 @Language("Json")
-private const val DEFAULT_CONFIG = """
+internal const val DEFAULT_CONFIG = """
 {
   "stream": {
     "remote_cmd": "$REMOTE_CMD",
@@ -83,12 +83,12 @@ private const val DEFAULT_CONFIG = """
     "steer_factor": 1.0,
     "steer_zone": "0..0.7",
     "long_factor": 0.5,
-    "long_zones": {
+    "forward_long_zones": {
         "0.0": "0.01",
         "0.5": "0.2",
         "1.0": "0.7"
     },
-    "long_zones_negative": {
+    "backward_long_zones": {
         "0.0": "0.01",
         "1.0": "0.2"
     }

@@ -75,9 +75,9 @@ private fun com.rc.playgrounds.config.model.ControlTuning.asInterpolation() = Co
     steer = create(steerFactor),
     steerTranslator = create(steerZone),
     long = create(longFactor),
-    longTranslator = if (longZones.isNotEmpty()) {
-        val zonesNegative = longZonesNegative.ifEmpty { longZones }
-        create(negative = zonesNegative, positive = longZones)
+    longTranslator = if (forwardLongZones.isNotEmpty()) {
+        val zonesNegative = backwardLongZones.ifEmpty { forwardLongZones }
+        create(negative = zonesNegative, positive = forwardLongZones)
     } else {
         create(PointF(0f, 1f))
     },

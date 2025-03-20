@@ -1,11 +1,11 @@
 package com.rc.playgrounds.config
 
 import android.graphics.PointF
-import org.json.JSONObject
 import com.rc.playgrounds.config.model.ControlOffsets
 import com.rc.playgrounds.config.model.ControlServer
 import com.rc.playgrounds.config.model.ControlTuning
 import com.rc.playgrounds.config.model.MappingZone
+import org.json.JSONObject
 
 class Config(
     val rawJson: String,
@@ -14,17 +14,23 @@ class Config(
     private val json by lazy {
         runCatching {
             JSONObject(rawJson)
-        }.getOrElse { JSONObject() }
+        }
+            .onFailure(errorCollector)
+            .getOrElse { JSONObject() }
     }
     val remoteStreamCmd: String
         get() = runCatching {
             json.getJSONObject("stream").getString("remote_cmd")
-        }.getOrElse { "" }
+        }
+            .onFailure(errorCollector)
+            .getOrElse { "" }
 
     val streamLocalCmd: String
         get() = runCatching {
             json.getJSONObject("stream").getString("local_cmd")
-        }.getOrElse { "" }
+        }
+            .onFailure(errorCollector)
+            .getOrElse { "" }
 
     val controlServer: ControlServer? by lazy {
         runCatching {
@@ -34,7 +40,9 @@ class Config(
                 port = t.getInt("port")
             )
 
-        }.getOrNull()
+        }
+            .onFailure(errorCollector)
+            .getOrNull()
     }
 
     val controlOffsets: ControlOffsets by lazy {
@@ -69,8 +77,8 @@ class Config(
                 steerFactor = t.optDouble("steer_factor").toFloat(),
                 steerZone = parseZone(t.optString("steer_zone")),
                 longFactor = t.optDouble("long_factor").toFloat(),
-                longZones = parseZones(t.optJSONObject("long_zones")),
-                longZonesNegative = parseZones(t.optJSONObject("long_zones_negative")),
+                forwardLongZones = parseZones(t.optJSONObject("forward_long_zones")),
+                backwardLongZones = parseZones(t.optJSONObject("backward_long_zones")),
             )
         }
         .onFailure { errorCollector.invoke(it) }
@@ -83,8 +91,8 @@ class Config(
                 steerFactor = null,
                 steerZone = null,
                 longFactor = null,
-                longZones = emptyList(),
-                longZonesNegative = emptyList(),
+                forwardLongZones = emptyList(),
+                backwardLongZones = emptyList(),
             )
         }
     }

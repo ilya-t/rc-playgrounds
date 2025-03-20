@@ -5,9 +5,32 @@ import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import rc.playgrounds.config.DEFAULT_CONFIG
 
 @RunWith(RobolectricTestRunner::class)
 class ConfigTest {
+    private val errorRaiser = { it: Throwable -> throw it }
+    @Test
+    fun smoke() {
+        val config = Config(DEFAULT_CONFIG, errorRaiser)
+        Assert.assertNotNull(config.controlTuning)
+        Assert.assertNotNull(config.controlTuning.pitchFactor)
+        Assert.assertNotNull(config.controlTuning.pitchZone)
+        Assert.assertNotNull(config.controlTuning.yawFactor)
+        Assert.assertNotNull(config.controlTuning.yawZone)
+        Assert.assertNotNull(config.controlTuning.steerFactor)
+        Assert.assertNotNull(config.controlTuning.steerZone)
+        Assert.assertNotNull(config.controlTuning.longFactor)
+        Assert.assertTrue(config.controlTuning.forwardLongZones.isNotEmpty())
+        Assert.assertTrue(config.controlTuning.backwardLongZones.isNotEmpty())
+
+        Assert.assertNotNull(config.remoteStreamCmd)
+        Assert.assertNotNull(config.streamLocalCmd)
+        Assert.assertNotNull(config.controlServer)
+        Assert.assertNotNull(config.controlOffsets)
+        Assert.assertNotNull(config.controlTuning)
+    }
+
     @Test
     fun testRemoteStreamCmd_ValidJson() {
         val json = "{\"stream\": {\"remote_cmd\": \"start\"}}"
@@ -38,7 +61,7 @@ class ConfigTest {
         val config = Config(json) {
             throw it
         }
-        val longZones: List<MappingZone> = config.controlTuning.longZones
+        val longZones: List<MappingZone> = config.controlTuning.forwardLongZones
         Assert.assertEquals(4, longZones.size)
 
         Assert.assertEquals(0f, longZones[0].src.x)
