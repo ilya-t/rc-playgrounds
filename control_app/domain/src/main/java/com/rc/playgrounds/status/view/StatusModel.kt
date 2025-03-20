@@ -3,7 +3,9 @@ package com.rc.playgrounds.status.view
 import com.rc.playgrounds.control.SteeringEvent
 import com.rc.playgrounds.control.SteeringEventStream
 import com.rc.playgrounds.status.PingService
-import com.rc.playgrounds.status.StreamerEvents
+import com.rc.playgrounds.status.gstreamer.Event
+import com.rc.playgrounds.status.gstreamer.FrameDropStatus
+import com.rc.playgrounds.status.gstreamer.StreamerEvents
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,6 +21,7 @@ class StatusModel(
     config: ConfigModel,
     private val steeringEventStream: SteeringEventStream,
     private val streamerEvents: StreamerEvents,
+    private val frameDropStatus: FrameDropStatus,
 ) {
 
     private val pingTarget: Flow<String?> = config.configFlow.map { it.controlServer?.address }
@@ -41,24 +44,46 @@ class StatusModel(
         }
 
         scope.launch {
-            combine(steeringEventStream.events, _ping, streamerEvents.events, ::asStatus).collect {
+            combine(
+                steeringEventStream.events,
+                _ping,
+                streamerEvents.events,
+                frameDropStatus.frameDropsPerSecond,
+                ::asStatus
+            ).collect {
                 _text.value = it
             }
         }
     }
 }
 
-private fun asStatus(event: SteeringEvent,
-                     ping: String,
-                     streamerEvent: Result<String>): String {
-    val control =
-        "long: %.2f (raw: %.2f) ".format(event.long, event.rawLong) +
-        "steer: %.2f (raw: %.2f) ".format(event.steer, event.rawSteer) +
-        "pitch: %.2f (raw: %.2f) ".format(event.pitch, event.rawPitch) +
-        "yaw: %.2f (raw: %.2f)".format(event.yaw, event.rawYaw)
+private fun asStatus(
+    event: SteeringEvent,
+    ping: String,
+    streamerEvent: Event,
+    framesDropped: Int,
+): String {
+    val streamer: String? = if ((System.currentTimeMillis() - streamerEvent.time) < 10_000L) {
+        when (streamerEvent) {
+            is Event.Message -> null
+            is Event.Error -> "streamer error: ${streamerEvent.error.message ?: streamerEvent.error.toString() }}"
+        }
+    } else {
+        null
+    }
 
-    val streamer = "streamer: ${streamerEvent.getOrElse { exception -> exception.message ?: exception.toString() }}"
-    return "- " + ping + "\n- " + control + "\n- " + streamer
+    return buildString {
+        appendLine("- $ping")
+        appendLine("- frameDrop/sec: $framesDropped")
+        if (streamer != null) {
+            appendLine("- $streamer")
+        }
+
+        appendLine("- long: %.2f (raw: %.2f) ".format(event.long, event.rawLong))
+        appendLine("- steer: %.2f (raw: %.2f) ".format(event.steer, event.rawSteer))
+        appendLine("- pitch: %.2f (raw: %.2f) ".format(event.pitch, event.rawPitch))
+        appendLine("- yaw: %.2f (raw: %.2f)".format(event.yaw, event.rawYaw))
+    }
 }
 
 private class StatusCollector(
