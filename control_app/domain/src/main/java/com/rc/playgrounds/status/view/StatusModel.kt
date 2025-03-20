@@ -45,6 +45,7 @@ class StatusModel(
 
         scope.launch {
             combine(
+                pingTarget,
                 steeringEventStream.events,
                 _ping,
                 streamerEvents.events,
@@ -58,6 +59,7 @@ class StatusModel(
 }
 
 private fun asStatus(
+    pingTarget: String?,
     event: SteeringEvent,
     ping: String,
     streamerEvent: Event,
@@ -83,6 +85,7 @@ private fun asStatus(
         appendLine("- steer: %.2f (raw: %.2f) ".format(event.steer, event.rawSteer))
         appendLine("- pitch: %.2f (raw: %.2f) ".format(event.pitch, event.rawPitch))
         appendLine("- yaw: %.2f (raw: %.2f)".format(event.yaw, event.rawYaw))
+        appendLine("- server: $pingTarget")
     }
 }
 
@@ -97,10 +100,10 @@ private class StatusCollector(
         pingService.pingResult.collect { ping ->
             ping
                 .onSuccess { duration: Duration ->
-                    statusReceiver("ping($server): ${duration.inWholeMilliseconds}ms")
+                    statusReceiver("ping: ${duration.inWholeMilliseconds}ms")
                 }
                 .onFailure {
-                    statusReceiver("ping($server): ${it.message ?: "(error)"} ${SAD_EMOJI.random()}")
+                    statusReceiver("ping: ${it.message ?: "(error)"} ${SAD_EMOJI.random()}")
                 }
         }
     }
