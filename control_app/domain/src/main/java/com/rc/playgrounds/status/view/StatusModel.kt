@@ -1,5 +1,6 @@
 package com.rc.playgrounds.status.view
 
+import com.rc.playgrounds.config.ConfigModel
 import com.rc.playgrounds.control.SteeringEvent
 import com.rc.playgrounds.control.SteeringEventStream
 import com.rc.playgrounds.status.PingService
@@ -13,7 +14,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import rc.playgrounds.config.ConfigModel
 import kotlin.time.Duration
 
 class StatusModel(

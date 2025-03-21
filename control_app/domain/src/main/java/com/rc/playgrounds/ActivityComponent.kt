@@ -11,6 +11,7 @@ import androidx.appcompat.widget.AppCompatEditText
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import com.rc.playgrounds.config.Config
 import com.rc.playgrounds.config.ConfigView
 import com.rc.playgrounds.control.gamepad.GamepadEventEmitter
 import com.rc.playgrounds.domain.R
@@ -20,12 +21,13 @@ import com.rc.playgrounds.stopwatch.StopwatchView
 import com.rc.playgrounds.stream.StreamReceiver
 import com.rc.playgrounds.stream.StreamingProcess
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class ActivityComponent(
     private val appComponent: AppComponent,
     private val a: AppCompatActivity,
-    private val streamReceiverFactory: () -> StreamReceiver,
+    private val streamReceiverFactory: (Config) -> StreamReceiver,
 ) {
     init {
         a.setContentView(R.layout.experiment_activity)
@@ -97,9 +99,12 @@ class ActivityComponent(
 
     private fun start() {
         streamingProcess?.release()
-        streamingProcess = StreamingProcess(streamReceiverFactory)
-        streamingProcess?.start()
-        gamepadEventEmitter.restart()
+        a.lifecycleScope.launch {
+            val config = appComponent.configModel.configFlow.first()
+            streamingProcess = StreamingProcess(config, streamReceiverFactory)
+            streamingProcess?.start()
+            gamepadEventEmitter.restart()
+        }
     }
 
     private fun release() {

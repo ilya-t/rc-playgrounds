@@ -12,7 +12,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import rc.playgrounds.config.ConfigModel
 
 class ConfigView(
     private val configInput: AppCompatEditText,
@@ -56,10 +55,10 @@ class ConfigView(
 
             override fun afterTextChanged(s: Editable?) {
                 scope.launch {
-                    val unsaved = configModel.configFlow.value.rawJson != configInput.text.toString()
-                    withContext(Dispatchers.Main) {
-                        saveButton.isEnabled = unsaved
-                    }
+//                    val unsaved = configModel.configFlow.value.rawJson != configInput.text.toString()
+//                    withContext(Dispatchers.Main) {
+//                        saveButton.isEnabled = unsaved
+//                    }
                 }
             }
 

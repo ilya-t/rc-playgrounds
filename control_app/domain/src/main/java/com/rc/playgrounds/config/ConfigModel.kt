@@ -1,44 +1,33 @@
-package rc.playgrounds.config
+package com.rc.playgrounds.config
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import org.intellij.lang.annotations.Language
-import rc.playgrounds.storage.PersistentStorage
 
 class ConfigModel(
     scope: CoroutineScope,
-    private val storage: PersistentStorage,
+    private val configRepository: ConfigRepository
 ) {
-    private val _configFlow = MutableStateFlow<com.rc.playgrounds.config.Config>(
-        com.rc.playgrounds.config.Config(
-            DEFAULT_CONFIG
-        )
-    )
-    val configFlow: StateFlow<com.rc.playgrounds.config.Config> = _configFlow
+    val configFlow: Flow<Config> = configRepository.activeVersion.map { Config(it.rawConfig) }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val scope = scope + Dispatchers.IO.limitedParallelism(1)
 
     fun updateConfig(json: String) {
         scope.launch {
-            if (_configFlow.value.rawJson == json) {
-                return@launch
-            }
-
-            _configFlow.value = com.rc.playgrounds.config.Config(json)
-            storage.writeString(STORAGE_KEY, json)
-        }
-    }
-
-    init {
-        scope.launch {
-            val config = storage.readString(STORAGE_KEY).takeIf { it?.isNotEmpty() == true } ?: DEFAULT_CONFIG
-            _configFlow.value = com.rc.playgrounds.config.Config(config)
+            val version = configRepository.activeVersion.value.version
+            configRepository.storeConfig(
+                ConfigVersion(
+                    version = version,
+                    rawConfig = json,
+                )
+            )
+            configRepository.switchActive(version)
         }
     }
 }

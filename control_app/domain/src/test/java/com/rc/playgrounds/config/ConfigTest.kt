@@ -5,7 +5,6 @@ import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import rc.playgrounds.config.DEFAULT_CONFIG
 
 @RunWith(RobolectricTestRunner::class)
 class ConfigTest {

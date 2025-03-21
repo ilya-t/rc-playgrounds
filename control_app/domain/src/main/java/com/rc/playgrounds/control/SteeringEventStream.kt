@@ -2,6 +2,7 @@ package com.rc.playgrounds.control
 
 import android.graphics.PointF
 import android.view.animation.AccelerateInterpolator
+import com.rc.playgrounds.config.ConfigModel
 import com.rc.playgrounds.config.model.ControlOffsets
 import com.rc.playgrounds.config.model.MappingZone
 import com.rc.playgrounds.control.gamepad.GamepadEvent
@@ -12,7 +13,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import rc.playgrounds.config.ConfigModel
 import kotlin.math.absoluteValue
 import kotlin.math.sign
 import kotlin.math.withSign

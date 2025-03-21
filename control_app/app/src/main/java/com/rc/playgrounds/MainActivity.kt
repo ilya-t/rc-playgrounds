@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import androidx.annotation.OptIn
 import androidx.appcompat.app.AppCompatActivity
 import androidx.media3.common.util.UnstableApi
+import com.rc.playgrounds.config.Config
 import com.rc.playgrounds.domain.R
 import com.rc.playgrounds.stream.GStreamerReceiver
 import com.rc.playgrounds.stream.StreamReceiver
@@ -35,7 +36,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     @SuppressLint("UnsafeOptInUsageError")
-    private fun createReceiver(): StreamReceiver {
+    private fun createReceiver(c: Config): StreamReceiver {
 //        return ExoReceiver(
 //            activity,
 //            playerView,
@@ -51,7 +52,7 @@ class MainActivity : AppCompatActivity() {
             appComponent.streamerEvents,
             this,
             surfaceContainer,
-            appComponent.configModel.configFlow.value.streamLocalCmd,
+            c.streamLocalCmd,
         )
     }
 

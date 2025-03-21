@@ -4,60 +4,7 @@
     android:layout_height="match_parent"
     android:keepScreenOn="true"
     >
-    <RelativeLayout
-        android:id="@+id/layer_config"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:paddingTop="48dp"
-        android:visibility="gone">
-        <Button
-            android:id="@+id/ok_button"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
-            android:text="[OK]"/>
-
-        <androidx.appcompat.widget.AppCompatEditText
-            android:id="@+id/config_input"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:hint="Paste JSON Config here"
-            android:imeOptions="actionDone"
-            android:layout_above="@+id/config_controls"
-            android:layout_below="@+id/ok_button"
-            />
-        <LinearLayout
-            android:id="@+id/config_controls"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:orientation="horizontal"
-            android:weightSum="10"
-            android:layout_alignParentBottom="true">
-            <Button
-                android:id="@+id/back_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="4"
-                android:text="[BACK]"/>
-            <Button
-                android:id="@+id/save_button"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_weight="4"
-                android:text="[APPLY]"/>
-            <Button
-                android:id="@+id/stopwatch_button"
-                android:focusable="false"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_weight="2"
-                android:src="@drawable/outline_timer_24"
-                android:text="stopwatch"
-                />
-
-        </LinearLayout>
-    </RelativeLayout>
-
+    <include layout="@layout/layer_config"/>
     <include layout="@layout/layer_main"/>
 
 

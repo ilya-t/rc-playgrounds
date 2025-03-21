@@ -1,0 +1,95 @@
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layer_config"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingTop="48dp"
+    android:visibility="gone">
+    <Button
+        android:id="@+id/ok_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:text="[OK]"/>
+
+    <androidx.appcompat.widget.AppCompatEditText
+        android:id="@+id/config_input"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:hint="Paste JSON Config here"
+        android:imeOptions="actionDone"
+        android:layout_above="@+id/config_controls"
+        android:layout_below="@+id/ok_button"
+        />
+    <LinearLayout
+        android:id="@+id/config_controls"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:weightSum="10"
+        android:layout_alignParentBottom="true">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:orientation="horizontal"
+            android:weightSum="10"
+            android:layout_alignParentBottom="true">
+
+            <Button
+                android:id="@+id/prev_config_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"
+                android:text="prev"/>
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/config_name"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="config: v.1"
+                android:gravity="center"
+                android:imeOptions="actionDone"
+                android:layout_weight="6"
+                />
+
+            <Button
+                android:id="@+id/next_config_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"
+                android:text="nxt"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:orientation="horizontal"
+            android:weightSum="10"
+            android:layout_alignParentBottom="true">
+            <Button
+                android:id="@+id/back_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="4"
+                android:text="[BACK]"/>
+            <Button
+                android:id="@+id/save_button"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="4"
+                android:text="[SAVE]"/>
+            <Button
+                android:id="@+id/stopwatch_button"
+                android:focusable="false"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="2"
+                android:src="@drawable/outline_timer_24"
+                android:text="stopwatch"
+                />
+
+        </LinearLayout>
+
+    </LinearLayout>
+</RelativeLayout>

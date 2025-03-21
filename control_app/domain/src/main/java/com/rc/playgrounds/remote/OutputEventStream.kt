@@ -1,5 +1,7 @@
 package com.rc.playgrounds.remote
 
+import com.rc.playgrounds.config.Config
+import com.rc.playgrounds.config.ConfigModel
 import com.rc.playgrounds.control.SteeringEvent
 import com.rc.playgrounds.control.SteeringEventStream
 import kotlinx.coroutines.CoroutineScope
@@ -9,12 +11,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.json.JSONObject
-import rc.playgrounds.config.ConfigModel
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetAddress
@@ -65,7 +65,7 @@ private class EventEmitter(
     val config: com.rc.playgrounds.config.model.ControlServer,
     private val scope: CoroutineScope,
     private val steeringEventStream: SteeringEventStream,
-    private val configFlow: StateFlow<com.rc.playgrounds.config.Config>,
+    private val configFlow: Flow<Config>,
     private val streamCmdHash: Flow<String>,
 ) {
     private val messages: Flow<JSONObject> = combine(
