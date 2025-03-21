@@ -1,8 +1,9 @@
 package com.rc.playgrounds
 
 import android.app.Application
-import com.rc.playgrounds.config.ConfigModel
+import com.rc.playgrounds.config.ActiveConfigProvider
 import com.rc.playgrounds.config.ConfigRepository
+import com.rc.playgrounds.config.view.ConfigModel
 import com.rc.playgrounds.control.SteeringEventStream
 import com.rc.playgrounds.control.gamepad.GamepadEventStream
 import com.rc.playgrounds.remote.OutputEventStream
@@ -24,22 +25,26 @@ class AppComponent(app: Application) {
         storage,
         scope,
     )
-    val configModel = ConfigModel(
+    val activeConfigProvider = ActiveConfigProvider(
         scope,
         configRepository,
+    )
+    val configModel = ConfigModel(
+        configRepository = configRepository,
+        scope = scope,
     )
 
     val gamepadEventStream = GamepadEventStream()
     private val steeringEventStream = SteeringEventStream(
         scope,
-        configModel,
+        activeConfigProvider,
         gamepadEventStream,
     )
     val streamCmdHash = StreamCmdHash()
     private val outputEventStream = OutputEventStream(
         steeringEventStream,
         scope,
-        configModel,
+        activeConfigProvider,
         streamCmdHash,
     )
 
@@ -55,7 +60,7 @@ class AppComponent(app: Application) {
 
     val statusModel = StatusModel(
         scope,
-        configModel,
+        activeConfigProvider,
         steeringEventStream,
         streamerEvents,
         frameDropStatus,

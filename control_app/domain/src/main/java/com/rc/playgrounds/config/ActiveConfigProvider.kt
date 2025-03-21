@@ -9,7 +9,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import org.intellij.lang.annotations.Language
 
-class ConfigModel(
+class ActiveConfigProvider(
     scope: CoroutineScope,
     private val configRepository: ConfigRepository
 ) {

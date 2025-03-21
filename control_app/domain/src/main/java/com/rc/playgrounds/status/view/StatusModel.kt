@@ -1,6 +1,6 @@
 package com.rc.playgrounds.status.view
 
-import com.rc.playgrounds.config.ConfigModel
+import com.rc.playgrounds.config.ActiveConfigProvider
 import com.rc.playgrounds.control.SteeringEvent
 import com.rc.playgrounds.control.SteeringEventStream
 import com.rc.playgrounds.status.PingService
@@ -18,7 +18,7 @@ import kotlin.time.Duration
 
 class StatusModel(
     private val scope: CoroutineScope,
-    config: ConfigModel,
+    config: ActiveConfigProvider,
     private val steeringEventStream: SteeringEventStream,
     private val streamerEvents: StreamerEvents,
     private val frameDropStatus: FrameDropStatus,

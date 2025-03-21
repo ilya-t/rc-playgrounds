@@ -1,7 +1,7 @@
 package com.rc.playgrounds.remote
 
+import com.rc.playgrounds.config.ActiveConfigProvider
 import com.rc.playgrounds.config.Config
-import com.rc.playgrounds.config.ConfigModel
 import com.rc.playgrounds.control.SteeringEvent
 import com.rc.playgrounds.control.SteeringEventStream
 import kotlinx.coroutines.CoroutineScope
@@ -23,7 +23,7 @@ import java.net.InetAddress
 class OutputEventStream(
     private val steeringEventStream: SteeringEventStream,
     private val scope: CoroutineScope,
-    private val configModel: ConfigModel,
+    private val activeConfigProvider: ActiveConfigProvider,
     private val streamCmdHash: StreamCmdHash,
 ) {
 
@@ -32,7 +32,7 @@ class OutputEventStream(
 
     init {
         scope.launch {
-            configModel.configFlow.collect {
+            activeConfigProvider.configFlow.collect {
                 if (controlServer.value != it.controlServer) {
                     controlServer.value = it.controlServer
                 }
@@ -54,7 +54,7 @@ class OutputEventStream(
                 c,
                 scope,
                 steeringEventStream,
-                configModel.configFlow,
+                activeConfigProvider.configFlow,
                 streamCmdHash.hash,
             )
         }

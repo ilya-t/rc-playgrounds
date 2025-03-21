@@ -8,11 +8,12 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatEditText
+import androidx.appcompat.widget.AppCompatTextView
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.rc.playgrounds.config.Config
-import com.rc.playgrounds.config.ConfigView
+import com.rc.playgrounds.config.view.ConfigView
 import com.rc.playgrounds.control.gamepad.GamepadEventEmitter
 import com.rc.playgrounds.domain.R
 import com.rc.playgrounds.navigation.NaiveNavigator
@@ -41,13 +42,16 @@ class ActivityComponent(
     private var streamingProcess: StreamingProcess? = null
     private val navigator = NaiveNavigator(a)
     private val configView = ConfigView(
-        configInput,
-        okButton,
-        saveButton,
-        backButton,
-        appComponent.configModel,
-        a.lifecycleScope,
-        navigator,
+        configInput = configInput,
+        okButton = okButton,
+        saveButton = saveButton,
+        backButton = backButton,
+        nextButton = a.findViewById<Button>(R.id.next_config_button),
+        prevButton = a.findViewById<Button>(R.id.prev_config_button),
+        configTitle = a.findViewById<AppCompatTextView>(R.id.config_name),
+        scope = a.lifecycleScope,
+        navigator = navigator,
+        configModel = appComponent.configModel,
     )
     private val statusView = StatusView(
         textView = a.findViewById<TextView>(R.id.tv_output),
@@ -64,7 +68,7 @@ class ActivityComponent(
 
     init {
         a.lifecycleScope.launch {
-            appComponent.configModel.configFlow.collect {
+            appComponent.activeConfigProvider.configFlow.collect {
                 doReset()
             }
         }
@@ -100,7 +104,7 @@ class ActivityComponent(
     private fun start() {
         streamingProcess?.release()
         a.lifecycleScope.launch {
-            val config = appComponent.configModel.configFlow.first()
+            val config = appComponent.activeConfigProvider.configFlow.first()
             streamingProcess = StreamingProcess(config, streamReceiverFactory)
             streamingProcess?.start()
             gamepadEventEmitter.restart()

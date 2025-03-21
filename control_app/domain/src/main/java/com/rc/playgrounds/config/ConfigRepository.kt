@@ -17,23 +17,13 @@ class ConfigRepository(
 ) {
     @OptIn(ExperimentalCoroutinesApi::class)
     private val scope = scope + Dispatchers.IO.limitedParallelism(1)
-    private val configVersions = loadAvailableVersions(persistentStorage).toMutableList()
-
-    private fun pickNextVersion(): String {
-        var i = 1
-        var candidate = "v.${configVersions.size + i}"
-
-        while (configVersions.contains(candidate)) {
-            i++
-            candidate = "v.${configVersions.size + i}"
-        }
-
-        return candidate
-    }
+    private val _allVersions = MutableStateFlow(loadAvailableVersions(persistentStorage))
+    val allVersions: StateFlow<List<String>> = _allVersions
 
     private val _activeVersion = MutableStateFlow(
         run {
-            val version = loadActiveVersionName(persistentStorage) ?: pickNextVersion()
+            val version = loadActiveVersionName(persistentStorage)
+                ?: pickNextVersion(_allVersions.value)
             ConfigVersion(
                 version = version,
                 rawConfig = readVersionConfig(version) ?: DEFAULT_CONFIG
@@ -88,9 +78,11 @@ class ConfigRepository(
     private suspend fun writeVersionConfig(version: String, config: String) {
         val prefixedVersion = "$CONFIG_PREFIX$version"
         persistentStorage.writeString(prefixedVersion, config)
+        val configVersions = _allVersions.value.toMutableList()
         if (!configVersions.contains(version)) {
             configVersions.add(version)
             persistentStorage.writeString(CONFIGS, JSONArray(configVersions).toString())
+            _allVersions.value = configVersions.toList()
         }
     }
 }
@@ -103,6 +95,18 @@ private fun loadAvailableVersions(persistentStorage: PersistentStorage): List<St
         configList.add(jsonArray.getString(i))
     }
     return configList
+}
+
+internal fun pickNextVersion(allVersions: List<String>): String {
+    var i = 1
+    var candidate = "v.${allVersions.size + i}"
+
+    while (allVersions.contains(candidate)) {
+        i++
+        candidate = "v.${allVersions.size + i}"
+    }
+
+    return candidate
 }
 
 private fun loadActiveVersionName(persistentStorage: PersistentStorage): String? {

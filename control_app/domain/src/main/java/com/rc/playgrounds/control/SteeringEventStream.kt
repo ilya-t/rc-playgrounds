@@ -2,7 +2,7 @@ package com.rc.playgrounds.control
 
 import android.graphics.PointF
 import android.view.animation.AccelerateInterpolator
-import com.rc.playgrounds.config.ConfigModel
+import com.rc.playgrounds.config.ActiveConfigProvider
 import com.rc.playgrounds.config.model.ControlOffsets
 import com.rc.playgrounds.config.model.MappingZone
 import com.rc.playgrounds.control.gamepad.GamepadEvent
@@ -19,12 +19,12 @@ import kotlin.math.withSign
 
 class SteeringEventStream(
     scope: CoroutineScope,
-    private val configModel: ConfigModel,
+    private val activeConfigProvider: ActiveConfigProvider,
     private val gamepadEventStream: GamepadEventStream,
 ) {
     private val statelessEvents: Flow<SteeringEvent> = combine(
-        configModel.configFlow.map { it.controlOffsets },
-        configModel.configFlow.map { it.controlTuning.asInterpolation() },
+        activeConfigProvider.configFlow.map { it.controlOffsets },
+        activeConfigProvider.configFlow.map { it.controlTuning.asInterpolation() },
         gamepadEventStream.events,
     ) { offsets: ControlOffsets,
         interpolation: ControlInterpolation,
