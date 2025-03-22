@@ -59,6 +59,9 @@ class ConfigModel(
             nextEnabled = !isLastConfig,
             prevEnabled = !isFirstConfig,
             save = {
+                if (!unsaved) {
+                    return@ConfigViewModel
+                }
                 val newVersion = ConfigVersion(
                     version = pickNextVersion(allVersions),
                     rawConfig = text
