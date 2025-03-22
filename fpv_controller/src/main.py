@@ -110,7 +110,7 @@ class Controller:
             yaw = msg.get("yaw", 0)       # -1..1
             pitch = msg.get("pitch", 0)   # -1..1
             steer = msg.get("steer", 0)   # -1..1
-            long = msg.get("long", 0) + 0.18    # -1..1
+            long = msg.get("long", 0)    # -1..1
             stream_cmd = msg.get("stream_cmd", "") 
             stream_cmd_hash = msg.get("stream_cmd_hash", "") 
 
