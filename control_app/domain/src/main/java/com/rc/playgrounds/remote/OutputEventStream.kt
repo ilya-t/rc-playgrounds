@@ -2,6 +2,7 @@ package com.rc.playgrounds.remote
 
 import com.rc.playgrounds.config.ActiveConfigProvider
 import com.rc.playgrounds.config.Config
+import com.rc.playgrounds.config.model.ControlServer
 import com.rc.playgrounds.control.SteeringEvent
 import com.rc.playgrounds.control.SteeringEventStream
 import kotlinx.coroutines.CoroutineScope
@@ -27,7 +28,7 @@ class OutputEventStream(
     private val streamCmdHash: StreamCmdHash,
 ) {
 
-    private val controlServer = MutableStateFlow<com.rc.playgrounds.config.model.ControlServer?>(null)
+    private val controlServer = MutableStateFlow<ControlServer?>(null)
     private var emitter: EventEmitter? = null
 
     init {
@@ -46,7 +47,7 @@ class OutputEventStream(
         }
     }
 
-    private fun restart(c: com.rc.playgrounds.config.model.ControlServer?) {
+    private fun restart(c: ControlServer?) {
         emitter?.stop()
         emitter = null
         c?.let {
@@ -62,7 +63,7 @@ class OutputEventStream(
 }
 
 private class EventEmitter(
-    val config: com.rc.playgrounds.config.model.ControlServer,
+    val config: ControlServer,
     private val scope: CoroutineScope,
     private val steeringEventStream: SteeringEventStream,
     private val configFlow: Flow<Config>,
@@ -72,7 +73,7 @@ private class EventEmitter(
         configFlow,
         steeringEventStream.events,
         streamCmdHash,
-    ) { config: com.rc.playgrounds.config.Config, event: SteeringEvent, streamHash: String ->
+    ) { config: Config, event: SteeringEvent, streamHash: String ->
         asJson(
             event,
             streamCmd = config.remoteStreamCmd,
@@ -80,8 +81,8 @@ private class EventEmitter(
         )
     }
 
+    private var messageStream: Job? = null
     private val job = scope.launch {
-        var messageStream: Job? = null
         messages.collect { m ->
             messageStream?.cancel()
             messageStream = scope.launch {
@@ -124,6 +125,8 @@ private class EventEmitter(
     }
 
     fun stop() {
+        messageStream?.cancel()
+        messageStream = null
         job.cancel()
     }
 }

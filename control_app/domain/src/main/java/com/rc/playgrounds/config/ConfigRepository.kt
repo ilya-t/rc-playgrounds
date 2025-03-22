@@ -56,17 +56,13 @@ class ConfigRepository(
     }
 
     fun switchActive(version: String) {
-        println("switch@${this@ConfigRepository}: $version")
         scope.launch {
-            println("switch@${this@ConfigRepository}: $version >>>")
             persistentStorage.writeString(ACTIVE_CONFIG_NAME, version)
 
             if (_activeVersion.value.version == version) {
                 return@launch
             }
-            println("switch@${this@ConfigRepository}: $version > (new) >>>")
             val config: String = readVersionConfig(version) ?: return@launch
-            println("switch@${this@ConfigRepository}: $version > (new) >>> $config")
             _activeVersion.value = ConfigVersion(version, rawConfig = config)
         }
     }
