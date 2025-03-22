@@ -43,9 +43,9 @@ class SteeringEventStream(
         val rawLong = -longTrigger
 
         val steeringEvent = SteeringEvent(
-            pitch = interpolation.fixPitch(rawPitch + offsets.pitch),
-            yaw = interpolation.fixYaw(rawYaw + offsets.yaw),
-            steer = interpolation.fixSteer(rawSteer + offsets.steer),
+            pitch = interpolation.fixPitch(rawPitch) + offsets.pitch,
+            yaw = interpolation.fixYaw(rawYaw) + offsets.yaw,
+            steer = interpolation.fixSteer(rawSteer) + offsets.steer,
             long = if (rawLong.absoluteValue > 0.0001f) {
                 // When trigger not touched then its safer to prevent long
                 // pulse at all rather than send one with offset.
