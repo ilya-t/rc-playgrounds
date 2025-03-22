@@ -62,7 +62,7 @@ internal const val DEFAULT_CONFIG = """
     "pitch": 0.0,
     "yaw": 0.0,
     "steer": -0.33,
-    "long": 0.0
+    "long": 0.18
   },
   "control_tuning": {
     "pitch_factor": 1.0,
