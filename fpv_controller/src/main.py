@@ -16,6 +16,11 @@ PWM_YAW_PIN = 18    # GPIO18 (PWM0)
 PWM_PITCH_PIN = 12  # GPIO19 (PWM1)
 PWM_STEER_PIN = 13  # GPIO12 (PWM0)
 PWM_LONG_PIN = 19   # GPIO13 (PWM1)
+PWM_GIMB_MODE = 23
+PWM_GIMB_SENS = 24
+
+GIMB_MODE_VAL = 1000
+GIMB_SENS_VAL = 1000
 
 # PWM options
 PWM_FREQUENCY = 50  
@@ -93,7 +98,7 @@ class Controller:
             self.stream_process = None
 
     def stop_servo_pulse(self):
-        for pin in [PWM_YAW_PIN, PWM_PITCH_PIN, PWM_STEER_PIN, PWM_LONG_PIN]:
+        for pin in [PWM_YAW_PIN, PWM_PITCH_PIN, PWM_STEER_PIN, PWM_LONG_PIN, PWM_GIMB_MODE, PWM_GIMB_SENS]:
             self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(pin, 0));
 
     def scale_pwm(self, value):
@@ -122,6 +127,8 @@ class Controller:
             self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(PWM_PITCH_PIN, pwm_pitch))
             self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(PWM_STEER_PIN, pwm_steer))
             self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(PWM_LONG_PIN, pwm_long))
+            self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(PWM_GIMB_MODE, GIMB_MODE_VAL))
+            self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(PWM_GIMB_SENS, GIMB_SENS_VAL))
             print(f"Received: yaw={yaw}, pitch={pitch}, steer={steer}, long={long} => PWM: {pwm_yaw}, {pwm_pitch}, {pwm_steer}, {pwm_long}")
 
             self._try_update_stream(stream_cmd, stream_cmd_hash)
