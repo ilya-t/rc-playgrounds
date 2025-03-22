@@ -30,6 +30,8 @@ class ActivityComponent(
     private val a: AppCompatActivity,
     private val streamReceiverFactory: (Config) -> StreamReceiver,
 ) {
+    private val lifecycleScope = a.lifecycleScope
+
     init {
         a.setContentView(R.layout.experiment_activity)
     }
@@ -62,19 +64,23 @@ class ActivityComponent(
         model = appComponent.stopwatchModel,
         container = a.findViewById<ViewGroup>(R.id.stopwatch_container),
         stopwatchButton = a.findViewById<Button>(R.id.stopwatch_button),
-        scope = a.lifecycleScope,
+        scope = lifecycleScope,
     )
     private var gamepadEventEmitter = GamepadEventEmitter(appComponent.gamepadEventStream)
 
     init {
-        a.lifecycleScope.launch {
+        lifecycleScope.launch {
             appComponent.activeConfigProvider.configFlow.collect {
                 doReset()
             }
         }
 
         resetButton.setOnClickListener {
-            doReset()
+            resetButton.isEnabled = false
+            lifecycleScope.launch {
+                doReset()
+                resetButton.isEnabled = true
+            }
         }
 
         a.lifecycle.addObserver(object : DefaultLifecycleObserver {
@@ -90,31 +96,30 @@ class ActivityComponent(
         navigator.openMain()
     }
 
-    private fun doReset() {
+    private suspend fun doReset() {
         release()
         start()
-        a.lifecycleScope.launch {
+        lifecycleScope.launch {
             // Give a small delay before stream restart on remote
             // so our stream receiver won't miss first frame.
             delay(500L)
             appComponent.streamCmdHash.invalidate()
-        }
+        }.join()
     }
 
-    private fun start() {
+    private suspend fun start() {
         streamingProcess?.release()
-        a.lifecycleScope.launch {
+        lifecycleScope.launch {
             val config = appComponent.activeConfigProvider.configFlow.first()
             streamingProcess = StreamingProcess(config, streamReceiverFactory)
             streamingProcess?.start()
             gamepadEventEmitter.restart()
-        }
+        }.join()
     }
 
     private fun release() {
         streamingProcess?.release()
         streamingProcess = null
-
     }
 
     fun onGenericMotionEvent(event: MotionEvent): Boolean {
