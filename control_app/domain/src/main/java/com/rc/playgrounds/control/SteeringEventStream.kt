@@ -49,7 +49,7 @@ class SteeringEventStream(
             long = if (rawLong.absoluteValue > 0.0001f) {
                 // When trigger not touched then its safer to prevent long
                 // pulse at all rather than send one with offset.
-                interpolation.fixLong(rawLong) + offsets.long
+                interpolation.fixLong(rawLong) + (if (rawLong < 0) -offsets.long else offsets.long)
             } else {
                 0f
             },
