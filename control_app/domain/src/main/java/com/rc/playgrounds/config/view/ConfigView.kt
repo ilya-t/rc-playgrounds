@@ -31,48 +31,14 @@ class ConfigView(
     init {
         scope.launch {
             configModel.viewModel.collect { viewModel ->
-                if (viewModel.rawJson != configInput.text.toString()) {
-                    withContext(Dispatchers.Main) {
-                        skipDraftUpdate = true
-                        configInput.setText(viewModel.rawJson)
-                        skipDraftUpdate = false
-                    }
-                }
-
-                withContext(Dispatchers.Main) {
-                    configTitle.text = viewModel.title
-                    saveButton.isEnabled = viewModel.saveEnabled
-                    nextButton.isEnabled = viewModel.nextEnabled
-                    prevButton.isEnabled = viewModel.prevEnabled
-
-                    nextButton.setOnClickListener {
-                        viewModel.next()
-                    }
-
-                    prevButton.setOnClickListener {
-                        viewModel.prev()
-                    }
-
-                    saveButton.setOnClickListener {
-                        viewModel.save()
-                        saveButton.isEnabled = false
-                    }
-                    okButton.setOnClickListener {
-                        viewModel.save()
-                        saveButton.isEnabled = false
-                        navigator.openMain()
-                        hideKeyboard(configInput)
-                    }
-
-                }
-            }
-
-            backButton.setOnClickListener {
-                navigator.openMain()
-                hideKeyboard(configInput)
+                apply(viewModel)
             }
         }
 
+        backButton.setOnClickListener {
+            navigator.openMain()
+            hideKeyboard(configInput)
+        }
 
         configInput.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
@@ -88,6 +54,41 @@ class ConfigView(
 
         })
     }
+
+    private suspend fun apply(viewModel: ConfigViewModel) {
+        if (viewModel.rawJson != configInput.text.toString()) {
+            withContext(Dispatchers.Main) {
+                skipDraftUpdate = true
+                configInput.setText(viewModel.rawJson)
+                skipDraftUpdate = false
+            }
+        }
+
+        withContext(Dispatchers.Main) {
+            configTitle.text = viewModel.title
+            saveButton.isEnabled = viewModel.saveEnabled
+            nextButton.isEnabled = viewModel.nextEnabled
+            prevButton.isEnabled = viewModel.prevEnabled
+
+            nextButton.setOnClickListener {
+                viewModel.next()
+            }
+
+            prevButton.setOnClickListener {
+                viewModel.prev()
+            }
+
+            saveButton.setOnClickListener {
+                viewModel.save()
+                saveButton.isEnabled = false
+            }
+            okButton.setOnClickListener {
+                viewModel.save()
+                saveButton.isEnabled = false
+                navigator.openMain()
+                hideKeyboard(configInput)
+            }
+        }    }
 
     private fun hideKeyboard(view: View) {
         val imm = view.context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
