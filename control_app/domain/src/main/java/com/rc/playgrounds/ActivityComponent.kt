@@ -22,7 +22,9 @@ import com.rc.playgrounds.stopwatch.StopwatchView
 import com.rc.playgrounds.stream.StreamReceiver
 import com.rc.playgrounds.stream.StreamingProcess
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class ActivityComponent(
@@ -70,9 +72,13 @@ class ActivityComponent(
 
     init {
         lifecycleScope.launch {
-            appComponent.activeConfigProvider.configFlow.collect {
-                doReset()
-            }
+            appComponent.activeConfigProvider
+                .configFlow
+                .map { it.streamLocalCmd }
+                .distinctUntilChanged()
+                .collect {
+                    doReset()
+                }
         }
 
         resetButton.setOnClickListener {

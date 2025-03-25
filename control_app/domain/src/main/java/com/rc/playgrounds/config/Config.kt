@@ -9,7 +9,7 @@ import org.json.JSONObject
 
 class Config(
     val rawJson: String,
-    val errorCollector: (e: Throwable) -> Unit = {},
+    val errorCollector: (e: Throwable) -> Unit = { it.printStackTrace() },
 ) {
     private val json by lazy {
         runCatching {
@@ -17,6 +17,20 @@ class Config(
         }
             .onFailure(errorCollector)
             .getOrElse { JSONObject() }
+    }
+    val adaptiveRemoteCmd: AdaptiveRemoteCmd? by lazy {
+        val result: AdaptiveRemoteCmd? = runCatching {
+            val j = json
+                .getJSONObject("stream")
+                .getJSONObject("adaptive_remote_cmd")
+            AdaptiveRemoteCmd(
+                enabled = j.optBoolean("enabled", true),
+                cmdTemplate = j.getString("cmd_template"),
+            )
+        }
+            .onFailure(errorCollector)
+            .getOrNull()
+        return@lazy result
     }
     val remoteStreamCmd: String
         get() = runCatching {

@@ -3,6 +3,8 @@ package com.rc.playgrounds.status.view
 import com.rc.playgrounds.config.ActiveConfigProvider
 import com.rc.playgrounds.control.SteeringEvent
 import com.rc.playgrounds.control.SteeringEventStream
+import com.rc.playgrounds.remote.stream.RemoteStreamConfig
+import com.rc.playgrounds.remote.stream.RemoteStreamConfigController
 import com.rc.playgrounds.status.PingService
 import com.rc.playgrounds.status.gstreamer.Event
 import com.rc.playgrounds.status.gstreamer.FrameDropStatus
@@ -22,6 +24,7 @@ class StatusModel(
     private val steeringEventStream: SteeringEventStream,
     private val streamerEvents: StreamerEvents,
     private val frameDropStatus: FrameDropStatus,
+    private val remoteStreamConfigController: RemoteStreamConfigController,
 ) {
 
     private val pingTarget: Flow<String?> = config.configFlow.map { it.controlServer?.address }
@@ -45,7 +48,7 @@ class StatusModel(
 
         scope.launch {
             combine(
-                pingTarget,
+                remoteStreamConfigController.state,
                 steeringEventStream.events,
                 _ping,
                 streamerEvents.events,
@@ -59,7 +62,7 @@ class StatusModel(
 }
 
 private fun asStatus(
-    pingTarget: String?,
+    streamConfig: RemoteStreamConfig?,
     event: SteeringEvent,
     ping: String,
     streamerEvent: Event,
@@ -75,6 +78,12 @@ private fun asStatus(
     }
 
     return buildString {
+        if (streamConfig != null) {
+            val p = streamConfig.parameters
+            appendLine("- stream: ${p.width}x${p.height} ${p.framerate}fps (${p.bitrate / 1_000_000f}mbit/s)")
+        } else {
+            appendLine("- stream: ?")
+        }
         appendLine("- $ping")
         appendLine("- frameDrop/sec: $framesDropped")
         if (streamer != null) {
@@ -85,7 +94,6 @@ private fun asStatus(
         appendLine("- steer: %.2f (raw: %.2f) ".format(event.steer, event.rawSteer))
         appendLine("- pitch: %.2f (raw: %.2f) ".format(event.pitch, event.rawPitch))
         appendLine("- yaw: %.2f (raw: %.2f)".format(event.yaw, event.rawYaw))
-        appendLine("- server: $pingTarget")
     }
 }
 

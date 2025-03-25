@@ -8,6 +8,8 @@ import com.rc.playgrounds.control.SteeringEventStream
 import com.rc.playgrounds.control.gamepad.GamepadEventStream
 import com.rc.playgrounds.remote.OutputEventStream
 import com.rc.playgrounds.remote.StreamCmdHash
+import com.rc.playgrounds.remote.stream.RemoteStreamConfigController
+import com.rc.playgrounds.remote.stream.StreamQualityProvider
 import com.rc.playgrounds.status.gstreamer.FrameDropStatus
 import com.rc.playgrounds.status.gstreamer.StreamerEvents
 import com.rc.playgrounds.status.view.StatusModel
@@ -21,7 +23,7 @@ import kotlinx.coroutines.Dispatchers
 class AppComponent(app: Application) {
     private val scope = CoroutineScope(Dispatchers.IO + CoroutineName("AppScope"))
     private val storage: PersistentStorage = AndroidPersistentStorage(app)
-    private val configRepository = ConfigRepository(
+    val configRepository = ConfigRepository(
         storage,
         scope,
     )
@@ -41,11 +43,19 @@ class AppComponent(app: Application) {
         gamepadEventStream,
     )
     val streamCmdHash = StreamCmdHash()
+
+    private val streamQualityProvider = StreamQualityProvider()
+    private val remoteStreamConfigController = RemoteStreamConfigController(
+        activeConfigProvider,
+        streamQualityProvider,
+        scope,
+    )
     private val outputEventStream = OutputEventStream(
         steeringEventStream,
         scope,
         activeConfigProvider,
         streamCmdHash,
+        remoteStreamConfigController,
     )
 
     val stopwatchModel = StopwatchModel(
@@ -64,6 +74,7 @@ class AppComponent(app: Application) {
         steeringEventStream,
         streamerEvents,
         frameDropStatus,
+        remoteStreamConfigController,
     )
 
     companion object {
