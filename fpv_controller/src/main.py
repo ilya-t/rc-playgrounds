@@ -5,6 +5,7 @@ import time
 import subprocess
 import os
 import signal
+import traceback
 
 UDP_IP = "0.0.0.0"  # All interfaces
 UDP_PORT = 12346
@@ -105,36 +106,33 @@ class Controller:
         return int(PWM_MIN + (value + 1) * 0.5 * (PWM_MAX - PWM_MIN))
 
     def handle_data(self, data):
-        try:
-            msg = json.loads(data.decode("utf-8"))
-            yaw = msg.get("yaw", 0)       # -1..1
-            pitch = msg.get("pitch", 0)   # -1..1
-            steer = msg.get("steer", 0)   # -1..1
-            long = msg.get("long", 0)    # -1..1
-            stream_cmd = msg.get("stream_cmd", "") 
-            stream_cmd_hash = msg.get("stream_cmd_hash", "") 
+        msg = json.loads(data.decode("utf-8"))
+        yaw = msg.get("yaw", 0)       # -1..1
+        pitch = msg.get("pitch", 0)   # -1..1
+        steer = msg.get("steer", 0)   # -1..1
+        long = msg.get("long", 0)    # -1..1
+        stream_cmd = msg.get("stream_cmd", "") 
+        stream_cmd_hash = msg.get("stream_cmd_hash", "") 
 
-            if not all(-1 <= v <= 1 for v in [yaw, pitch, steer, long]):
-                print(f"Incorrect data: {msg}")
-                return
+        if not all(-1 <= v <= 1 for v in [yaw, pitch, steer, long]):
+            print(f"Incorrect data: {msg}")
+            return
 
-            pwm_yaw = self.scale_pwm(yaw)
-            pwm_pitch = self.scale_pwm(pitch)
-            pwm_steer = self.scale_pwm(steer)
-            pwm_long = int(PWM_MIN_LONG + (long + 1) * 0.5 * (PWM_MAX_LONG - PWM_MIN_LONG))
+        pwm_yaw = self.scale_pwm(yaw)
+        pwm_pitch = self.scale_pwm(pitch)
+        pwm_steer = self.scale_pwm(steer)
+        pwm_long = int(PWM_MIN_LONG + (long + 1) * 0.5 * (PWM_MAX_LONG - PWM_MIN_LONG))
 
-            self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(PWM_YAW_PIN, pwm_yaw))
-            self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(PWM_PITCH_PIN, pwm_pitch))
-            self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(PWM_STEER_PIN, pwm_steer))
-            self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(PWM_LONG_PIN, pwm_long))
-            self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(PWM_GIMB_MODE, GIMB_MODE_VAL))
-            self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(PWM_GIMB_SENS, GIMB_SENS_VAL))
-            print(f"Received: yaw={yaw}, pitch={pitch}, steer={steer}, long={long} => PWM: {pwm_yaw}, {pwm_pitch}, {pwm_steer}, {pwm_long}")
+        self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(PWM_YAW_PIN, pwm_yaw))
+        self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(PWM_PITCH_PIN, pwm_pitch))
+        self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(PWM_STEER_PIN, pwm_steer))
+        self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(PWM_LONG_PIN, pwm_long))
+        self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(PWM_GIMB_MODE, GIMB_MODE_VAL))
+        self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(PWM_GIMB_SENS, GIMB_SENS_VAL))
+        print(f"Received: yaw={yaw}, pitch={pitch}, steer={steer}, long={long} => PWM: {pwm_yaw}, {pwm_pitch}, {pwm_steer}, {pwm_long}")
 
-            self._try_update_stream(stream_cmd, stream_cmd_hash)
+        self._try_update_stream(stream_cmd, stream_cmd_hash)
             
-        except json.JSONDecodeError:
-            print("JSON parsing error:", data.decode("utf-8"))
 
     def _try_update_stream(self, cmd: str, hash: str) -> None:
         if not cmd or len(cmd) == 0:
@@ -162,6 +160,9 @@ class Controller:
                         print("No data received for 250ms, stopping servo pulses.")
                         self.stop_servo_pulse()
                         last_received_time = time.time()
+                except Exception as e:
+                    print(f"An unknown error occurred: {e}")
+                    traceback.print_exc()
         except KeyboardInterrupt:
             print("\nEnding...")
             self.stop_stream()
