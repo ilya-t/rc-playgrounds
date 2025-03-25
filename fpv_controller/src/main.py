@@ -110,7 +110,7 @@ class Controller:
         try:
             msg = json.loads(data.decode("utf-8"))
         except UnicodeDecodeError as e:
-            print(f"Failed to decode data as UTF-8: {e} data: {data}")
+            print(f"Failed to decode data as UTF-8: {e}")
             traceback.print_exc()
             return
         except json.JSONDecodeError as e:

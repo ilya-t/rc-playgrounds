@@ -2,7 +2,7 @@ package com.rc.playgrounds.remote
 
 import com.rc.playgrounds.config.ActiveConfigProvider
 import com.rc.playgrounds.config.Config
-import com.rc.playgrounds.config.model.ControlServer
+import com.rc.playgrounds.config.model.NetworkTarget
 import com.rc.playgrounds.control.SteeringEvent
 import com.rc.playgrounds.control.SteeringEventStream
 import com.rc.playgrounds.remote.stream.RemoteStreamConfig
@@ -31,7 +31,7 @@ class OutputEventStream(
     private val remoteStreamConfigController: RemoteStreamConfigController,
 ) {
 
-    private val controlServer = MutableStateFlow<ControlServer?>(null)
+    private val controlServer = MutableStateFlow<NetworkTarget?>(null)
     private var emitter: EventEmitter? = null
 
     init {
@@ -50,7 +50,7 @@ class OutputEventStream(
         }
     }
 
-    private fun restart(c: ControlServer?) {
+    private fun restart(c: NetworkTarget?) {
         emitter?.stop()
         emitter = null
         c?.let {
@@ -67,7 +67,7 @@ class OutputEventStream(
 }
 
 private class EventEmitter(
-    val config: ControlServer,
+    val config: NetworkTarget,
     private val scope: CoroutineScope,
     private val steeringEventStream: SteeringEventStream,
     private val configFlow: Flow<Config>,

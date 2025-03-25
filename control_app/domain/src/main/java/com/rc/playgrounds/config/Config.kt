@@ -2,9 +2,9 @@ package com.rc.playgrounds.config
 
 import android.graphics.PointF
 import com.rc.playgrounds.config.model.ControlOffsets
-import com.rc.playgrounds.config.model.ControlServer
 import com.rc.playgrounds.config.model.ControlTuning
 import com.rc.playgrounds.config.model.MappingZone
+import com.rc.playgrounds.config.model.NetworkTarget
 import org.json.JSONObject
 
 class Config(
@@ -46,10 +46,23 @@ class Config(
             .onFailure(errorCollector)
             .getOrElse { "" }
 
-    val controlServer: ControlServer? by lazy {
+    val controlServer: NetworkTarget? by lazy {
         runCatching {
             val t = json.getJSONObject("control_server")
-            ControlServer(
+            NetworkTarget(
+                address = t.getString("address"),
+                port = t.getInt("port")
+            )
+
+        }
+            .onFailure(errorCollector)
+            .getOrNull()
+    }
+
+    val streamTarget: NetworkTarget? by lazy {
+        runCatching {
+            val t = json.getJSONObject("stream_target")
+            NetworkTarget(
                 address = t.getString("address"),
                 port = t.getInt("port")
             )

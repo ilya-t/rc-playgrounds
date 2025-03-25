@@ -53,11 +53,15 @@ internal const val DEFAULT_CONFIG = """
   "stream": {
     "adaptive_remote_cmd": {
        "enabled": true,
-       "cmd_template": "raspivid -pf baseline -fl -g 1 -w @{width} -h @{height} --bitrate @{bitrate} -fps @{framerate}/1 -t 0 -o - | gst-launch-1.0 fdsrc ! h264parse ! rtph264pay ! udpsink host=@{stream_target} port=@{stream_target_port}"
+       "cmd_template": "raspivid -pf baseline -fl -g 1 -w @{width} -h @{height} --bitrate @{bitrate} --nopreview -fps @{framerate}/1 -t 0 -o - | gst-launch-1.0 fdsrc ! h264parse ! rtph264pay ! udpsink host=@{stream_target} port=@{stream_target_port}"
     },
     "remote_cmd": "$REMOTE_CMD",
     "local_cmd": "udpsrc port=12345 caps=\"application/x-rtp, media=video, encoding-name=H264, payload=96\" ! rtph264depay ! h264parse ! decodebin ! videoconvert ! autovideosink"
   },
+  "stream_target": {
+    "address": "$SERVER_STREAM_TARGET",
+    "port": 12345
+  },  
   "control_server": {
     "address": "$SERVER_ADDR",
     "port": 12346

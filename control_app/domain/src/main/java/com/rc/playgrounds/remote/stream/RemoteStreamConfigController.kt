@@ -2,7 +2,7 @@ package com.rc.playgrounds.remote.stream
 
 import com.rc.playgrounds.config.ActiveConfigProvider
 import com.rc.playgrounds.config.AdaptiveRemoteCmd
-import com.rc.playgrounds.config.model.ControlServer
+import com.rc.playgrounds.config.model.NetworkTarget
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,7 +22,7 @@ class RemoteStreamConfigController(
         scope.launch {
             combine(
                 config.configFlow.map { it.adaptiveRemoteCmd },
-                config.configFlow.map { it.controlServer },
+                config.configFlow.map { it.streamTarget },
                 qualityResolver.currentQuality,
                 ::asRemoteStreamConfig
             ).collect {
@@ -33,7 +33,7 @@ class RemoteStreamConfigController(
 
     private fun asRemoteStreamConfig(
         adaptiveRemoteCmd: AdaptiveRemoteCmd?,
-        server: ControlServer?,
+        streamTarget: NetworkTarget?,
         parameters: StreamParameters,
         ): RemoteStreamConfig? {
         if (adaptiveRemoteCmd == null) {
@@ -44,7 +44,7 @@ class RemoteStreamConfigController(
             return null
         }
 
-        if (server == null) {
+        if (streamTarget == null) {
             return null
         }
 
@@ -53,14 +53,14 @@ class RemoteStreamConfigController(
             remoteCmd = buildRemoteCmd(
                 template = adaptiveRemoteCmd.cmdTemplate,
                 parameters = parameters,
-                server = server,
+                server = streamTarget,
             )
         )
     }
 
     private fun buildRemoteCmd(template: String,
                                parameters: StreamParameters,
-                               server: ControlServer,
+                               server: NetworkTarget,
                                ): String {
         return template
             .replace("@{width}", parameters.width.toString())
