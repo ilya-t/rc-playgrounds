@@ -36,7 +36,9 @@ class AppComponent(app: Application) {
         scope = scope,
     )
 
-    val gamepadEventStream = GamepadEventStream()
+    val gamepadEventStream = GamepadEventStream(
+        scope,
+    )
     private val steeringEventStream = SteeringEventStream(
         scope,
         activeConfigProvider,
@@ -44,7 +46,10 @@ class AppComponent(app: Application) {
     )
     val streamCmdHash = StreamCmdHash()
 
-    private val streamQualityProvider = StreamQualityProvider()
+    private val streamQualityProvider = StreamQualityProvider(
+        gamepadEventStream,
+        scope,
+    )
     private val remoteStreamConfigController = RemoteStreamConfigController(
         activeConfigProvider,
         streamQualityProvider,
