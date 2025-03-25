@@ -106,7 +106,17 @@ class Controller:
         return int(PWM_MIN + (value + 1) * 0.5 * (PWM_MAX - PWM_MIN))
 
     def handle_data(self, data):
-        msg = json.loads(data.decode("utf-8"))
+        msg = None
+        try:
+            msg = json.loads(data.decode("utf-8"))
+        except UnicodeDecodeError as e:
+            print(f"Failed to decode data as UTF-8: {e} data: {data}")
+            traceback.print_exc()
+            return
+        except json.JSONDecodeError as e:
+            print(f"Failed to parse JSON: {e}")
+            traceback.print_exc()
+            return        
         yaw = msg.get("yaw", 0)       # -1..1
         pitch = msg.get("pitch", 0)   # -1..1
         steer = msg.get("steer", 0)   # -1..1
