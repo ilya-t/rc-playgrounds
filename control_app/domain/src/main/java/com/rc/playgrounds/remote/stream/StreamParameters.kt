@@ -22,10 +22,10 @@ data class StreamParameters(
         )
 
         val HIGH = StreamParameters(
-            width = 1280,
-            height = 720,
+            width = 1024,
+            height = 778,
             framerate = 30,
-            bitrate = 4_200_000, // H.264 (Baseline)
+            bitrate = 3_000_000, // H.264 (Baseline)
         )
 
         val HD_READY = StreamParameters(
