@@ -6,6 +6,7 @@ import com.rc.playgrounds.config.ConfigRepository
 import com.rc.playgrounds.config.view.ConfigModel
 import com.rc.playgrounds.control.SteeringEventStream
 import com.rc.playgrounds.control.gamepad.GamepadEventStream
+import com.rc.playgrounds.fullscreen.FullscreenStateController
 import com.rc.playgrounds.remote.OutputEventStream
 import com.rc.playgrounds.remote.StreamCmdHash
 import com.rc.playgrounds.remote.stream.RemoteStreamConfigController
@@ -25,6 +26,10 @@ class AppComponent(app: Application) {
     private val storage: PersistentStorage = AndroidPersistentStorage(app)
     val configRepository = ConfigRepository(
         storage,
+        scope,
+    )
+
+    val fullScreenStateController = FullscreenStateController(
         scope,
     )
     val activeConfigProvider = ActiveConfigProvider(
