@@ -8,7 +8,7 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class ConfigTest {
-    private val errorRaiser = { it: Throwable -> throw it }
+    private val errorRaiser = { it: Throwable -> throw AssertionError(it) }
     @Test
     fun smoke() {
         val config = Config(DEFAULT_CONFIG, errorRaiser)
@@ -19,12 +19,12 @@ class ConfigTest {
         Assert.assertNotNull(config.controlTuning.yawZone)
         Assert.assertNotNull(config.controlTuning.steerFactor)
         Assert.assertNotNull(config.controlTuning.steerZone)
-        Assert.assertNotNull(config.controlTuning.longFactor)
         Assert.assertTrue(config.controlTuning.forwardLongZones.isNotEmpty())
         Assert.assertTrue(config.controlTuning.backwardLongZones.isNotEmpty())
 
-        Assert.assertNotNull(config.remoteStreamCmd)
-        Assert.assertNotNull(config.streamLocalCmd)
+        Assert.assertNotNull(config.stream.localCmd)
+        Assert.assertNotNull(config.stream.remoteCmd)
+        Assert.assertTrue(config.stream.qualityProfiles.isNotEmpty())
         Assert.assertNotNull(config.controlServer)
         Assert.assertNotNull(config.controlOffsets)
         Assert.assertNotNull(config.controlTuning)
@@ -34,21 +34,21 @@ class ConfigTest {
     fun testRemoteStreamCmd_ValidJson() {
         val json = "{\"stream\": {\"remote_cmd\": \"start\"}}"
         val config = Config(json)
-        Assert.assertEquals("start", config.remoteStreamCmd)
+        Assert.assertEquals("start", config.stream.remoteCmd)
     }
 
     @Test
     fun testRemoteStreamCmd_InvalidJson() {
         val json = "{}"
         val config = Config(json)
-        Assert.assertEquals("", config.remoteStreamCmd)
+        Assert.assertEquals("", config.stream.remoteCmd)
     }
 
     @Test
     fun `long zones parsing`() {
         val json = """{
             "control_tuning": {
-                "long_zones": {
+                "forward_long_zones": {
                     "0": "0.01",
                     "0.3": "0.21",
                     "0.7": "0.4",

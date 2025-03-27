@@ -80,7 +80,6 @@ private fun com.rc.playgrounds.config.model.ControlTuning.asInterpolation() = Co
     yawTranslator = create(yawZone),
     steer = create(steerFactor),
     steerTranslator = create(steerZone),
-    long = create(longFactor),
     longTranslator = if (forwardLongZones.isNotEmpty()) {
         val zonesNegative = backwardLongZones.ifEmpty { forwardLongZones }
         create(negative = zonesNegative, positive = forwardLongZones)
@@ -114,7 +113,6 @@ private class ControlInterpolation(
     private val yawTranslator: (Float) -> Float,
     private val steer: AccelerateInterpolator?,
     private val steerTranslator: (Float) -> Float,
-    private val long: AccelerateInterpolator?,
     private val longTranslator: (Float) -> Float,
 ) {
     fun fixPitch(value: Float): Float {
@@ -130,7 +128,7 @@ private class ControlInterpolation(
     }
 
     fun fixLong(value: Float): Float {
-        return fix(long, longTranslator, value)
+        return longTranslator(value)
     }
 
     private fun fix(

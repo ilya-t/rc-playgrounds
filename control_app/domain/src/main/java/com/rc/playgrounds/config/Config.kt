@@ -7,10 +7,11 @@ import com.rc.playgrounds.config.model.MappingZone
 import com.rc.playgrounds.config.model.NetworkTarget
 import com.rc.playgrounds.config.stream.QualityProfile
 import com.rc.playgrounds.config.stream.StreamConfig
+import org.intellij.lang.annotations.Language
 import org.json.JSONObject
 
 class Config(
-    val rawJson: String,
+    rawJson: String,
     val errorCollector: (e: Throwable) -> Unit = { it.printStackTrace() },
 ) {
     private val json by lazy {
@@ -23,7 +24,7 @@ class Config(
     val stream: StreamConfig by lazy {
         runCatching {
             val stream = json.getJSONObject("stream")
-            val qualityProfiles = stream.getJSONArray("quality_profiles").let { array ->
+            val qualityProfiles = stream.optJSONArray("quality_profiles")?.let { array ->
                 List(array.length()) { index ->
                     val profile = array.getJSONObject(index)
                     QualityProfile(
@@ -33,11 +34,12 @@ class Config(
                         framerate = profile.getInt("framerate")
                     )
                 }
-            }
+            } ?: QualityProfile.DEFAULT_PROFILES
+
             StreamConfig(
                 qualityProfiles = qualityProfiles,
-                remoteCmd = stream.getString("remote_cmd"),
-                localCmd = stream.getString("local_cmd"),
+                remoteCmd = stream.optString("remote_cmd", ""),
+                localCmd = stream.optString("local_cmd", ""),
             )
         }
             .onFailure(errorCollector)
@@ -107,7 +109,6 @@ class Config(
                 yawZone = parseZone(t.optString("yaw_zone")),
                 steerFactor = t.optDouble("steer_factor").toFloat(),
                 steerZone = parseZone(t.optString("steer_zone")),
-                longFactor = t.optDouble("long_factor").toFloat(),
                 forwardLongZones = parseZones(t.optJSONObject("forward_long_zones")),
                 backwardLongZones = parseZones(t.optJSONObject("backward_long_zones")),
             )
@@ -121,7 +122,6 @@ class Config(
                 yawZone = null,
                 steerFactor = null,
                 steerZone = null,
-                longFactor = null,
                 forwardLongZones = emptyList(),
                 backwardLongZones = emptyList(),
             )
@@ -187,4 +187,78 @@ private fun parseZones(zones: JSONObject?): List<MappingZone> {
 
     return results
 }
+
+
+@Language("Json")
+internal const val DEFAULT_CONFIG = """
+{
+  "stream": {
+    "local_cmd": "udpsrc port=12345 caps=\"application/x-rtp, media=video, encoding-name=H264, payload=96\" ! rtph264depay ! h264parse ! decodebin ! videoconvert ! autovideosink",
+    "remote_cmd": "raspivid -pf baseline -fl -g 1 -w @{width} -h @{height} --bitrate @{bitrate} --nopreview -fps @{framerate}/1 -t 0 -o - | gst-launch-1.0 fdsrc ! h264parse ! rtph264pay ! udpsink host=@{stream_target} port=@{stream_target_port}",
+    "quality_profiles": [
+        {
+            "width": 320,
+            "height": 240,
+            "framerate": 30,
+            "bitrate": 800000
+        },
+        {
+            "width": 640,
+            "height": 480,
+            "framerate": 30,
+            "bitrate": 1600000
+        },
+        {
+            "width": 1024,
+            "height": 778,
+            "framerate": 30,
+            "bitrate": 3000000
+        },
+        {
+            "width": 1280,
+            "height": 720,
+            "framerate": 30,
+            "bitrate": 4200000
+        },
+        {
+            "width": 1920,
+            "height": 1080,
+            "framerate": 30,
+            "bitrate": 8000000
+        }
+    ]
+  },
+  "stream_target": {
+    "address": "192.168.2.5",
+    "port": 12345
+  },  
+  "control_server": {
+    "address": "192.168.2.2",
+    "port": 12346
+  },
+  "control_offsets": {
+    "pitch": 0.0,
+    "yaw": 0.0,
+    "steer": -0.33,
+    "long": 0.18
+  },
+  "control_tuning": {
+    "pitch_factor": 1.0,
+    "pitch_zone": "0..0.5",
+    "yaw_factor": 1.0,
+    "yaw_zone": "0..0.5",
+    "steer_factor": 1.0,
+    "steer_zone": "0..0.7",
+    "forward_long_zones": {
+        "0.0": "0.01",
+        "0.5": "0.2",
+        "1.0": "0.7"
+    },
+    "backward_long_zones": {
+        "0.0": "0.01",
+        "1.0": "0.2"
+    }
+  }
+}    
+"""
 

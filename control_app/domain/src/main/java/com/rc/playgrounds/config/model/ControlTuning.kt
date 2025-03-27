@@ -9,7 +9,6 @@ data class ControlTuning(
     val yawZone: PointF?,
     val steerFactor: Float?,
     val steerZone: PointF?,
-    val longFactor: Float?,
     val forwardLongZones: List<MappingZone>,
     val backwardLongZones: List<MappingZone>,
 )
