@@ -86,7 +86,7 @@ class ActivityComponent(
         lifecycleScope.launch {
             appComponent.activeConfigProvider
                 .configFlow
-                .map { it.streamLocalCmd }
+                .map { it.stream.localCmd }
                 .distinctUntilChanged()
                 .collect {
                     doReset()

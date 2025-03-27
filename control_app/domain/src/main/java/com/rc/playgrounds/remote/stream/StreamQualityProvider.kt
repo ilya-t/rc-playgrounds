@@ -1,6 +1,7 @@
 package com.rc.playgrounds.remote.stream
 
 import com.rc.playgrounds.config.ActiveConfigProvider
+import com.rc.playgrounds.config.stream.QualityProfile
 import com.rc.playgrounds.control.gamepad.GamepadButtonPress
 import com.rc.playgrounds.control.gamepad.GamepadEventStream
 import kotlinx.coroutines.CoroutineScope

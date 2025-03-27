@@ -5,8 +5,8 @@ import com.rc.playgrounds.config.model.ControlOffsets
 import com.rc.playgrounds.config.model.ControlTuning
 import com.rc.playgrounds.config.model.MappingZone
 import com.rc.playgrounds.config.model.NetworkTarget
+import com.rc.playgrounds.config.stream.QualityProfile
 import com.rc.playgrounds.config.stream.StreamConfig
-import com.rc.playgrounds.remote.stream.QualityProfile
 import org.json.JSONObject
 
 class Config(
@@ -36,43 +36,19 @@ class Config(
             }
             StreamConfig(
                 qualityProfiles = qualityProfiles,
+                remoteCmd = stream.getString("remote_cmd"),
+                localCmd = stream.getString("local_cmd"),
             )
         }
             .onFailure(errorCollector)
             .getOrElse {
                 StreamConfig(
-                    qualityProfiles = QualityProfile.DEFAULT_PROFILES
+                    qualityProfiles = QualityProfile.DEFAULT_PROFILES,
+                    remoteCmd = "",
+                    localCmd = "",
                 )
             }
     }
-
-    val adaptiveRemoteCmd: AdaptiveRemoteCmd? by lazy {
-        val result: AdaptiveRemoteCmd? = runCatching {
-            val j = json
-                .getJSONObject("stream")
-                .getJSONObject("adaptive_remote_cmd")
-            AdaptiveRemoteCmd(
-                enabled = j.optBoolean("enabled", true),
-                cmdTemplate = j.getString("cmd_template"),
-            )
-        }
-            .onFailure(errorCollector)
-            .getOrNull()
-        return@lazy result
-    }
-    val remoteStreamCmd: String
-        get() = runCatching {
-            json.getJSONObject("stream").getString("remote_cmd")
-        }
-            .onFailure(errorCollector)
-            .getOrElse { "" }
-
-    val streamLocalCmd: String
-        get() = runCatching {
-            json.getJSONObject("stream").getString("local_cmd")
-        }
-            .onFailure(errorCollector)
-            .getOrElse { "" }
 
     val controlServer: NetworkTarget? by lazy {
         runCatching {

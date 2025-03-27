@@ -82,7 +82,7 @@ private class EventEmitter(
     ) { streamConfig: RemoteStreamConfig?, config: Config, event: SteeringEvent, streamHash: String ->
         asJson(
             event,
-            streamCmd = streamConfig?.remoteCmd ?: config.remoteStreamCmd,
+            streamCmd = streamConfig?.remoteCmd ?: config.stream.remoteCmd,
             streamCmdHash = streamHash,
         )
     }

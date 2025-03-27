@@ -52,7 +52,7 @@ class MainActivity : AppCompatActivity() {
             appComponent.streamerEvents,
             this,
             surfaceContainer,
-            c.streamLocalCmd,
+            c.stream.localCmd,
         )
     }
 

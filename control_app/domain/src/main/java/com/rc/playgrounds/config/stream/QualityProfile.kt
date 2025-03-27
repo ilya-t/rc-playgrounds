@@ -1,4 +1,4 @@
-package com.rc.playgrounds.remote.stream
+package com.rc.playgrounds.config.stream
 
 data class QualityProfile(
     val width: Int,
