@@ -34,7 +34,7 @@ class RemoteStreamConfigController(
     private fun asRemoteStreamConfig(
         adaptiveRemoteCmd: AdaptiveRemoteCmd?,
         streamTarget: NetworkTarget?,
-        parameters: StreamParameters,
+        parameters: QualityProfile,
         ): RemoteStreamConfig? {
         if (adaptiveRemoteCmd == null) {
             return null
@@ -59,7 +59,7 @@ class RemoteStreamConfigController(
     }
 
     private fun buildRemoteCmd(template: String,
-                               parameters: StreamParameters,
+                               parameters: QualityProfile,
                                server: NetworkTarget,
                                ): String {
         return template

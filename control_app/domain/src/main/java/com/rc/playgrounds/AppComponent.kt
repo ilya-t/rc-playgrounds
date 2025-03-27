@@ -52,6 +52,7 @@ class AppComponent(app: Application) {
     val streamCmdHash = StreamCmdHash()
 
     private val streamQualityProvider = StreamQualityProvider(
+        activeConfigProvider,
         gamepadEventStream,
         scope,
     )

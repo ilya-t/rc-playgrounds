@@ -5,6 +5,8 @@ import com.rc.playgrounds.config.model.ControlOffsets
 import com.rc.playgrounds.config.model.ControlTuning
 import com.rc.playgrounds.config.model.MappingZone
 import com.rc.playgrounds.config.model.NetworkTarget
+import com.rc.playgrounds.config.stream.StreamConfig
+import com.rc.playgrounds.remote.stream.QualityProfile
 import org.json.JSONObject
 
 class Config(
@@ -18,6 +20,32 @@ class Config(
             .onFailure(errorCollector)
             .getOrElse { JSONObject() }
     }
+    val stream: StreamConfig by lazy {
+        runCatching {
+            val stream = json.getJSONObject("stream")
+            val qualityProfiles = stream.getJSONArray("quality_profiles").let { array ->
+                List(array.length()) { index ->
+                    val profile = array.getJSONObject(index)
+                    QualityProfile(
+                        width = profile.getInt("width"),
+                        height = profile.getInt("height"),
+                        bitrate = profile.getInt("bitrate"),
+                        framerate = profile.getInt("framerate")
+                    )
+                }
+            }
+            StreamConfig(
+                qualityProfiles = qualityProfiles,
+            )
+        }
+            .onFailure(errorCollector)
+            .getOrElse {
+                StreamConfig(
+                    qualityProfiles = QualityProfile.DEFAULT_PROFILES
+                )
+            }
+    }
+
     val adaptiveRemoteCmd: AdaptiveRemoteCmd? by lazy {
         val result: AdaptiveRemoteCmd? = runCatching {
             val j = json

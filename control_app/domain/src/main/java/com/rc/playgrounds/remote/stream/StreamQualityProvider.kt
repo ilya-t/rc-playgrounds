@@ -1,40 +1,48 @@
 package com.rc.playgrounds.remote.stream
 
+import com.rc.playgrounds.config.ActiveConfigProvider
 import com.rc.playgrounds.control.gamepad.GamepadButtonPress
 import com.rc.playgrounds.control.gamepad.GamepadEventStream
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class StreamQualityProvider(
+    private val activeConfigProvider: ActiveConfigProvider,
     private val eventStream: GamepadEventStream,
     private val scope: CoroutineScope,
 ) {
-    private val _quality = MutableStateFlow(StreamParameters.LOW)
+    private val _quality = MutableStateFlow(QualityProfile.DEFAULT_PROFILES.first())
     private var profileIndex = 0
 
-    val currentQuality: Flow<StreamParameters> = _quality
+    val currentQuality: Flow<QualityProfile> = _quality
 
     init {
         scope.launch {
-            eventStream.buttonEvents.collect {
-                when (it) {
+            combine(
+                activeConfigProvider.configFlow.map { it.stream.qualityProfiles },
+                eventStream.buttonEvents,
+            ) { a, b -> a to b }
+            .collect { (profiles, event) ->
+                when (event) {
                     GamepadButtonPress.DpadDown -> {
                         profileIndex--
-                        invalidate()
+                        invalidate(profiles)
                     }
                     GamepadButtonPress.DpadUp -> {
                         profileIndex++
-                        invalidate()
+                        invalidate(profiles)
                     }
                 }
             }
         }
     }
 
-    private fun invalidate() {
-        val current = StreamParameters.H264_OPTIONS.getOrNull(profileIndex)
+    private fun invalidate(qualityProfiles: List<QualityProfile>) {
+        val current = qualityProfiles.getOrNull(profileIndex)
 
         if (current != null) {
             _quality.value = current
@@ -43,11 +51,11 @@ class StreamQualityProvider(
 
         if (profileIndex < 0) {
             profileIndex = 0
-            invalidate()
+            invalidate(QualityProfile.DEFAULT_PROFILES)
             return
         }
 
-        profileIndex = StreamParameters.H264_OPTIONS.lastIndex
-        invalidate()
+        profileIndex = qualityProfiles.lastIndex
+        invalidate(QualityProfile.DEFAULT_PROFILES)
     }
 }

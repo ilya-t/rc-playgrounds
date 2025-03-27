@@ -55,6 +55,38 @@ internal const val DEFAULT_CONFIG = """
        "enabled": true,
        "cmd_template": "raspivid -pf baseline -fl -g 1 -w @{width} -h @{height} --bitrate @{bitrate} --nopreview -fps @{framerate}/1 -t 0 -o - | gst-launch-1.0 fdsrc ! h264parse ! rtph264pay ! udpsink host=@{stream_target} port=@{stream_target_port}"
     },
+    "quality_profiles": [
+            {
+                "width": 320,
+                "height": 240,
+                "framerate": 30,
+                "bitrate": 800000
+            },
+            {
+                "width": 640,
+                "height": 480,
+                "framerate": 30,
+                "bitrate": 1600000
+            },
+            {
+                "width": 1024,
+                "height": 778,
+                "framerate": 30,
+                "bitrate": 3000000
+            },
+            {
+                "width": 1280,
+                "height": 720,
+                "framerate": 30,
+                "bitrate": 4200000
+            },
+            {
+                "width": 1920,
+                "height": 1080,
+                "framerate": 30,
+                "bitrate": 8000000
+            }
+        ],
     "remote_cmd": "$REMOTE_CMD",
     "local_cmd": "udpsrc port=12345 caps=\"application/x-rtp, media=video, encoding-name=H264, payload=96\" ! rtph264depay ! h264parse ! decodebin ! videoconvert ! autovideosink"
   },

@@ -80,7 +80,7 @@ private fun asStatus(
     return buildString {
         if (streamConfig != null) {
             val p = streamConfig.parameters
-            appendLine("- stream: ${p.width}x${p.height} ${p.framerate}fps (${p.bitrate / 1_000_000f}mbit/s)")
+            appendLine("- stream: ${p.width}x${p.height}\n  ${p.framerate}fps (${p.bitrate / 1_000_000f}mbit/s)")
         } else {
             appendLine("- stream: ?")
         }
