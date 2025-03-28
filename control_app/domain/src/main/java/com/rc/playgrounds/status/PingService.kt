@@ -33,8 +33,12 @@ class PingService(
     fun start(): Job {
         return scope.launch {
             while (isActive) {
-                _pingResult.value = pingHost()
-                delay(intervalMilllis)
+                val pingHost: Result<Duration> = pingHost()
+                _pingResult.value = pingHost
+
+                if (pingHost.isSuccess) {
+                    delay(intervalMilllis)
+                }
             }
         }
     }
