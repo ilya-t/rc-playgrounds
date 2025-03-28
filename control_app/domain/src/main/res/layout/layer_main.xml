@@ -1,30 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/layer_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
     <FrameLayout
-        android:id="@+id/stopwatch_container"
-        android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:layout_alignParentTop="true"
-        android:visibility="gone"
-        />
-
-    <FrameLayout
         android:id="@+id/surface_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@+id/controls"
-        android:layout_below="@+id/stopwatch_container"
         />
 
     <LinearLayout
         android:id="@+id/controls"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
+        android:layout_gravity="bottom"
         android:orientation="horizontal"
         android:weightSum="2">
 
@@ -44,4 +34,28 @@
             android:layout_weight="1"
             android:text="[CONFIGURE]" />
     </LinearLayout>
-</RelativeLayout>
+
+    <FrameLayout
+        android:id="@+id/stopwatch_container"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_gravity="top"
+        android:visibility="gone"
+        />
+
+    <FrameLayout
+        android:id="@+id/controls_lock_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#8000"
+        >
+        <androidx.appcompat.widget.AppCompatTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:drawableTop="@drawable/baseline_block_24"
+            android:text="@string/controls_lock"
+            android:textSize="28sp"
+            />
+    </FrameLayout>
+</FrameLayout>

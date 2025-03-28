@@ -37,6 +37,10 @@ class StreamQualityProvider(
                         profileIndex++
                         invalidate(profiles)
                     }
+
+                    GamepadButtonPress.B -> Unit
+                    GamepadButtonPress.SELECT -> Unit
+                    GamepadButtonPress.START -> Unit
                 }
             }
         }

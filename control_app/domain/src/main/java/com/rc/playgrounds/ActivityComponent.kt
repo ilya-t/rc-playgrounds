@@ -15,6 +15,7 @@ import androidx.lifecycle.lifecycleScope
 import com.rc.playgrounds.config.Config
 import com.rc.playgrounds.config.view.ConfigView
 import com.rc.playgrounds.control.gamepad.GamepadEventEmitter
+import com.rc.playgrounds.control.lock.LockView
 import com.rc.playgrounds.domain.R
 import com.rc.playgrounds.fullscreen.FullscreenView
 import com.rc.playgrounds.navigation.NaiveNavigator
@@ -79,6 +80,11 @@ class ActivityComponent(
         container = activity.findViewById<ViewGroup>(R.id.stopwatch_container),
         stopwatchButton = activity.findViewById<Button>(R.id.stopwatch_button),
         scope = lifecycleScope,
+    )
+    private val lockView = LockView(
+        activity,
+        appComponent.lockModel,
+        lifecycleScope,
     )
     private var gamepadEventEmitter = GamepadEventEmitter(appComponent.gamepadEventStream)
 

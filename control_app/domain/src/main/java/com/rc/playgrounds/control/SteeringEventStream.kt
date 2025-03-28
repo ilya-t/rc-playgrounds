@@ -7,6 +7,7 @@ import com.rc.playgrounds.config.model.ControlOffsets
 import com.rc.playgrounds.config.model.MappingZone
 import com.rc.playgrounds.control.gamepad.GamepadEvent
 import com.rc.playgrounds.control.gamepad.GamepadEventStream
+import com.rc.playgrounds.control.lock.ControlLock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,14 +22,21 @@ class SteeringEventStream(
     scope: CoroutineScope,
     private val activeConfigProvider: ActiveConfigProvider,
     private val gamepadEventStream: GamepadEventStream,
+    private val controlLock: ControlLock,
 ) {
     private val statelessEvents: Flow<SteeringEvent> = combine(
+        controlLock.locked,
         activeConfigProvider.configFlow.map { it.controlOffsets },
         activeConfigProvider.configFlow.map { it.controlTuning.asInterpolation() },
         gamepadEventStream.events,
-    ) { offsets: ControlOffsets,
+    ) { controlsLocked: Boolean,
+        offsets: ControlOffsets,
         interpolation: ControlInterpolation,
         event: GamepadEvent ->
+
+        if (controlsLocked) {
+            return@combine SteeringEvent.STILL
+        }
 
         val rawPitch = -event.rightStickY
         val rawYaw = event.rightStickX

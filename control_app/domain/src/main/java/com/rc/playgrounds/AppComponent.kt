@@ -6,6 +6,8 @@ import com.rc.playgrounds.config.ConfigRepository
 import com.rc.playgrounds.config.view.ConfigModel
 import com.rc.playgrounds.control.SteeringEventStream
 import com.rc.playgrounds.control.gamepad.GamepadEventStream
+import com.rc.playgrounds.control.lock.ControlLock
+import com.rc.playgrounds.control.lock.LockModel
 import com.rc.playgrounds.fullscreen.FullscreenStateController
 import com.rc.playgrounds.remote.OutputEventStream
 import com.rc.playgrounds.remote.StreamCmdHash
@@ -43,10 +45,12 @@ class AppComponent(app: Application) {
     val gamepadEventStream = GamepadEventStream(
         scope,
     )
+    private val controlLock = ControlLock()
     private val steeringEventStream = SteeringEventStream(
         scope,
         activeConfigProvider,
         gamepadEventStream,
+        controlLock,
     )
     val streamCmdHash = StreamCmdHash()
 
@@ -85,6 +89,12 @@ class AppComponent(app: Application) {
         streamerEvents,
         frameDropStatus,
         remoteStreamConfigController,
+    )
+
+    val lockModel = LockModel(
+        controlLock,
+        gamepadEventStream,
+        scope,
     )
 
     companion object {
