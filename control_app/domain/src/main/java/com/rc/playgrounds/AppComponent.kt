@@ -9,6 +9,9 @@ import com.rc.playgrounds.control.gamepad.GamepadEventStream
 import com.rc.playgrounds.control.lock.ControlLock
 import com.rc.playgrounds.control.lock.LockModel
 import com.rc.playgrounds.fullscreen.FullscreenStateController
+import com.rc.playgrounds.navigation.ActiveScreenProvider
+import com.rc.playgrounds.presentation.main.MainModel
+import com.rc.playgrounds.presentation.quickconfig.QuickConfigModel
 import com.rc.playgrounds.remote.OutputEventStream
 import com.rc.playgrounds.remote.StreamCmdHash
 import com.rc.playgrounds.remote.stream.RemoteStreamConfigController
@@ -26,6 +29,7 @@ import kotlinx.coroutines.Dispatchers
 class AppComponent(app: Application) {
     private val scope = CoroutineScope(Dispatchers.IO + CoroutineName("AppScope"))
     private val storage: PersistentStorage = AndroidPersistentStorage(app)
+    val activeScreenProvider = ActiveScreenProvider()
     val configRepository = ConfigRepository(
         storage,
         scope,
@@ -56,8 +60,20 @@ class AppComponent(app: Application) {
 
     private val streamQualityProvider = StreamQualityProvider(
         activeConfigProvider,
-        gamepadEventStream,
         scope,
+    )
+
+    val mainModel = MainModel(
+        activeScreenProvider,
+        scope,
+        gamepadEventStream,
+    )
+
+    val quickConfigModel = QuickConfigModel(
+        scope,
+        activeScreenProvider,
+        activeConfigProvider,
+        streamQualityProvider,
     )
     private val remoteStreamConfigController = RemoteStreamConfigController(
         activeConfigProvider,
@@ -92,6 +108,7 @@ class AppComponent(app: Application) {
     )
 
     val lockModel = LockModel(
+        activeScreenProvider,
         controlLock,
         gamepadEventStream,
         scope,

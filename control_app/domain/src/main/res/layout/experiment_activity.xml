@@ -9,16 +9,4 @@
         android:paddingBottom="16dp">
         <include layout="@layout/basic_layout"/>
     </FrameLayout>
-
-    <TextView
-        android:id="@+id/tv_output"
-        android:text="Hello World!"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal|bottom"
-        android:maxLines="10"
-        android:paddingLeft="8dp"
-        android:paddingRight="8dp"
-        android:layout_marginBottom="64dp"
-        />
 </FrameLayout>

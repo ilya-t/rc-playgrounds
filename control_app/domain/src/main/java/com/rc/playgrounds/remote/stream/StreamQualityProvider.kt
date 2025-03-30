@@ -2,8 +2,6 @@ package com.rc.playgrounds.remote.stream
 
 import com.rc.playgrounds.config.ActiveConfigProvider
 import com.rc.playgrounds.config.stream.QualityProfile
-import com.rc.playgrounds.control.gamepad.GamepadButtonPress
-import com.rc.playgrounds.control.gamepad.GamepadEventStream
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,11 +11,10 @@ import kotlinx.coroutines.launch
 
 class StreamQualityProvider(
     private val activeConfigProvider: ActiveConfigProvider,
-    private val eventStream: GamepadEventStream,
     private val scope: CoroutineScope,
 ) {
     private val _quality = MutableStateFlow(QualityProfile.DEFAULT_PROFILES.first())
-    private var profileIndex = 0
+    private val profileIndex = MutableStateFlow<Int>(0)
 
     val currentQuality: Flow<QualityProfile> = _quality
 
@@ -25,42 +22,36 @@ class StreamQualityProvider(
         scope.launch {
             combine(
                 activeConfigProvider.configFlow.map { it.stream.qualityProfiles },
-                eventStream.buttonEvents,
+                profileIndex,
             ) { a, b -> a to b }
-            .collect { (profiles, event) ->
-                when (event) {
-                    GamepadButtonPress.DpadDown -> {
-                        profileIndex--
-                        invalidate(profiles)
-                    }
-                    GamepadButtonPress.DpadUp -> {
-                        profileIndex++
-                        invalidate(profiles)
-                    }
-
-                    GamepadButtonPress.B -> Unit
-                    GamepadButtonPress.SELECT -> Unit
-                    GamepadButtonPress.START -> Unit
-                }
+            .collect { (profiles, index) ->
+                invalidate(index, profiles)
             }
         }
     }
 
-    private fun invalidate(qualityProfiles: List<QualityProfile>) {
-        val current = qualityProfiles.getOrNull(profileIndex)
+    fun nextQuality() {
+        profileIndex.value += 1
+    }
+
+
+    fun prevQuality() {
+        profileIndex.value -= 1
+    }
+
+    private fun invalidate(index: Int, qualityProfiles: List<QualityProfile>) {
+        val current = qualityProfiles.getOrNull(index)
 
         if (current != null) {
             _quality.value = current
             return
         }
 
-        if (profileIndex < 0) {
-            profileIndex = 0
-            invalidate(QualityProfile.DEFAULT_PROFILES)
+        if (index < 0) {
+            profileIndex.value = 0
             return
         }
 
-        profileIndex = qualityProfiles.lastIndex
-        invalidate(QualityProfile.DEFAULT_PROFILES)
+        profileIndex.value = qualityProfiles.lastIndex
     }
 }

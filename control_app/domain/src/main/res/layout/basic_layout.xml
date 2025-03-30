@@ -6,6 +6,8 @@
     >
     <include layout="@layout/layer_config"/>
     <include layout="@layout/layer_main"/>
+    <include layout="@layout/layer_lock"/>
+    <include layout="@layout/layer_quick_config"/>
 
 
 </FrameLayout>

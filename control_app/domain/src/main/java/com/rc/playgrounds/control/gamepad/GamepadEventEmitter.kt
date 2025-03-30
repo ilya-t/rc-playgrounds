@@ -44,11 +44,13 @@ class GamepadEventEmitter(
     fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         when (keyCode) {
             KeyEvent.KEYCODE_DPAD_UP -> {
-                eventStream.emit(GamepadButtonPress.DpadUp)
+                eventStream.emit(GamepadButtonPress.Up)
                 return true
             }
             KeyEvent.KEYCODE_DPAD_DOWN -> {
-                eventStream.emit(GamepadButtonPress.DpadDown)
+                // you may add event.isFromSource(InputDevice.SOURCE_DPAD) but
+                // not every gamepad with dpad has this source.
+                eventStream.emit(GamepadButtonPress.Down)
                 return true
             }
             KeyEvent.KEYCODE_BUTTON_A -> {

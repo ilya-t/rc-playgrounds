@@ -19,6 +19,8 @@ import com.rc.playgrounds.control.lock.LockView
 import com.rc.playgrounds.domain.R
 import com.rc.playgrounds.fullscreen.FullscreenView
 import com.rc.playgrounds.navigation.NaiveNavigator
+import com.rc.playgrounds.presentation.main.MainView
+import com.rc.playgrounds.presentation.quickconfig.QuickConfigView
 import com.rc.playgrounds.status.view.StatusView
 import com.rc.playgrounds.stopwatch.StopwatchView
 import com.rc.playgrounds.stream.StreamReceiver
@@ -54,10 +56,15 @@ class ActivityComponent(
     private val saveButton = activity.findViewById<Button>(R.id.save_button)
     private val backButton = activity.findViewById<Button>(R.id.back_button)
     private val okButton = activity.findViewById<Button>(R.id.ok_button)
-    private val configureButton = activity.findViewById<Button>(R.id.configure_button)
     private val configInput: AppCompatEditText = activity.findViewById(R.id.config_input)
     private var streamingProcess: StreamingProcess? = null
-    private val navigator = NaiveNavigator(activity)
+    private val navigator = NaiveNavigator(activity, appComponent.activeScreenProvider)
+    private val mainView = MainView(
+        activity = activity,
+        mainModel = appComponent.mainModel,
+        activeScreenProvider = appComponent.activeScreenProvider,
+        scope = lifecycleScope,
+    )
     private val configView = ConfigView(
         configInput = configInput,
         okButton = okButton,
@@ -86,6 +93,12 @@ class ActivityComponent(
         appComponent.lockModel,
         lifecycleScope,
     )
+    private val quickConfigView = QuickConfigView(
+        activity,
+        appComponent.quickConfigModel,
+        lifecycleScope,
+        appComponent.gamepadEventStream,
+    )
     private var gamepadEventEmitter = GamepadEventEmitter(appComponent.gamepadEventStream)
 
     init {
@@ -112,12 +125,6 @@ class ActivityComponent(
                 release()
             }
         })
-
-        configureButton.setOnClickListener {
-            navigator.openConfig()
-        }
-
-        navigator.openMain()
     }
 
     private suspend fun doReset() {

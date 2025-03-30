@@ -42,20 +42,15 @@
         android:layout_gravity="top"
         android:visibility="gone"
         />
-
-    <FrameLayout
-        android:id="@+id/controls_lock_container"
+    <TextView
+        android:id="@+id/tv_output"
+        android:text="Hello World!"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="#8000"
-        >
-        <androidx.appcompat.widget.AppCompatTextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:drawableTop="@drawable/baseline_block_24"
-            android:text="@string/controls_lock"
-            android:textSize="28sp"
-            />
-    </FrameLayout>
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal|bottom"
+        android:maxLines="10"
+        android:paddingLeft="8dp"
+        android:paddingRight="8dp"
+        android:layout_marginBottom="64dp"
+        />
 </FrameLayout>
