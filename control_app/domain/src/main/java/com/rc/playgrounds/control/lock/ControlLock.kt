@@ -3,7 +3,7 @@ package com.rc.playgrounds.control.lock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class ControlLock {
+class ControlLock() {
     private val _locked = MutableStateFlow(false)
     val locked: StateFlow<Boolean> = _locked
 
@@ -11,7 +11,7 @@ class ControlLock {
         _locked.value = false
     }
 
-    fun toggle() {
+    fun lock() {
         _locked.value = !_locked.value
     }
 }

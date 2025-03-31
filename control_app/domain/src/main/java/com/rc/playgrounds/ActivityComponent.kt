@@ -15,10 +15,10 @@ import androidx.lifecycle.lifecycleScope
 import com.rc.playgrounds.config.Config
 import com.rc.playgrounds.config.view.ConfigView
 import com.rc.playgrounds.control.gamepad.GamepadEventEmitter
-import com.rc.playgrounds.control.lock.LockView
 import com.rc.playgrounds.domain.R
 import com.rc.playgrounds.fullscreen.FullscreenView
 import com.rc.playgrounds.navigation.NaiveNavigator
+import com.rc.playgrounds.presentation.lock.LockView
 import com.rc.playgrounds.presentation.main.MainView
 import com.rc.playgrounds.presentation.quickconfig.QuickConfigView
 import com.rc.playgrounds.status.view.StatusView
@@ -92,6 +92,8 @@ class ActivityComponent(
         activity,
         appComponent.lockModel,
         lifecycleScope,
+        appComponent.gamepadEventStream,
+        appComponent.activeScreenProvider,
     )
     private val quickConfigView = QuickConfigView(
         activity,

@@ -2,6 +2,7 @@ package com.rc.playgrounds.presentation.main
 
 import com.rc.playgrounds.control.gamepad.GamepadButtonPress
 import com.rc.playgrounds.control.gamepad.GamepadEventStream
+import com.rc.playgrounds.control.lock.ControlLock
 import com.rc.playgrounds.navigation.ActiveScreenProvider
 import com.rc.playgrounds.navigation.Screen
 import kotlinx.coroutines.CoroutineScope
@@ -14,6 +15,7 @@ class MainModel(
     private val activeScreenProvider: ActiveScreenProvider,
     private val scope: CoroutineScope,
     private val gamepadEventStream: GamepadEventStream,
+    private val lock: ControlLock,
 ) {
     private val _viewModel = MutableStateFlow<MainViewModel>(MainViewModel.Visible)
     val viewModel: Flow<MainViewModel> = _viewModel
@@ -32,17 +34,26 @@ class MainModel(
         scope.launch {
             _viewModel.collect { viewModel ->
                 job?.cancel()
-                job = scope.launch {
-                    gamepadEventStream.buttonEvents.collect { button ->
-                        when (button) {
-                            GamepadButtonPress.B -> {
-                                activeScreenProvider.switchTo(Screen.LOCK_SCREEN)
+                job = null
+                when (viewModel) {
+                    MainViewModel.Hidden -> {
+                        Unit
+                    }
+                    is MainViewModel.Visible -> {
+                        activeScreenProvider.switchTo(Screen.MAIN)
+                        job = scope.launch {
+                            gamepadEventStream.buttonEvents.collect { button ->
+                                when (button) {
+                                    GamepadButtonPress.B -> {
+                                        lock.lock()
+                                    }
+                                    GamepadButtonPress.START,
+                                    GamepadButtonPress.SELECT -> {
+                                        activeScreenProvider.switchTo(Screen.QUICK_CONFIG)
+                                    }
+                                    else -> Unit
+                                }
                             }
-                            GamepadButtonPress.START,
-                            GamepadButtonPress.SELECT -> {
-                                activeScreenProvider.switchTo(Screen.QUICK_CONFIG)
-                            }
-                            else -> Unit
                         }
                     }
                 }

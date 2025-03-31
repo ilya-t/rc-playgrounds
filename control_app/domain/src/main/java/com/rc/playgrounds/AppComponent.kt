@@ -7,9 +7,9 @@ import com.rc.playgrounds.config.view.ConfigModel
 import com.rc.playgrounds.control.SteeringEventStream
 import com.rc.playgrounds.control.gamepad.GamepadEventStream
 import com.rc.playgrounds.control.lock.ControlLock
-import com.rc.playgrounds.control.lock.LockModel
 import com.rc.playgrounds.fullscreen.FullscreenStateController
 import com.rc.playgrounds.navigation.ActiveScreenProvider
+import com.rc.playgrounds.presentation.lock.LockModel
 import com.rc.playgrounds.presentation.main.MainModel
 import com.rc.playgrounds.presentation.quickconfig.QuickConfigModel
 import com.rc.playgrounds.remote.OutputEventStream
@@ -68,6 +68,7 @@ class AppComponent(app: Application) {
         activeScreenProvider,
         scope,
         gamepadEventStream,
+        controlLock,
     )
 
     val quickConfigModel = QuickConfigModel(
@@ -109,10 +110,7 @@ class AppComponent(app: Application) {
     )
 
     val lockModel = LockModel(
-        activeScreenProvider,
         controlLock,
-        gamepadEventStream,
-        scope,
     )
 
     companion object {
