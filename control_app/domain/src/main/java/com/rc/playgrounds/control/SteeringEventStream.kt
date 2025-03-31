@@ -40,7 +40,7 @@ class SteeringEventStream(
 
         val rawPitch = -event.rightStickY
         val rawYaw = event.rightStickX
-        val rawSteer = -event.leftStickX
+        val rawSteer = event.leftStickX
         val breakTrigger = event.leftTrigger
         val rightTrigger = event.rightTrigger
         val longTrigger = if (breakTrigger > rightTrigger) {

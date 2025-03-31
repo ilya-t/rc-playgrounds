@@ -130,7 +130,7 @@ class Controller:
 
         pwm_yaw = self.scale_pwm(yaw)
         pwm_pitch = self.scale_pwm(pitch)
-        pwm_steer = self.scale_pwm(steer)
+        pwm_steer = self.scale_pwm(-steer)
         pwm_long = int(PWM_MIN_LONG + (long + 1) * 0.5 * (PWM_MAX_LONG - PWM_MIN_LONG))
 
         self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(PWM_YAW_PIN, pwm_yaw))
