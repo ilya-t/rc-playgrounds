@@ -43,7 +43,6 @@ data class Config(
     companion object {
         private val jsonParser = Json {
             ignoreUnknownKeys = true
-            prettyPrint = true
             isLenient = true
         }
 

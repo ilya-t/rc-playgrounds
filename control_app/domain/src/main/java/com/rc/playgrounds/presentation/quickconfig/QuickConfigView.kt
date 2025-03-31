@@ -48,6 +48,7 @@ class QuickConfigView(
         buttonPress: GamepadButtonPress
     ) {
         when (buttonPress) {
+            GamepadButtonPress.A -> viewModel.onBackButton()
             GamepadButtonPress.B -> viewModel.onBackButton()
             GamepadButtonPress.Down -> viewModel.onButtonDownPressed()
             GamepadButtonPress.Up -> viewModel.onButtonUpPressed()

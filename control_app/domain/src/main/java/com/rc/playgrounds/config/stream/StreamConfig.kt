@@ -7,6 +7,8 @@ import kotlinx.serialization.Serializable
 data class StreamConfig(
     @SerialName("quality_profiles")
     val qualityProfiles: List<QualityProfile>,
+    @SerialName("default_quality_profile_index")
+    val defaultQualityProfile: Int? = null,
     @SerialName("remote_cmd")
     val remoteCmd: String,
     @SerialName("local_cmd")

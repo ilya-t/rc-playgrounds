@@ -181,6 +181,21 @@ class ConfigTest {
 
         assertJsonEquals(original, reserialized)
     }
+
+    @Test
+    fun `new fields adding`() {
+        val config = Config(DEFAULT_CONFIG)
+        val newConfig = config.copy(
+            stream = config.stream.copy(
+                defaultQualityProfile = 777,
+            )
+        )
+        Assert.assertTrue(
+            "Instead got ${newConfig.writeToJson()}",
+            newConfig.writeToJson()
+                .contains("\"default_quality_profile_index\":777")
+        )
+    }
 }
 
 private val TEST_JSON = """{

@@ -5,7 +5,6 @@ import com.rc.playgrounds.config.stream.QualityProfile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
@@ -14,44 +13,48 @@ class StreamQualityProvider(
     private val scope: CoroutineScope,
 ) {
     private val _quality = MutableStateFlow(QualityProfile.DEFAULT_PROFILES.first())
-    private val profileIndex = MutableStateFlow<Int>(0)
 
     val currentQuality: Flow<QualityProfile> = _quality
 
     init {
         scope.launch {
-            combine(
-                activeConfigProvider.configFlow.map { it.stream.qualityProfiles },
-                profileIndex,
-            ) { a, b -> a to b }
-            .collect { (profiles, index) ->
-                invalidate(index, profiles)
+            activeConfigProvider.configFlow.map { it.stream }.collect { stream ->
+                invalidate(stream.defaultQualityProfile ?: 0, stream.qualityProfiles)
             }
         }
     }
 
     fun nextQuality() {
-        profileIndex.value += 1
+        moveQualityProfileIndexBy(1)
     }
 
-
     fun prevQuality() {
-        profileIndex.value -= 1
+        moveQualityProfileIndexBy(-1)
+    }
+
+    private fun moveQualityProfileIndexBy(i: Int) {
+        activeConfigProvider.update { config ->
+            var index = (config.stream.defaultQualityProfile ?: 0) + i
+            val current = config.stream.qualityProfiles.getOrNull(index)
+
+            if (index < 0) {
+                index = 0
+            }
+
+            if (current == null) {
+                index = config.stream.qualityProfiles.lastIndex
+            }
+
+            config.copy(
+                stream = config.stream.copy(
+                    defaultQualityProfile = index,
+                )
+            )
+        }
     }
 
     private fun invalidate(index: Int, qualityProfiles: List<QualityProfile>) {
-        val current = qualityProfiles.getOrNull(index)
-
-        if (current != null) {
-            _quality.value = current
-            return
-        }
-
-        if (index < 0) {
-            profileIndex.value = 0
-            return
-        }
-
-        profileIndex.value = qualityProfiles.lastIndex
+        val current = qualityProfiles.getOrNull(index) ?: return
+        _quality.value = current
     }
 }

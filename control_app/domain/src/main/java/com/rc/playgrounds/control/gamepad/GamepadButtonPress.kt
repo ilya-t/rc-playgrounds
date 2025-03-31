@@ -5,6 +5,7 @@ sealed interface GamepadButtonPress {
     data object Down : GamepadButtonPress
     data object Left : GamepadButtonPress
     data object Right : GamepadButtonPress
+    data object A : GamepadButtonPress
     data object B : GamepadButtonPress
     data object START : GamepadButtonPress
     data object SELECT : GamepadButtonPress

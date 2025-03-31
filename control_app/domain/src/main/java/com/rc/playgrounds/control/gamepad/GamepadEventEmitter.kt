@@ -62,7 +62,7 @@ class GamepadEventEmitter(
                 return true
             }
             KeyEvent.KEYCODE_BUTTON_A -> {
-                //Static.output("Button [A]")
+                eventStream.emit(GamepadButtonPress.A)
                 return true
             }
             KeyEvent.KEYCODE_BUTTON_B -> {
