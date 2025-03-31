@@ -53,6 +53,14 @@ class GamepadEventEmitter(
                 eventStream.emit(GamepadButtonPress.Down)
                 return true
             }
+            KeyEvent.KEYCODE_DPAD_LEFT -> {
+                eventStream.emit(GamepadButtonPress.Left)
+                return true
+            }
+            KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                eventStream.emit(GamepadButtonPress.Right)
+                return true
+            }
             KeyEvent.KEYCODE_BUTTON_A -> {
                 //Static.output("Button [A]")
                 return true

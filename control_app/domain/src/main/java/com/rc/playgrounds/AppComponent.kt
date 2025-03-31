@@ -40,6 +40,7 @@ class AppComponent(app: Application) {
     )
     val activeConfigProvider = ActiveConfigProvider(
         configRepository,
+        scope,
     )
     val configModel = ConfigModel(
         configRepository = configRepository,

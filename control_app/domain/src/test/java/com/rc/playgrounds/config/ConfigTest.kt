@@ -47,6 +47,22 @@ class ConfigTest {
     @Test
     fun `long zones parsing`() {
         val json = """{
+            "stream": {
+            },
+            "control_server": {
+                "address": "192.168.0.1", 
+                "port": 8080
+            },
+            "stream_target": {
+                "address": "192.168.0.2", 
+                "port": 8181
+            },
+            "control_offsets": {
+                "pitch": 0.0,
+                "yaw": 0.0,
+                "steer": 0.0,
+                "long": 0.0
+            },
             "control_tuning": {
                 "forward_long_zones": {
                     "0": "0.01",

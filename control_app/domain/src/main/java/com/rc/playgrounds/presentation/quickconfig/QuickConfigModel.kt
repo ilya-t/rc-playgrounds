@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 class QuickConfigModel(
     scope: CoroutineScope,
     activeScreenProvider: ActiveScreenProvider,
-    config: ActiveConfigProvider,
+    private val activeConfigProvider: ActiveConfigProvider,
     qualityProvider: StreamQualityProvider,
 ) {
     private val _viewModel = MutableStateFlow<QuickConfigViewModel>(QuickConfigViewModel.Hidden)
@@ -23,7 +23,7 @@ class QuickConfigModel(
     init {
         scope.launch {
             combine(
-                config.configFlow,
+                activeConfigProvider.configFlow,
                 activeScreenProvider.screen,
                 qualityProvider.currentQuality,
             ) { config, screen, p ->
@@ -38,8 +38,12 @@ class QuickConfigModel(
                             onButtonDownPressed = {
                                 qualityProvider.prevQuality()
                             },
-                            onButtonLeftPressed = { /* TODO */ },
-                            onButtonRightPressed = { /* TODO */ },
+                            onButtonLeftPressed = {
+                                shiftSteerOffset(-0.1f)
+                            },
+                            onButtonRightPressed = {
+                                shiftSteerOffset(0.1f)
+                            },
                             onBackButton = { activeScreenProvider.switchTo(Screen.MAIN) }
                         )
                     }
@@ -49,6 +53,16 @@ class QuickConfigModel(
             .collect {
                 _viewModel.value = it
             }
+        }
+    }
+
+    private fun shiftSteerOffset(value: Float) {
+        activeConfigProvider.update { config ->
+            config.copy(
+                controlOffsets = config.controlOffsets.copy(
+                    steer = (config.controlOffsets.steer + value).coerceIn(-1f, 1f)
+                )
+            )
         }
     }
 }

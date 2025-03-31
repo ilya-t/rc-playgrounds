@@ -10,120 +10,124 @@ import com.rc.playgrounds.config.stream.StreamConfig
 import org.intellij.lang.annotations.Language
 import org.json.JSONObject
 
-class Config(
-    rawJson: String,
-    val errorCollector: (e: Throwable) -> Unit = { it.printStackTrace() },
+data class Config(
+    val stream: StreamConfig,
+    val controlServer: NetworkTarget?,
+    val streamTarget: NetworkTarget?,
+    val controlOffsets: ControlOffsets,
+    val controlTuning: ControlTuning,
 ) {
-    private val json by lazy {
-        runCatching {
-            JSONObject(rawJson)
-        }
-            .onFailure(errorCollector)
-            .getOrElse { JSONObject() }
+
+    fun writeToJson(): String {
+        TODO("not implemented yet")
     }
-    val stream: StreamConfig by lazy {
-        runCatching {
-            val stream = json.getJSONObject("stream")
-            val qualityProfiles = stream.optJSONArray("quality_profiles")?.let { array ->
-                List(array.length()) { index ->
-                    val profile = array.getJSONObject(index)
-                    QualityProfile(
-                        width = profile.getInt("width"),
-                        height = profile.getInt("height"),
-                        bitrate = profile.getInt("bitrate"),
-                        framerate = profile.getInt("framerate")
+    companion object {
+        operator fun invoke(
+            rawJson: String,
+            errorCollector: (e: Throwable) -> Unit = { it.printStackTrace() },
+        ): Config {
+            val json = runCatching {
+                JSONObject(rawJson)
+            }
+                .onFailure(errorCollector)
+                .getOrElse { JSONObject() }
+
+            return Config(
+                stream = runCatching {
+                    val stream = json.getJSONObject("stream")
+                    val qualityProfiles = stream.optJSONArray("quality_profiles")?.let { array ->
+                        List(array.length()) { index ->
+                            val profile = array.getJSONObject(index)
+                            QualityProfile(
+                                width = profile.getInt("width"),
+                                height = profile.getInt("height"),
+                                bitrate = profile.getInt("bitrate"),
+                                framerate = profile.getInt("framerate")
+                            )
+                        }
+                    } ?: QualityProfile.DEFAULT_PROFILES
+
+                    StreamConfig(
+                        qualityProfiles = qualityProfiles,
+                        remoteCmd = stream.optString("remote_cmd", ""),
+                        localCmd = stream.optString("local_cmd", ""),
                     )
                 }
-            } ?: QualityProfile.DEFAULT_PROFILES
+                    .onFailure(errorCollector)
+                    .getOrElse {
+                        StreamConfig(
+                            qualityProfiles = QualityProfile.DEFAULT_PROFILES,
+                            remoteCmd = "",
+                            localCmd = "",
+                        )
+                    },
 
-            StreamConfig(
-                qualityProfiles = qualityProfiles,
-                remoteCmd = stream.optString("remote_cmd", ""),
-                localCmd = stream.optString("local_cmd", ""),
-            )
-        }
-            .onFailure(errorCollector)
-            .getOrElse {
-                StreamConfig(
-                    qualityProfiles = QualityProfile.DEFAULT_PROFILES,
-                    remoteCmd = "",
-                    localCmd = "",
-                )
-            }
-    }
+                controlServer = runCatching {
+                    val t = json.getJSONObject("control_server")
+                    NetworkTarget(
+                        address = t.getString("address"),
+                        port = t.getInt("port")
+                    )
+                }
+                    .onFailure(errorCollector)
+                    .getOrNull(),
 
-    val controlServer: NetworkTarget? by lazy {
-        runCatching {
-            val t = json.getJSONObject("control_server")
-            NetworkTarget(
-                address = t.getString("address"),
-                port = t.getInt("port")
-            )
+                streamTarget = runCatching {
+                    val t = json.getJSONObject("stream_target")
+                    NetworkTarget(
+                        address = t.getString("address"),
+                        port = t.getInt("port")
+                    )
 
-        }
-            .onFailure(errorCollector)
-            .getOrNull()
-    }
+                }
+                    .onFailure(errorCollector)
+                    .getOrNull(),
 
-    val streamTarget: NetworkTarget? by lazy {
-        runCatching {
-            val t = json.getJSONObject("stream_target")
-            NetworkTarget(
-                address = t.getString("address"),
-                port = t.getInt("port")
-            )
+                controlOffsets = runCatching {
+                    val t = json.getJSONObject("control_offsets")
+                    ControlOffsets(
+                        pitch = t.getDouble("pitch").toFloat(),
+                        yaw = t.getDouble("yaw").toFloat(),
+                        steer = t.getDouble("steer").toFloat(),
+                        long = t.getDouble("long").toFloat(),
+                    )
+                }.onFailure {
+                    errorCollector(it)
+                }.getOrElse {
+                    ControlOffsets(
+                        pitch = 0f,
+                        yaw = 0f,
+                        steer = 0f,
+                        long = 0f,
+                    )
+                },
 
-        }
-            .onFailure(errorCollector)
-            .getOrNull()
-    }
-
-    val controlOffsets: ControlOffsets by lazy {
-        runCatching {
-            val t = json.getJSONObject("control_offsets")
-            ControlOffsets(
-                pitch = t.getDouble("pitch").toFloat(),
-                yaw = t.getDouble("yaw").toFloat(),
-                steer = t.getDouble("steer").toFloat(),
-                long = t.getDouble("long").toFloat(),
-            )
-        }.onFailure {
-            errorCollector(it)
-        }.getOrElse {
-            ControlOffsets(
-                pitch = 0f,
-                yaw = 0f,
-                steer = 0f,
-                long = 0f,
-            )
-        }
-    }
-
-    val controlTuning: ControlTuning by lazy {
-        runCatching {
-            val t = json.getJSONObject("control_tuning")
-            ControlTuning(
-                pitchFactor = t.optDouble("pitch_factor").toFloat(),
-                pitchZone = parseZone(t.optString("pitch_zone")),
-                yawFactor = t.optDouble("yaw_factor").toFloat(),
-                yawZone = parseZone(t.optString("yaw_zone")),
-                steerFactor = t.optDouble("steer_factor").toFloat(),
-                steerZone = parseZone(t.optString("steer_zone")),
-                forwardLongZones = parseZones(t.optJSONObject("forward_long_zones")),
-                backwardLongZones = parseZones(t.optJSONObject("backward_long_zones")),
-            )
-        }
-        .onFailure { errorCollector.invoke(it) }
-        .getOrElse {
-            ControlTuning(
-                pitchFactor = null,
-                pitchZone = null,
-                yawFactor = null,
-                yawZone = null,
-                steerFactor = null,
-                steerZone = null,
-                forwardLongZones = emptyList(),
-                backwardLongZones = emptyList(),
+                controlTuning = runCatching {
+                    val t = json.getJSONObject("control_tuning")
+                    ControlTuning(
+                        pitchFactor = t.optDouble("pitch_factor").toFloat(),
+                        pitchZone = parseZone(t.optString("pitch_zone")),
+                        yawFactor = t.optDouble("yaw_factor").toFloat(),
+                        yawZone = parseZone(t.optString("yaw_zone")),
+                        steerFactor = t.optDouble("steer_factor").toFloat(),
+                        steerZone = parseZone(t.optString("steer_zone")),
+                        forwardLongZones = parseZones(t.optJSONObject("forward_long_zones")),
+                        backwardLongZones = parseZones(t.optJSONObject("backward_long_zones")),
+                    )
+                }
+                    .onFailure { errorCollector.invoke(it) }
+                    .getOrElse {
+                        ControlTuning(
+                            pitchFactor = null,
+                            pitchZone = null,
+                            yawFactor = null,
+                            yawZone = null,
+                            steerFactor = null,
+                            steerZone = null,
+                            forwardLongZones = emptyList(),
+                            backwardLongZones = emptyList(),
+                        )
+                    },
             )
         }
     }
