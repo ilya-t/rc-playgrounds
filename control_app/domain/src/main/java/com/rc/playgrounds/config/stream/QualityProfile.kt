@@ -1,5 +1,8 @@
 package com.rc.playgrounds.config.stream
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class QualityProfile(
     val width: Int,
     val height: Int,

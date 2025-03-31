@@ -39,10 +39,10 @@ class QuickConfigModel(
                                 qualityProvider.prevQuality()
                             },
                             onButtonLeftPressed = {
-                                shiftSteerOffset(-0.1f)
+                                shiftSteerOffset(-0.01f)
                             },
                             onButtonRightPressed = {
-                                shiftSteerOffset(0.1f)
+                                shiftSteerOffset(0.01f)
                             },
                             onBackButton = { activeScreenProvider.switchTo(Screen.MAIN) }
                         )

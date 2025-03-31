@@ -1,14 +1,40 @@
 package com.rc.playgrounds.config.model
 
 import android.graphics.PointF
+import com.rc.playgrounds.config.serial.Zones
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
+@Serializable
 data class ControlTuning(
-    val pitchFactor: Float?,
-    val pitchZone: PointF?,
-    val yawFactor: Float?,
-    val yawZone: PointF?,
-    val steerFactor: Float?,
-    val steerZone: PointF?,
-    val forwardLongZones: List<MappingZone>,
-    val backwardLongZones: List<MappingZone>,
-)
+    @SerialName("pitch_factor")
+    val pitchFactor: Float? = null,
+    @SerialName("pitch_zone")
+    internal val rawPitchZone: String? = null,
+    @SerialName("yaw_factor")
+    val yawFactor: Float? = null,
+    @Contextual
+    @SerialName("yaw_zone")
+    val rawYawZone: String? = null,
+    @SerialName("steer_factor")
+    val steerFactor: Float? = null,
+    @SerialName("steer_zone")
+    val rawSteerZone: String? = null,
+    @SerialName("forward_long_zones")
+    val rawForwardLongZones: Map<String, String> = emptyMap(),
+    @SerialName("backward_long_zones")
+    val rawBackwardLongZones: Map<String, String> = emptyMap(),
+) {
+    @Transient
+    val pitchZone: PointF? = Zones.parseZone(rawPitchZone)
+    @Transient
+    val yawZone: PointF? = Zones.parseZone(rawYawZone)
+    @Transient
+    val steerZone: PointF? = Zones.parseZone(rawSteerZone)
+    @Transient
+    val forwardLongZones: List<MappingZone> = Zones.parseZones(rawForwardLongZones)
+    @Transient
+    val backwardLongZones: List<MappingZone> = Zones.parseZones(rawBackwardLongZones)
+}
