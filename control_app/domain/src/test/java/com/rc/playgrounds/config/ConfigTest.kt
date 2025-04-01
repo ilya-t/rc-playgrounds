@@ -193,7 +193,7 @@ class ConfigTest {
         Assert.assertTrue(
             "Instead got ${newConfig.writeToJson()}",
             newConfig.writeToJson()
-                .contains("\"default_quality_profile_index\":777")
+                .contains("\"default_quality_profile_index\": 777")
         )
     }
 }
