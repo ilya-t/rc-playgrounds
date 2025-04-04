@@ -31,7 +31,7 @@ class QuickConfigModel(
                     Screen.QUICK_CONFIG -> {
                         QuickConfigViewModel.Visible(
                             resolution = "${p.width}x${p.height} ${p.framerate}fps (${p.bitrate / 1_000_000f}mbit/s)",
-                            steeringOffset = "steer offset: %.2f".format(config.controlOffsets.steer),
+                            steeringOffset = "steer offset: %.3f".format(config.controlOffsets.steer),
                             onButtonUpPressed = {
                                 qualityProvider.nextQuality()
                             },
@@ -39,10 +39,10 @@ class QuickConfigModel(
                                 qualityProvider.prevQuality()
                             },
                             onButtonLeftPressed = {
-                                shiftSteerOffset(-0.01f)
+                                shiftSteerOffset(-STEER_OFFSET_STEP)
                             },
                             onButtonRightPressed = {
-                                shiftSteerOffset(0.01f)
+                                shiftSteerOffset(STEER_OFFSET_STEP)
                             },
                             onBackButton = { activeScreenProvider.switchTo(Screen.MAIN) }
                         )
@@ -66,3 +66,6 @@ class QuickConfigModel(
         }
     }
 }
+
+
+private const val STEER_OFFSET_STEP = 0.005f

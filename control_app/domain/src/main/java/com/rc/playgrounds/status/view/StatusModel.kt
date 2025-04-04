@@ -91,7 +91,7 @@ private fun asStatus(
         }
 
         appendLine("- long: %.2f (raw: %.2f) ".format(event.long, event.rawLong))
-        appendLine("- steer: %.2f (raw: %.2f) ".format(event.steer, event.rawSteer))
+        appendLine("- steer: %.3f (raw: %.2f) ".format(event.steer, event.rawSteer))
         appendLine("- pitch: %.2f (raw: %.2f) ".format(event.pitch, event.rawPitch))
         appendLine("- yaw: %.2f (raw: %.2f)".format(event.yaw, event.rawYaw))
     }
