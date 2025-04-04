@@ -28,7 +28,6 @@ class ConfigTest {
         Assert.assertNotNull(config.controlTuning.pitchZone)
         Assert.assertNotNull(config.controlTuning.yawFactor)
         Assert.assertNotNull(config.controlTuning.yawZone)
-        Assert.assertNotNull(config.controlTuning.steerFactor)
         Assert.assertNotNull(config.controlTuning.steerZone)
         Assert.assertTrue(config.controlTuning.forwardLongZones.isNotEmpty())
         Assert.assertTrue(config.controlTuning.backwardLongZones.isNotEmpty())

@@ -30,16 +30,15 @@ data class Config(
         rawPitchZone = null,
         yawFactor = 0f,
         rawYawZone = null,
-        steerFactor = 0f,
         rawSteerZone = null,
         rawForwardLongZones = emptyMap(),
         rawBackwardLongZones = emptyMap(),
     ),
 ) {
-
     fun writeToJson(): String {
         return jsonParser.encodeToString(Config.serializer(), this)
     }
+
     companion object {
         private val jsonParser = Json {
             ignoreUnknownKeys = true
@@ -74,7 +73,6 @@ data class Config(
                             rawPitchZone = null,
                             yawFactor = 0f,
                             rawYawZone = null,
-                            steerFactor = 0f,
                             rawSteerZone = null,
                             rawForwardLongZones = emptyMap(),
                             rawBackwardLongZones = emptyMap(),
@@ -135,7 +133,7 @@ internal const val DEFAULT_CONFIG = """
   "control_offsets": {
     "pitch": 0.0,
     "yaw": 0.0,
-    "steer": -0.33,
+    "steer": 0.08,
     "long": 0.18
   },
   "control_tuning": {
@@ -143,8 +141,12 @@ internal const val DEFAULT_CONFIG = """
     "pitch_zone": "0..0.5",
     "yaw_factor": 1.0,
     "yaw_zone": "0..0.5",
-    "steer_factor": 1.0,
     "steer_zone": "0..0.7",
+    "steer_limit_at_trigger": {
+        "0.0": "1.0",
+        "0.5": "0.7",
+        "1.0": "0.3"
+    },
     "forward_long_zones": {
         "0.0": "0.01",
         "0.5": "0.2",

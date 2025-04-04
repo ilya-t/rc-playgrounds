@@ -18,12 +18,23 @@ data class ControlTuning(
     @Contextual
     @SerialName("yaw_zone")
     val rawYawZone: String? = null,
-    @SerialName("steer_factor")
-    val steerFactor: Float? = null,
     @SerialName("steer_zone")
     val rawSteerZone: String? = null,
+    /**
+     * Key is your trigger position for long. Value is steering limit at that position
+     */
+    @SerialName("steer_limit_at_trigger")
+    val rawSteerLimitAtTrigger: Map<String, String> = emptyMap(),
+
+    /**
+     * Key is your right trigger position. Value is 'long' value that will be sent to the car.
+     */
     @SerialName("forward_long_zones")
     val rawForwardLongZones: Map<String, String> = emptyMap(),
+
+    /**
+     * Key is your left trigger position. Value is 'long' value that will be sent to the car.
+     */
     @SerialName("backward_long_zones")
     val rawBackwardLongZones: Map<String, String> = emptyMap(),
 ) {
@@ -37,4 +48,7 @@ data class ControlTuning(
     val forwardLongZones: List<MappingZone> = Zones.parseZones(rawForwardLongZones)
     @Transient
     val backwardLongZones: List<MappingZone> = Zones.parseZones(rawBackwardLongZones)
+
+    @Transient
+    val steerLimitAtTrigger: List<MappingZone> = Zones.parseZones(rawSteerLimitAtTrigger)
 }

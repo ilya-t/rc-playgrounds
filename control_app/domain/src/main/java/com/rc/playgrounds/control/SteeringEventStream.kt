@@ -4,6 +4,7 @@ import android.graphics.PointF
 import android.view.animation.AccelerateInterpolator
 import com.rc.playgrounds.config.ActiveConfigProvider
 import com.rc.playgrounds.config.model.ControlOffsets
+import com.rc.playgrounds.config.model.ControlTuning
 import com.rc.playgrounds.config.model.MappingZone
 import com.rc.playgrounds.control.gamepad.GamepadEvent
 import com.rc.playgrounds.control.gamepad.GamepadEventStream
@@ -53,7 +54,7 @@ class SteeringEventStream(
         val steeringEvent = SteeringEvent(
             pitch = interpolation.fixPitch(rawPitch) + offsets.pitch,
             yaw = interpolation.fixYaw(rawYaw) + offsets.yaw,
-            steer = interpolation.fixSteer(rawSteer) + offsets.steer,
+            steer = interpolation.fixSteer(rawSteer, activeTrigger = longTrigger) + offsets.steer,
             long = if (rawLong.absoluteValue > 0.0001f) {
                 // When trigger not touched then its safer to prevent long
                 // pulse at all rather than send one with offset.
@@ -81,13 +82,27 @@ class SteeringEventStream(
     }
 }
 
-private fun com.rc.playgrounds.config.model.ControlTuning.asInterpolation() = ControlInterpolation(
+private fun ControlTuning.asInterpolation() = ControlInterpolation(
     pitch = create(pitchFactor),
     pitchTranslator = create(pitchZone),
     yaw = create(yawFactor),
     yawTranslator = create(yawZone),
-    steer = create(steerFactor),
-    steerTranslator = create(steerZone),
+    steerTranslator = { steer: Float, rawTrigger: Float ->
+        val trigger = rawTrigger.absoluteValue
+        steerLimitAtTrigger
+            .find { trigger >= it.src.x && trigger <= it.src.y }
+            ?.dst
+            ?.let { limits ->
+                val maxSteer = translate(trigger, 0f, 1f, limits.x, limits.y)
+                translate(steer.absoluteValue, 0f, 1f, 0f, maxSteer) * steer.sign
+            }
+
+            ?: steerZone?.let {
+                translate(steer.absoluteValue, 0f, 1f, it.x, it.y) * steer.sign
+            }
+
+            ?: steer
+    },
     longTranslator = if (forwardLongZones.isNotEmpty()) {
         val zonesNegative = backwardLongZones.ifEmpty { forwardLongZones }
         create(negative = zonesNegative, positive = forwardLongZones)
@@ -119,8 +134,7 @@ private class ControlInterpolation(
     private val pitchTranslator: (Float) -> Float,
     private val yaw: AccelerateInterpolator?,
     private val yawTranslator: (Float) -> Float,
-    private val steer: AccelerateInterpolator?,
-    private val steerTranslator: (Float) -> Float,
+    private val steerTranslator: (steer: Float, trigger: Float) -> Float,
     private val longTranslator: (Float) -> Float,
 ) {
     fun fixPitch(value: Float): Float {
@@ -131,8 +145,8 @@ private class ControlInterpolation(
         return fix(yaw, yawTranslator, value)
     }
 
-    fun fixSteer(value: Float): Float {
-        return fix(steer, steerTranslator, value)
+    fun fixSteer(steer: Float, activeTrigger: Float): Float {
+        return steerTranslator(steer, activeTrigger)
     }
 
     fun fixLong(value: Float): Float {
@@ -184,5 +198,9 @@ private fun create(zone: PointF?): (Float) -> Float {
 
 fun translate(valueX: Float, x1: Float, x2: Float, y1: Float, y2: Float): Float {
     val raw = y1 + (valueX - x1) * (y2 - y1) / (x2 - x1)
-    return raw.coerceIn(y1, y2)
+    return if (y1 > y2) {
+        raw.coerceIn(y2, y1)
+    } else {
+        raw.coerceIn(y1, y2)
+    }
 }
