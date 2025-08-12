@@ -42,6 +42,15 @@ android {
         }
     }
 
+    signingConfigs {
+        getByName("debug").apply {
+            storeFile = file("debug_signing.jks")
+            storePassword = "debug_pass"
+            keyAlias = "debug"
+            keyPassword = "debug_pass"
+        }
+    }
+
     namespace = "com.testspace"
     flavorDimensions("default")
 }
