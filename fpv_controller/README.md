@@ -1,8 +1,25 @@
+## Before you start
+`src/main.py` defines constants for network and PWM behavior. Update them to
+match your setup before running the controller:
+
+- `UDP_IP`, `UDP_PORT` – address and port to listen for control packets.
+- `STREAM_DST_IP` – IP of the client that will receive the H.264 UDP stream.
+- `PWM_YAW_PIN`, `PWM_PITCH_PIN`, `PWM_STEER_PIN`, `PWM_LONG_PIN` – Raspberry Pi
+  GPIO pins (BCM numbering) driving yaw, pitch, steering and throttle servos.
+- `PWM_GIMB_MODE`, `PWM_GIMB_SENS` – pins that set gimbal mode and
+  sensitivity; their pulse widths are fixed to `GIMB_MODE_VAL` and
+  `GIMB_SENS_VAL`.
+- `PWM_FREQUENCY`, `PWM_MIN`, `PWM_MAX` – base PWM frequency and pulse width
+  range for yaw/pitch/steer channels.
+- `PWM_MIN_LONG`, `PWM_MAX_LONG` – pulse width range for the throttle channel.
+- `NO_DATA_TIMEOUT` – seconds before servo pulses are cleared when no control
+  packets are received.
+Adjust these values to match your hardware and network environment.
+
 ## Quickstart
 ```sh
 ./run.sh
 ```
-
 
 ## Launch at start
 - create `startup.service`:
