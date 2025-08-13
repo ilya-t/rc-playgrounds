@@ -5,6 +5,7 @@ import com.rc.playgrounds.config.ActiveConfigProvider
 import com.rc.playgrounds.config.ConfigRepository
 import com.rc.playgrounds.config.view.ConfigModel
 import com.rc.playgrounds.control.SteeringEventStream
+import com.rc.playgrounds.control.gamepad.GamePadEventSessionProvider
 import com.rc.playgrounds.control.gamepad.GamepadEventStream
 import com.rc.playgrounds.control.lock.ControlLock
 import com.rc.playgrounds.fullscreen.FullscreenStateController
@@ -50,11 +51,15 @@ class AppComponent(app: Application) {
     val gamepadEventStream = GamepadEventStream(
         scope,
     )
+    private val gamePadEventSessionProvider = GamePadEventSessionProvider(
+        scope,
+        gamepadEventStream,
+    )
     private val controlLock = ControlLock()
     private val steeringEventStream = SteeringEventStream(
         scope,
         activeConfigProvider,
-        gamepadEventStream,
+        gamePadEventSessionProvider,
         controlLock,
     )
     val streamCmdHash = StreamCmdHash()

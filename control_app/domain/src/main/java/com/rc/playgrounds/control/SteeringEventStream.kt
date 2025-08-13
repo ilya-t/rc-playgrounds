@@ -6,8 +6,8 @@ import com.rc.playgrounds.config.ActiveConfigProvider
 import com.rc.playgrounds.config.model.ControlOffsets
 import com.rc.playgrounds.config.model.ControlTuning
 import com.rc.playgrounds.config.model.MappingZone
-import com.rc.playgrounds.control.gamepad.GamepadEvent
-import com.rc.playgrounds.control.gamepad.GamepadEventStream
+import com.rc.playgrounds.control.gamepad.GamePadEventSessionProvider
+import com.rc.playgrounds.control.gamepad.SessionGamepadEvent
 import com.rc.playgrounds.control.lock.ControlLock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -22,19 +22,19 @@ import kotlin.math.withSign
 class SteeringEventStream(
     scope: CoroutineScope,
     private val activeConfigProvider: ActiveConfigProvider,
-    private val gamepadEventStream: GamepadEventStream,
+    private val gamePadEventSessionProvider: GamePadEventSessionProvider,
     private val controlLock: ControlLock,
 ) {
     private val statelessEvents: Flow<SteeringEvent> = combine(
         controlLock.locked,
         activeConfigProvider.configFlow.map { it.controlOffsets },
         activeConfigProvider.configFlow.map { it.controlTuning.asInterpolation() },
-        gamepadEventStream.events,
+        gamePadEventSessionProvider.events,
     ) { controlsLocked: Boolean,
         offsets: ControlOffsets,
         interpolation: ControlInterpolation,
-        event: GamepadEvent ->
-
+        sessionEvent: SessionGamepadEvent ->
+        val event = sessionEvent.event
         if (controlsLocked) {
             return@combine SteeringEvent.STILL
         }
@@ -51,10 +51,15 @@ class SteeringEventStream(
         }
         val rawLong = -longTrigger
 
+        val steerAtStart = sessionEvent.sessionStart?.leftStickX
         val steeringEvent = SteeringEvent(
             pitch = interpolation.fixPitch(rawPitch) + offsets.pitch,
             yaw = interpolation.fixYaw(rawYaw) + offsets.yaw,
-            steer = interpolation.fixSteer(rawSteer, activeTrigger = longTrigger) + offsets.steer,
+            steer = (interpolation.fixSteer(
+                rawSteer,
+                activeTrigger = longTrigger,
+                steerAtStart = steerAtStart,
+            ) + offsets.steer).coerceIn(-1f, 1f),
             long = if (rawLong.absoluteValue > 0.0001f) {
                 // When trigger not touched then its safer to prevent long
                 // pulse at all rather than send one with offset.
@@ -145,8 +150,28 @@ private class ControlInterpolation(
         return fix(yaw, yawTranslator, value)
     }
 
-    fun fixSteer(steer: Float, activeTrigger: Float): Float {
-        return steerTranslator(steer, activeTrigger)
+    fun fixSteer(steer: Float, activeTrigger: Float, steerAtStart: Float?): Float {
+        val fixedSteer: Float = steerTranslator(steer, activeTrigger)
+
+        if (steerAtStart == null) {
+            return fixedSteer
+        }
+
+        if (fixedSteer == steer) {
+            return fixedSteer
+        }
+
+        if (steer > 0 && fixedSteer < steerAtStart.absoluteValue) {
+            // Decline steer fix (right)
+            return steer
+        }
+
+        if (steer < 0 && fixedSteer > -1*steerAtStart.absoluteValue) {
+            // Decline steer fix (left)
+            return steer
+        }
+
+        return fixedSteer
     }
 
     fun fixLong(value: Float): Float {
