@@ -3,8 +3,8 @@ package com.rc.playgrounds.remote
 import com.rc.playgrounds.config.ActiveConfigProvider
 import com.rc.playgrounds.config.Config
 import com.rc.playgrounds.config.model.NetworkTarget
-import com.rc.playgrounds.control.SteeringEvent
-import com.rc.playgrounds.control.SteeringEventStream
+import com.rc.playgrounds.control.RcEvent
+import com.rc.playgrounds.control.RcEventStream
 import com.rc.playgrounds.remote.stream.RemoteStreamConfig
 import com.rc.playgrounds.remote.stream.RemoteStreamConfigController
 import kotlinx.coroutines.CoroutineScope
@@ -24,7 +24,7 @@ import java.net.InetAddress
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class OutputEventStream(
-    private val steeringEventStream: SteeringEventStream,
+    private val rcEventStream: RcEventStream,
     private val scope: CoroutineScope,
     private val activeConfigProvider: ActiveConfigProvider,
     private val streamCmdHash: StreamCmdHash,
@@ -57,7 +57,7 @@ class OutputEventStream(
             emitter = EventEmitter(
                 c,
                 scope,
-                steeringEventStream,
+                rcEventStream,
                 activeConfigProvider.configFlow,
                 streamCmdHash.hash,
                 remoteStreamConfigController,
@@ -69,7 +69,7 @@ class OutputEventStream(
 private class EventEmitter(
     val config: NetworkTarget,
     private val scope: CoroutineScope,
-    private val steeringEventStream: SteeringEventStream,
+    private val rcEventStream: RcEventStream,
     private val configFlow: Flow<Config>,
     private val streamCmdHash: Flow<String>,
     private val remoteStreamConfigController: RemoteStreamConfigController,
@@ -77,9 +77,9 @@ private class EventEmitter(
     private val messages: Flow<JSONObject> = combine(
         remoteStreamConfigController.state,
         configFlow,
-        steeringEventStream.events,
+        rcEventStream.events,
         streamCmdHash,
-    ) { streamConfig: RemoteStreamConfig?, config: Config, event: SteeringEvent, streamHash: String ->
+    ) { streamConfig: RemoteStreamConfig?, config: Config, event: RcEvent, streamHash: String ->
         asJson(
             event,
             streamCmd = streamConfig?.remoteCmd ?: config.stream.remoteCmd,
@@ -116,7 +116,7 @@ private class EventEmitter(
     }
 
     private fun asJson(
-        event: SteeringEvent,
+        event: RcEvent,
         streamCmd: String,
         streamCmdHash: String,
     ): JSONObject {

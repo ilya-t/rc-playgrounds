@@ -4,7 +4,7 @@ import android.app.Application
 import com.rc.playgrounds.config.ActiveConfigProvider
 import com.rc.playgrounds.config.ConfigRepository
 import com.rc.playgrounds.config.view.ConfigModel
-import com.rc.playgrounds.control.SteeringEventStream
+import com.rc.playgrounds.control.RcEventStream
 import com.rc.playgrounds.control.gamepad.GamePadEventSessionProvider
 import com.rc.playgrounds.control.gamepad.GamepadEventStream
 import com.rc.playgrounds.control.lock.ControlLock
@@ -56,7 +56,7 @@ class AppComponent(app: Application) {
         gamepadEventStream,
     )
     private val controlLock = ControlLock()
-    private val steeringEventStream = SteeringEventStream(
+    private val rcEventStream = RcEventStream(
         scope,
         activeConfigProvider,
         gamePadEventSessionProvider,
@@ -88,7 +88,7 @@ class AppComponent(app: Application) {
         scope,
     )
     private val outputEventStream = OutputEventStream(
-        steeringEventStream,
+        rcEventStream,
         scope,
         activeConfigProvider,
         streamCmdHash,
@@ -108,7 +108,7 @@ class AppComponent(app: Application) {
     val statusModel = StatusModel(
         scope,
         activeConfigProvider,
-        steeringEventStream,
+        rcEventStream,
         streamerEvents,
         frameDropStatus,
         remoteStreamConfigController,

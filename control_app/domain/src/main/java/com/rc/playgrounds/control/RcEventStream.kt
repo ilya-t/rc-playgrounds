@@ -19,13 +19,13 @@ import kotlin.math.absoluteValue
 import kotlin.math.sign
 import kotlin.math.withSign
 
-class SteeringEventStream(
+class RcEventStream(
     scope: CoroutineScope,
     private val activeConfigProvider: ActiveConfigProvider,
     private val gamePadEventSessionProvider: GamePadEventSessionProvider,
     private val controlLock: ControlLock,
 ) {
-    private val statelessEvents: Flow<SteeringEvent> = combine(
+    private val statelessEvents: Flow<RcEvent> = combine(
         controlLock.locked,
         activeConfigProvider.configFlow.map { it.controlOffsets },
         activeConfigProvider.configFlow.map { it.controlTuning.asInterpolation() },
@@ -36,7 +36,7 @@ class SteeringEventStream(
         sessionEvent: SessionGamepadEvent ->
         val event = sessionEvent.event
         if (controlsLocked) {
-            return@combine SteeringEvent.STILL
+            return@combine RcEvent.STILL
         }
 
         val rawPitch = -event.rightStickY
@@ -52,7 +52,7 @@ class SteeringEventStream(
         val rawLong = -longTrigger
 
         val steerAtStart = sessionEvent.sessionStart?.leftStickX
-        val steeringEvent = SteeringEvent(
+        val rcEvent = RcEvent(
             pitch = interpolation.fixPitch(rawPitch) + offsets.pitch,
             yaw = interpolation.fixYaw(rawYaw) + offsets.yaw,
             steer = (interpolation.fixSteer(
@@ -72,11 +72,11 @@ class SteeringEventStream(
             rawSteer = rawSteer,
             rawLong = rawLong,
         )
-        steeringEvent
+        rcEvent
     }
 
-    private val _events = MutableStateFlow(SteeringEvent.STILL)
-    val events: Flow<SteeringEvent> = _events
+    private val _events = MutableStateFlow(RcEvent.STILL)
+    val events: Flow<RcEvent> = _events
 
     init {
         scope.launch {

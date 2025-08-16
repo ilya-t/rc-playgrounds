@@ -1,8 +1,8 @@
 package com.rc.playgrounds.status.view
 
 import com.rc.playgrounds.config.ActiveConfigProvider
-import com.rc.playgrounds.control.SteeringEvent
-import com.rc.playgrounds.control.SteeringEventStream
+import com.rc.playgrounds.control.RcEvent
+import com.rc.playgrounds.control.RcEventStream
 import com.rc.playgrounds.remote.stream.RemoteStreamConfig
 import com.rc.playgrounds.remote.stream.RemoteStreamConfigController
 import com.rc.playgrounds.status.PingService
@@ -21,7 +21,7 @@ import kotlin.time.Duration
 class StatusModel(
     private val scope: CoroutineScope,
     config: ActiveConfigProvider,
-    private val steeringEventStream: SteeringEventStream,
+    private val rcEventStream: RcEventStream,
     private val streamerEvents: StreamerEvents,
     private val frameDropStatus: FrameDropStatus,
     private val remoteStreamConfigController: RemoteStreamConfigController,
@@ -49,7 +49,7 @@ class StatusModel(
         scope.launch {
             combine(
                 remoteStreamConfigController.state,
-                steeringEventStream.events,
+                rcEventStream.events,
                 _ping,
                 streamerEvents.events,
                 frameDropStatus.frameDropsPerSecond,
@@ -63,7 +63,7 @@ class StatusModel(
 
 private fun asStatus(
     streamConfig: RemoteStreamConfig?,
-    event: SteeringEvent,
+    event: RcEvent,
     ping: String,
     streamerEvent: Event,
     framesDropped: Int,

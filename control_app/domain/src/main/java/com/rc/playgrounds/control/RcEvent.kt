@@ -1,6 +1,6 @@
 package com.rc.playgrounds.control
 
-data class SteeringEvent(
+data class RcEvent(
     val pitch: Float,
     val yaw: Float,
     val steer: Float,
@@ -11,7 +11,7 @@ data class SteeringEvent(
     val rawLong: Float
 ) {
     companion object {
-        val STILL = SteeringEvent(
+        val STILL = RcEvent(
             pitch = 0f,
             yaw = 0f,
             steer = 0f,
