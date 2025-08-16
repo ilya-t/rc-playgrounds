@@ -4,10 +4,12 @@ import android.app.Application
 import com.rc.playgrounds.config.ActiveConfigProvider
 import com.rc.playgrounds.config.ConfigRepository
 import com.rc.playgrounds.config.view.ConfigModel
+import com.rc.playgrounds.control.ControlInterpolationProvider
 import com.rc.playgrounds.control.RcEventStream
 import com.rc.playgrounds.control.gamepad.GamePadEventSessionProvider
 import com.rc.playgrounds.control.gamepad.GamepadEventStream
 import com.rc.playgrounds.control.lock.ControlLock
+import com.rc.playgrounds.control.steering.SteerProvider
 import com.rc.playgrounds.fullscreen.FullscreenStateController
 import com.rc.playgrounds.navigation.ActiveScreenProvider
 import com.rc.playgrounds.presentation.lock.LockModel
@@ -56,10 +58,21 @@ class AppComponent(app: Application) {
         gamepadEventStream,
     )
     private val controlLock = ControlLock()
+    private val controlInterpolationProvider = ControlInterpolationProvider(
+        activeConfigProvider,
+    )
+    private val steerProvider = SteerProvider(
+        gamePadEventSessionProvider,
+        controlInterpolationProvider,
+        activeConfigProvider,
+        scope,
+    )
     private val rcEventStream = RcEventStream(
         scope,
+        controlInterpolationProvider,
         activeConfigProvider,
-        gamePadEventSessionProvider,
+        gamepadEventStream,
+        steerProvider,
         controlLock,
     )
     val streamCmdHash = StreamCmdHash()
