@@ -2,8 +2,10 @@ package com.rc.playgrounds.config
 
 import com.rc.playgrounds.storage.PersistentStorage
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -38,20 +40,38 @@ class ConfigRepository(
         }
     }
 
-    fun storeConfig(newVersion: ConfigVersion) {
-        scope.launch {
+    fun storeConfig(newVersion: ConfigVersion): Deferred<Result<Unit>> {
+        return scope.async {
+            isValid(newVersion).onFailure {
+                return@async Result.failure(it)
+            }
+
             writeVersionConfig(newVersion.version, newVersion.rawConfig)
 
             val active = _activeVersion.value
             if (newVersion.version != active.version) {
-                return@launch
+                return@async Result.success(Unit)
             }
 
             if (newVersion.rawConfig == active.rawConfig) {
-                return@launch
+                return@async Result.success(Unit)
             }
 
             _activeVersion.value = newVersion
+            Result.success(Unit)
+        }
+    }
+
+    private fun isValid(c: ConfigVersion): Result<Unit> {
+        val errors = mutableListOf<Throwable>()
+        Config(c.rawConfig) { t: Throwable ->
+            errors.add(t)
+        }
+
+        return if (errors.isEmpty()) {
+            Result.success(Unit)
+        } else {
+            Result.failure(errors.first())
         }
     }
 

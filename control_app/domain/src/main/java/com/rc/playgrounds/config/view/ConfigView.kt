@@ -8,6 +8,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatEditText
+import androidx.core.view.isVisible
 import com.rc.playgrounds.navigation.NaiveNavigator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -22,6 +23,7 @@ class ConfigView(
     private val nextButton: Button,
     private val prevButton: Button,
     private val configTitle: TextView,
+    private val saveErrorView: TextView,
     private val scope: CoroutineScope,
     private val navigator: NaiveNavigator,
     private val configModel: ConfigModel,
@@ -79,16 +81,23 @@ class ConfigView(
             }
 
             saveButton.setOnClickListener {
-                viewModel.save()
+                viewModel.saveBtn()
                 saveButton.isEnabled = false
             }
             okButton.setOnClickListener {
-                viewModel.save()
                 saveButton.isEnabled = false
-                navigator.openMain()
                 hideKeyboard(configInput)
+                scope.launch {
+                    if (viewModel.okBtn()) {
+                        navigator.openMain()
+                    }
+                }
             }
-        }    }
+        }
+
+        saveErrorView.isVisible = viewModel.saveError != null
+        saveErrorView.text = viewModel.saveError
+    }
 
     private fun hideKeyboard(view: View) {
         val imm = view.context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager

@@ -73,6 +73,7 @@ class ActivityComponent(
         nextButton = activity.findViewById<Button>(R.id.next_config_button),
         prevButton = activity.findViewById<Button>(R.id.prev_config_button),
         configTitle = activity.findViewById<AppCompatTextView>(R.id.config_name),
+        saveErrorView = activity.findViewById<AppCompatTextView>(R.id.save_error),
         scope = activity.lifecycleScope,
         navigator = navigator,
         configModel = appComponent.configModel,

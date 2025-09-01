@@ -14,10 +14,10 @@ class ConfigModel(
     private val configRepository: ConfigRepository,
     private val scope: CoroutineScope,
 ) {
-    private val draftState = MutableStateFlow<String?>(null)
+    private val draftState = MutableStateFlow<DraftState?>(null)
 
     fun updateDraft(text: String) {
-        draftState.value = text
+        draftState.value = DraftState.Unsaved(text)
     }
 
     private val _viewModel = MutableStateFlow<ConfigViewModel?>(null)
@@ -35,13 +35,13 @@ class ConfigModel(
     }
 
     private fun asViewModel(
-        draft: String?,
+        draft: DraftState?,
         activeConfig: ConfigVersion,
         allVersions: List<String>
     ): ConfigViewModel {
-        val unsaved = draft != null && draft != activeConfig.rawConfig
+        val unsaved = draft != null && draft.text != activeConfig.rawConfig
         val text: String = if (unsaved) {
-            draft.orEmpty()
+            draft?.text.orEmpty()
         } else {
             activeConfig.rawConfig
         }
@@ -58,19 +58,18 @@ class ConfigModel(
             saveEnabled = unsaved,
             nextEnabled = !isLastConfig,
             prevEnabled = !isFirstConfig,
-            save = {
-                if (!unsaved) {
-                    return@ConfigViewModel
+            saveError = when (draft) {
+                is DraftState.Unsaved -> null
+                is DraftState.UnsavedWithErrors ->  draft.error.message
+                null -> null
+            },
+            saveBtn = {
+                scope.launch {
+                    doSave(draft, unsaved, allVersions, text)
                 }
-                val newVersion = ConfigVersion(
-                    version = pickNextVersion(allVersions),
-                    rawConfig = text
-                )
-                configRepository.storeConfig(
-                    newVersion
-                )
-                draftState.value = null
-                configRepository.switchActive(newVersion.version)
+            },
+            okBtn = suspend {
+                doSave(draft, unsaved, allVersions, text) == null
             },
             next = {
                 if (unsaved) {
@@ -93,5 +92,28 @@ class ConfigModel(
                 }
             },
         )
+    }
+
+    private suspend fun doSave(draft: DraftState?, unsaved: Boolean, allVersions: List<String>, text: String): Throwable? {
+        if (!unsaved) {
+            return null
+        }
+        val newVersion = ConfigVersion(
+            version = pickNextVersion(allVersions),
+            rawConfig = text
+        )
+
+        return configRepository.storeConfig(newVersion).await()
+            .onSuccess {
+                draftState.value = null
+                configRepository.switchActive(newVersion.version)
+            }
+            .onFailure { t ->
+                draftState.value = DraftState.UnsavedWithErrors(
+                    text = draft?.text.orEmpty(),
+                    error = t,
+                )
+            }
+            .exceptionOrNull()
     }
 }
