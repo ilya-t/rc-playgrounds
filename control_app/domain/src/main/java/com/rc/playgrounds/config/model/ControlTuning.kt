@@ -20,6 +20,9 @@ data class ControlTuning(
     val rawYawZone: String? = null,
     @SerialName("steer_zone")
     val rawSteerZone: String? = null,
+
+    @SerialName("steer_mode")
+    val steerMode: String? = null,
     /**
      * Key is your trigger position for long. Value is steering limit at that position
      */

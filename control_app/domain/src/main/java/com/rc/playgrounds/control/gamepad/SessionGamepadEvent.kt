@@ -21,6 +21,8 @@ class GamePadEventSessionProvider(
 ) {
     private val sessionFlow = MutableStateFlow<SessionGamepadEvent?>(null)
     val events: Flow<SessionGamepadEvent> = sessionFlow.filterNotNull()
+    val lastEvent: SessionGamepadEvent?
+        get() = sessionFlow.value
 
     init {
         scope.launch {
