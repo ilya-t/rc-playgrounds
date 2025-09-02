@@ -1,7 +1,6 @@
 package com.rc.playgrounds.control.steering
 
 import com.rc.playgrounds.config.ActiveConfigProvider
-import com.rc.playgrounds.config.model.ControlOffsets
 import com.rc.playgrounds.config.model.ControlTuning
 import com.rc.playgrounds.control.ControlInterpolation
 import com.rc.playgrounds.control.ControlInterpolationProvider
@@ -31,8 +30,9 @@ class SteerProvider(
     private val scope: CoroutineScope
 ) {
     private val activeSteeringJob = MutableStateFlow<ActiveMode?>(null)
-    private val _state = MutableStateFlow(0f)
-    val steer: StateFlow<SteerValue> = _state
+    private val steerState = MutableStateFlow(0f)
+    private val steerWithOffsets = MutableStateFlow(0f)
+    val steer: StateFlow<SteerValue> = steerWithOffsets
 
     init {
         scope.launch {
@@ -54,6 +54,18 @@ class SteerProvider(
                 }
 
         }
+
+        scope.launch {
+            combine(
+                activeConfigProvider.configFlow.map { it.controlOffsets },
+                steerState,
+            ) { offsets, steer ->
+                val withOffsets: Float = steer + offsets.steer
+                withOffsets.trim()
+            }.collect {
+                steerWithOffsets.value = it
+            }
+        }
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -69,7 +81,7 @@ class SteerProvider(
                 }
                 val raw = event.event.leftStickX
                 val normWheel = wheel.step(raw)          // [-1..1]
-                _state.value = normWheel                // publish emulated wheel
+                steerState.value = normWheel                // publish emulated wheel
                 delay(16L)                              // ~60 Hz (dt handled inside)
             }
         }
@@ -79,22 +91,19 @@ class SteerProvider(
         return scope.launch {
             combine(
                 gamePadEventSessionProvider.events,
-                activeConfigProvider.configFlow.map { it.controlOffsets },
                 controlInterpolationProvider.interpolation,
             ) { sessionEvent: SessionGamepadEvent,
-                offsets: ControlOffsets,
                 interpolation: ControlInterpolation ->
                 val steerAtStart = sessionEvent.sessionStart?.leftStickX
                 val rawSteer = sessionEvent.event.leftStickX
 
-                val fixedSteer = interpolation.fixSteer(
+                interpolation.fixSteer(
                     rawSteer,
                     activeTrigger = sessionEvent.event.longTrigger,
                     steerAtStart = steerAtStart,
-                ) + offsets.steer
-                fixedSteer.trim()
+                )
             }.collect {
-                _state.value = it
+                steerState.value = it
             }
         }
     }
