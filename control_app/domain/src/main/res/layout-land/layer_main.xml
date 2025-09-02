@@ -54,5 +54,10 @@
         android:paddingLeft="8dp"
         android:paddingRight="8dp"
         android:paddingBottom="16dp"
+        android:textColor="#FFFFFF"
+        android:shadowColor="#000000"
+        android:shadowDx="1"
+        android:shadowDy="1"
+        android:shadowRadius="1"
         />
 </FrameLayout>
