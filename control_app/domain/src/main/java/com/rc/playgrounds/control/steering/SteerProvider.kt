@@ -1,12 +1,16 @@
 package com.rc.playgrounds.control.steering
 
+import android.graphics.PointF
 import com.rc.playgrounds.config.ActiveConfigProvider
+import com.rc.playgrounds.config.Config
+import com.rc.playgrounds.config.model.ControlOffsets
 import com.rc.playgrounds.config.model.ControlTuning
 import com.rc.playgrounds.control.ControlInterpolation
 import com.rc.playgrounds.control.ControlInterpolationProvider
 import com.rc.playgrounds.control.gamepad.GamePadEventSessionProvider
 import com.rc.playgrounds.control.gamepad.SessionGamepadEvent
 import com.rc.playgrounds.control.longTrigger
+import com.rc.playgrounds.control.translate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -21,6 +25,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.math.PI
 import kotlin.math.abs
+import kotlin.math.absoluteValue
 import kotlin.math.sign
 
 class SteerProvider(
@@ -57,13 +62,25 @@ class SteerProvider(
 
         scope.launch {
             combine(
-                activeConfigProvider.configFlow.map { it.controlOffsets },
+                activeConfigProvider.configFlow,
                 steerState,
-            ) { offsets, steer ->
-                val withOffsets: Float = steer + offsets.steer
-                withOffsets.trim()
+            ) { config: Config, steer: Float ->
+                val offsets: ControlOffsets = config.controlOffsets
+                val steerWithOffsets: Float = steer + offsets.steer
+                val steerZone: PointF? = config.controlTuning.steerZone
+
+                if (steerZone != null) {
+                    translate(steerWithOffsets.absoluteValue,
+                        x1 = 0f,
+                        x2 = 1f,
+                        y1 = steerZone.x,
+                        y2 = steerZone.y
+                    ) * steer.sign
+                } else {
+                    steerWithOffsets
+                }
             }.collect {
-                steerWithOffsets.value = it
+                steerWithOffsets.value = it.trim()
             }
         }
     }
