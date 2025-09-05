@@ -33,6 +33,7 @@ data class Config(
         rawSteerZone = null,
         rawForwardLongZones = emptyMap(),
         rawBackwardLongZones = emptyMap(),
+        wheel = null,
     ),
 ) {
     fun writeToJson(): String {
@@ -76,6 +77,7 @@ data class Config(
                             rawSteerZone = null,
                             rawForwardLongZones = emptyMap(),
                             rawBackwardLongZones = emptyMap(),
+                            wheel = null,
                         )
                     )
                 }
@@ -155,8 +157,18 @@ internal const val DEFAULT_CONFIG = """
     "backward_long_zones": {
         "0.0": "0.01",
         "1.0": "0.2"
+    },
+    "wheel": {
+      "max_angle_deg": 28.0,
+      "max_turn_rate_deg_per_sec": 420.0,
+      "center_return_rate_deg_per_sec": 140.0,
+      "deadzone": 0.06,
+      "curve_blend": 0.55,
+      "ema_cutoff_hz": 10.0,
+      "center_stick_threshold": 0.02,
+      "damping": 0.9
     }
   }
-}    
+}
 """
 
