@@ -42,17 +42,15 @@ class SteerProvider(
     init {
         scope.launch {
             activeConfigProvider.configFlow
-                .map { it.controlTuning.toMode() }
+                .map { it.controlTuning }
                 .distinctUntilChanged()
-                .collect { m ->
-                    if (m == activeSteeringJob.value?.mode) {
-                        return@collect
-                    }
+                .collect { tuning ->
+                    val mode = tuning.toMode()
                     activeSteeringJob.value?.job?.cancel()
                     activeSteeringJob.value = ActiveMode(
-                        mode = m,
-                        job = when (m) {
-                            StreeringMode.WHEEL_EMULATION -> wheelEmulatedSteering()
+                        mode = mode,
+                        job = when (mode) {
+                            StreeringMode.WHEEL_EMULATION -> wheelEmulatedSteering(tuning)
                             StreeringMode.LIMITING_BY_TRIGGER -> steerLimitingByLongTrigger()
                         }
                     )
@@ -86,9 +84,19 @@ class SteerProvider(
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private fun wheelEmulatedSteering(): Job {
+    private fun wheelEmulatedSteering(tuning: ControlTuning): Job {
         // Wheel emulation engine lives in a separate private class (below)
-        val wheel = WheelEmulator()
+        val wheelConfig = tuning.wheel
+        val wheel = WheelEmulator(
+            maxWheelAngleDeg = wheelConfig?.maxAngleDeg ?: 28f,
+            maxTurnRateDegPerSec = wheelConfig?.maxTurnRateDegPerSec ?: 420f,
+            centerReturnRateDegPerSec = wheelConfig?.centerReturnRateDegPerSec ?: 140f,
+            deadzone = wheelConfig?.deadzone ?: 0.06f,
+            curveBlend = wheelConfig?.curveBlend ?: 0.55f,
+            emaCutoffHz = wheelConfig?.emaCutoffHz ?: 10f,
+            centerStickThreshold = wheelConfig?.centerStickThreshold ?: 0.02f,
+            damping = wheelConfig?.damping ?: 0.9f,
+        )
         return scope.launch(Dispatchers.IO.limitedParallelism(1)) {
             while (isActive) {
                 val event: SessionGamepadEvent? = gamePadEventSessionProvider.lastEvent
@@ -144,16 +152,18 @@ private fun ControlTuning.toMode(): StreeringMode {
     }
 }
 
-private class WheelEmulator {
+private class WheelEmulator(
+    private val maxWheelAngleDeg: Float = 28f,
+    private val maxTurnRateDegPerSec: Float = 420f,
+    private val centerReturnRateDegPerSec: Float = 140f,
+    private val deadzone: Float = 0.06f,
+    private val curveBlend: Float = 0.55f,
+    private val emaCutoffHz: Float = 10f,
+    private val centerStickThreshold: Float = 0.02f,
+    private val damping: Float = 0.9f,
+) {
     // --- Tunables (adjust to taste) ---
-    private val maxWheelAngleDeg = 28f               // steering lock (deg)
-    private val maxTurnRateDegPerSec = 420f          // wheel speed at full stick
-    private val centerReturnRateDegPerSec = 140f     // auto-center when stick ~0
-    private val deadzone = 0.06f                     // radial deadzone
-    private val curveBlend = 0.55f                   // 0=linear, 1=x^3
-    private val emaCutoffHz = 10f                    // input smoothing cutoff
-    private val centerStickThreshold = 0.02f         // start recentre below |x|
-    private val damping = 0.9f                       // light viscous damping
+    // provided via constructor
 
     // --- State ---
     private var wheelDeg = 0f

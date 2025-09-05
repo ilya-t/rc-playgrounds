@@ -40,6 +40,9 @@ data class ControlTuning(
      */
     @SerialName("backward_long_zones")
     val rawBackwardLongZones: Map<String, String> = emptyMap(),
+
+    @SerialName("wheel")
+    val wheel: WheelConfig? = null,
 ) {
     @Transient
     val pitchZone: PointF? = Zones.parseZone(rawPitchZone)
