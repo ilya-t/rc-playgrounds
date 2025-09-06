@@ -6,6 +6,7 @@ import android.text.TextWatcher
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
+import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.view.isVisible
@@ -27,11 +28,11 @@ class ConfigView(
     private val scope: CoroutineScope,
     private val navigator: NaiveNavigator,
     private val configModel: ConfigModel,
-    ) {
+) {
     private var skipDraftUpdate = false
 
     init {
-        scope.launch {
+        scope.launch(Dispatchers.Default) {
             configModel.viewModel.collect { viewModel ->
                 apply(viewModel)
             }
@@ -58,10 +59,11 @@ class ConfigView(
     }
 
     private suspend fun apply(viewModel: ConfigViewModel) {
-        if (viewModel.rawJson != configInput.text.toString()) {
+        val rawText = withContext(Dispatchers.Main) { configInput.text.toString() }
+        if (viewModel.rawJson != rawText) {
             withContext(Dispatchers.Main) {
                 skipDraftUpdate = true
-                configInput.setText(viewModel.rawJson)
+                configInput.updateTextKeepingCursor(viewModel.rawJson)
                 skipDraftUpdate = false
             }
         }
@@ -95,11 +97,35 @@ class ConfigView(
             }
         }
 
-        saveErrorView.isVisible = viewModel.saveError != null
-        saveErrorView.text = viewModel.saveError
+        withContext(Dispatchers.Main) {
+            saveErrorView.isVisible = viewModel.saveError != null
+            saveErrorView.text = viewModel.saveError
+        }
     }
 
     private fun hideKeyboard(view: View) {
         val imm = view.context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
         imm?.hideSoftInputFromWindow(view.windowToken, 0)
-    }}
+    }
+}
+
+fun EditText.updateTextKeepingCursor(newText: String) {
+    val oldText = this.text.toString()
+    val selectionStart = selectionStart
+    val selectionEnd = selectionEnd
+
+    setText(newText)
+
+    val newLength = newText.length
+
+    // Try to keep the same relative cursor position
+    val offset = newLength - oldText.length
+    val adjustedStart = (selectionStart + offset).coerceIn(0, newLength)
+    val adjustedEnd = (selectionEnd + offset).coerceIn(0, newLength)
+
+    if (adjustedStart == adjustedEnd) {
+        setSelection(adjustedStart)
+    } else {
+        setSelection(adjustedStart, adjustedEnd)
+    }
+}
