@@ -10,7 +10,6 @@ import com.rc.playgrounds.control.ControlInterpolationProvider
 import com.rc.playgrounds.control.gamepad.GamePadEventSessionProvider
 import com.rc.playgrounds.control.gamepad.SessionGamepadEvent
 import com.rc.playgrounds.control.longTrigger
-import com.rc.playgrounds.control.translate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -66,12 +65,11 @@ class SteerProvider(
                 val steerZone: PointF? = config.controlTuning.steerZone
 
                 if (steerZone != null) {
-                    translate(steerWithOffsets.absoluteValue,
-                        x1 = 0f,
-                        x2 = 1f,
-                        y1 = steerZone.x,
-                        y2 = steerZone.y
-                    ) * steer.sign
+                    val limitedSteer = steerWithOffsets.absoluteValue.coerceIn(
+                        steerZone.x,
+                        steerZone.y
+                    ) * steerWithOffsets.sign
+                    limitedSteer
                 } else {
                     steerWithOffsets
                 }
