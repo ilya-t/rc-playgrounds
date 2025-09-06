@@ -22,8 +22,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlin.math.absoluteValue
-import kotlin.math.sign
 
 class SteerProvider(
     private val gamePadEventSessionProvider: GamePadEventSessionProvider,
@@ -65,10 +63,10 @@ class SteerProvider(
                 val steerZone: PointF? = config.controlTuning.steerZone
 
                 if (steerZone != null) {
-                    val limitedSteer = steerWithOffsets.absoluteValue.coerceIn(
+                    val limitedSteer = steerWithOffsets.coerceIn(
                         steerZone.x,
                         steerZone.y
-                    ) * steerWithOffsets.sign
+                    )
                     limitedSteer
                 } else {
                     steerWithOffsets

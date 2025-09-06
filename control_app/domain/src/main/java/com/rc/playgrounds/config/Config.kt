@@ -143,7 +143,7 @@ internal const val DEFAULT_CONFIG = """
     "pitch_zone": "0..0.5",
     "yaw_factor": 1.0,
     "yaw_zone": "0..0.5",
-    "steer_zone": "0..0.7",
+    "steer_zone": "-0.7..0.7",
     "steer_limit_at_trigger": {
         "0.0": "1.0",
         "0.5": "0.7",
