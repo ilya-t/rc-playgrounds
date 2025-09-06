@@ -158,6 +158,9 @@ internal const val DEFAULT_CONFIG = """
         "0.0": "0.01",
         "1.0": "0.2"
     },
+    "_comment_steer_mode_": "available modes 'steer_limit_at_trigger', 'wheel' and 'exponent'",
+    "steer_mode": "wheel",
+    "steer_exponent_factor": 2.0,
     "wheel": {
       "_comment_": "All values are optional. See: WheelEmulator.kt",
       "max_angle_deg": 28.0,

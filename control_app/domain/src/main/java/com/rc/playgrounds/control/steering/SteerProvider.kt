@@ -22,6 +22,9 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlin.math.absoluteValue
+import kotlin.math.pow
+import kotlin.math.sign
 
 class SteerProvider(
     private val gamePadEventSessionProvider: GamePadEventSessionProvider,
@@ -47,6 +50,7 @@ class SteerProvider(
                         job = when (mode) {
                             StreeringMode.WHEEL_EMULATION -> wheelEmulatedSteering(tuning)
                             StreeringMode.LIMITING_BY_TRIGGER -> steerLimitingByLongTrigger()
+                            StreeringMode.EXPONENT -> steerByExponent()
                         }
                     )
                 }
@@ -75,6 +79,26 @@ class SteerProvider(
                 steerWithOffsets.value = it.trim()
             }
         }
+    }
+
+    private fun steerByExponent(): Job {
+        return scope.launch {
+            combine(
+                gamePadEventSessionProvider.events,
+                activeConfigProvider.configFlow.map { it.controlTuning.steerExponentFactor?.toDouble() },
+            ) { sessionEvent: SessionGamepadEvent,
+                exponentFactor: Double? ->
+                val rawSteer = sessionEvent.event.leftStickX.toDouble()
+                expo(x = rawSteer, exponentFactor ?: 2.0).toFloat()
+            }.collect {
+                steerState.value = it
+            }
+        }
+    }
+
+    private fun expo(x: Double, factor: Double = 2.0): Double {
+        val a = x.absoluteValue.coerceIn(0.0, 1.0)
+        return x.sign * a.pow(factor)
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -136,12 +160,14 @@ private class ActiveMode(
 private enum class StreeringMode {
     WHEEL_EMULATION,
     LIMITING_BY_TRIGGER,
+    EXPONENT,
 }
 
 private fun ControlTuning.toMode(): StreeringMode {
     return when (this.steerMode) {
         "steer_limit_at_trigger" -> StreeringMode.LIMITING_BY_TRIGGER
         "wheel" -> StreeringMode.WHEEL_EMULATION
+        "exponent" -> StreeringMode.EXPONENT
         else -> StreeringMode.LIMITING_BY_TRIGGER
     }
 }

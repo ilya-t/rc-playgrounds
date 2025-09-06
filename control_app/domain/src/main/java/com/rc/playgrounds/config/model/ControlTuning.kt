@@ -23,6 +23,9 @@ data class ControlTuning(
 
     @SerialName("steer_mode")
     val steerMode: String? = null,
+
+    @SerialName("steer_exponent_factor")
+    val steerExponentFactor: Float? = null,
     /**
      * Key is your trigger position for long. Value is steering limit at that position
      */
