@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 class ConfigModel(
     private val configRepository: ConfigRepository,
@@ -54,7 +55,7 @@ class ConfigModel(
             } else {
                 activeConfig.version
             },
-            rawJson = text,
+            rawJson = runCatching { JSONObject(text).toString(2) }.getOrElse { text },
             saveEnabled = unsaved,
             nextEnabled = !isLastConfig,
             prevEnabled = !isFirstConfig,
