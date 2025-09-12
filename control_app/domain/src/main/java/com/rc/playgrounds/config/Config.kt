@@ -7,6 +7,7 @@ import com.rc.playgrounds.config.stream.QualityProfile
 import com.rc.playgrounds.config.stream.StreamConfig
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import kotlinx.serialization.json.Json
 import org.intellij.lang.annotations.Language
 
@@ -24,18 +25,23 @@ data class Config(
         steer = 0f,
         long = 0f,
     ),
-    @SerialName("control_tuning")
-    val controlTuning: ControlTuning = ControlTuning(
-        pitchFactor = 0f,
-        rawPitchZone = null,
-        yawFactor = 0f,
-        rawYawZone = null,
-        rawSteerZone = null,
-        rawForwardLongZones = emptyMap(),
-        rawBackwardLongZones = emptyMap(),
-        wheel = null,
+    @SerialName("control_profiles")
+    val controlProfiles: List<ControlTuning> = listOf(
+        ControlTuning(
+            pitchFactor = 0f,
+            rawPitchZone = null,
+            yawFactor = 0f,
+            rawYawZone = null,
+            rawSteerZone = null,
+            rawForwardLongZones = emptyMap(),
+            rawBackwardLongZones = emptyMap(),
+            wheel = null,
+        )
     ),
 ) {
+    @Transient
+    val controlTuning: ControlTuning = controlProfiles.first()
+
     fun writeToJson(): String {
         return jsonParser.encodeToString(Config.serializer(), this)
     }
@@ -69,15 +75,17 @@ data class Config(
                             steer = 0f,
                             long = 0f,
                         ),
-                        controlTuning = ControlTuning(
-                            pitchFactor = 0f,
-                            rawPitchZone = null,
-                            yawFactor = 0f,
-                            rawYawZone = null,
-                            rawSteerZone = null,
-                            rawForwardLongZones = emptyMap(),
-                            rawBackwardLongZones = emptyMap(),
-                            wheel = null,
+                        controlProfiles = listOf(
+                            ControlTuning(
+                                pitchFactor = 0f,
+                                rawPitchZone = null,
+                                yawFactor = 0f,
+                                rawYawZone = null,
+                                rawSteerZone = null,
+                                rawForwardLongZones = emptyMap(),
+                                rawBackwardLongZones = emptyMap(),
+                                wheel = null,
+                            )
                         )
                     )
                 }
@@ -138,38 +146,41 @@ internal const val DEFAULT_CONFIG = """
     "steer": 0.08,
     "long": 0.18
   },
-  "control_tuning": {
-    "pitch_factor": 1.0,
-    "pitch_zone": "0..0.5",
-    "yaw_factor": 1.0,
-    "yaw_zone": "0..0.5",
-    "steer_zone": "0..0.7",
-    "steer_limit_at_trigger": {
-        "0.0": "1.0",
-        "0.5": "0.7",
-        "1.0": "0.3"
-    },
-    "forward_long_zones": {
-        "0.0": "0.01",
-        "0.5": "0.2",
-        "1.0": "0.7"
-    },
-    "backward_long_zones": {
-        "0.0": "0.01",
-        "1.0": "0.2"
-    },
-    "wheel": {
-      "_comment_": "All values are optional. See: WheelEmulator.kt",
-      "max_angle_deg": 28.0,
-      "max_turn_rate_deg_per_sec": 420.0,
-      "center_return_rate_deg_per_sec": 140.0,
-      "deadzone": 0.06,
-      "curve_blend": 0.55,
-      "ema_cutoff_hz": 10.0,
-      "center_stick_threshold": 0.02,
-      "damping": 0.9
+  "control_profiles": [
+    {
+      "name": "default",
+      "pitch_factor": 1.0,
+      "pitch_zone": "0..0.5",
+      "yaw_factor": 1.0,
+      "yaw_zone": "0..0.5",
+      "steer_zone": "0..0.7",
+      "steer_limit_at_trigger": {
+          "0.0": "1.0",
+          "0.5": "0.7",
+          "1.0": "0.3"
+      },
+      "forward_long_zones": {
+          "0.0": "0.01",
+          "0.5": "0.2",
+          "1.0": "0.7"
+      },
+      "backward_long_zones": {
+          "0.0": "0.01",
+          "1.0": "0.2"
+      },
+      "wheel": {
+        "_comment_": "All values are optional. See: WheelEmulator.kt",
+        "max_angle_deg": 28.0,
+        "max_turn_rate_deg_per_sec": 420.0,
+        "center_return_rate_deg_per_sec": 140.0,
+        "deadzone": 0.06,
+        "curve_blend": 0.55,
+        "ema_cutoff_hz": 10.0,
+        "center_stick_threshold": 0.02,
+        "damping": 0.9
+      }
     }
-  }
+  ]
 }
 """
 

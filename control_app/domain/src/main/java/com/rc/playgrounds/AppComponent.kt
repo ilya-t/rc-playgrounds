@@ -5,6 +5,7 @@ import com.rc.playgrounds.config.ActiveConfigProvider
 import com.rc.playgrounds.config.ConfigRepository
 import com.rc.playgrounds.config.view.ConfigModel
 import com.rc.playgrounds.control.ControlInterpolationProvider
+import com.rc.playgrounds.control.ControlTuningProvider
 import com.rc.playgrounds.control.RcEventStream
 import com.rc.playgrounds.control.gamepad.GamePadEventSessionProvider
 import com.rc.playgrounds.control.gamepad.GamepadEventStream
@@ -58,13 +59,17 @@ class AppComponent(app: Application) {
         gamepadEventStream,
     )
     private val controlLock = ControlLock()
-    private val controlInterpolationProvider = ControlInterpolationProvider(
+    private val controlTuningProvider = ControlTuningProvider(
         activeConfigProvider,
+    )
+    private val controlInterpolationProvider = ControlInterpolationProvider(
+        controlTuningProvider,
     )
     private val steerProvider = SteerProvider(
         gamePadEventSessionProvider,
         controlInterpolationProvider,
         activeConfigProvider,
+        controlTuningProvider,
         scope,
     )
     private val rcEventStream = RcEventStream(

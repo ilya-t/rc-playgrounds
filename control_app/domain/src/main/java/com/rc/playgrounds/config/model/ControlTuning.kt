@@ -9,6 +9,8 @@ import kotlinx.serialization.Transient
 
 @Serializable
 data class ControlTuning(
+    @SerialName("name")
+    val name: String? = null,
     @SerialName("pitch_factor")
     val pitchFactor: Float? = null,
     @SerialName("pitch_zone")
