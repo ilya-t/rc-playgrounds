@@ -2,11 +2,11 @@ package com.rc.playgrounds.control.steering
 
 import android.graphics.PointF
 import com.rc.playgrounds.config.ActiveConfigProvider
-import com.rc.playgrounds.config.Config
 import com.rc.playgrounds.config.model.ControlOffsets
 import com.rc.playgrounds.config.model.ControlTuning
 import com.rc.playgrounds.control.ControlInterpolation
 import com.rc.playgrounds.control.ControlInterpolationProvider
+import com.rc.playgrounds.control.ControlTuningProvider
 import com.rc.playgrounds.control.gamepad.GamePadEventSessionProvider
 import com.rc.playgrounds.control.gamepad.SessionGamepadEvent
 import com.rc.playgrounds.control.longTrigger
@@ -30,6 +30,7 @@ class SteerProvider(
     private val gamePadEventSessionProvider: GamePadEventSessionProvider,
     private val controlInterpolationProvider: ControlInterpolationProvider,
     private val activeConfigProvider: ActiveConfigProvider,
+    private val controlTuningProvider: ControlTuningProvider,
     private val scope: CoroutineScope
 ) {
     private val activeSteeringJob = MutableStateFlow<ActiveMode?>(null)
@@ -39,8 +40,7 @@ class SteerProvider(
 
     init {
         scope.launch {
-            activeConfigProvider.configFlow
-                .map { it.controlTuning }
+            controlTuningProvider.controlTuning
                 .distinctUntilChanged()
                 .collect { tuning ->
                     val mode = tuning.toMode()
@@ -58,12 +58,12 @@ class SteerProvider(
 
         scope.launch {
             combine(
-                activeConfigProvider.configFlow,
+                activeConfigProvider.configFlow.map { it.controlOffsets },
+                controlTuningProvider.controlTuning,
                 steerState,
-            ) { config: Config, steer: Float ->
-                val offsets: ControlOffsets = config.controlOffsets
+            ) { offsets: ControlOffsets, tuning: ControlTuning, steer: Float ->
                 val steerWithOffsets: Float = steer + offsets.steer
-                val steerZone: PointF? = config.controlTuning.steerZone
+                val steerZone: PointF? = tuning.steerZone
 
                 if (steerZone != null) {
                     translate(steerWithOffsets.absoluteValue,

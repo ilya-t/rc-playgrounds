@@ -69,7 +69,8 @@ class ConfigTest {
                 "steer": 0.0,
                 "long": 0.0
             },
-            "control_tuning": {
+            "control_profiles": [{
+                "name": "default",
                 "forward_long_zones": {
                     "0": "0.01",
                     "0.3": "0.21",
@@ -77,7 +78,7 @@ class ConfigTest {
                     "0.9": "0.5",
                     "1": "0.7"
                 }
-            }
+            }]
         }""".trimIndent()
         val config = Config(json) {
             throw it
