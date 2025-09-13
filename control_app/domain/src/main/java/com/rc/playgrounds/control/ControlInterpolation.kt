@@ -102,7 +102,21 @@ private fun ControlTuning.asInterpolation() = ControlInterpolation(
     },
     longTranslator = if (forwardLongZones.isNotEmpty()) {
         val zonesNegative = backwardLongZones.ifEmpty { forwardLongZones }
-        create(negative = zonesNegative, positive = forwardLongZones)
+/*
+        val zonesNegative = backwardLongZones.ifEmpty { forwardLongZones }.map {
+            NO LUCK
+            MappingZone(
+                src = PointF().apply {
+                    x = -it.src.x.absoluteValue
+                    y = -it.src.y.absoluteValue
+                },
+                dst = PointF().apply {
+                    x = -it.dst.x.absoluteValue
+                    y = -it.dst.y.absoluteValue
+                },
+            )
+        }
+*/        create(negative = zonesNegative, positive = forwardLongZones)
     } else {
         create(PointF(0f, 1f))
     },
@@ -117,8 +131,11 @@ private fun create(negative: List<MappingZone>, positive: List<MappingZone>): (F
             negative
         }
         val absInput = input.absoluteValue
-        zones
+        val targetZone: MappingZone? = zones
             .find { absInput >= it.src.x && absInput <= it.src.y }
+            ?: zones.lastOrNull()
+
+        targetZone
             ?.let {
                 translate(absInput, it.src.x, it.src.y, it.dst.x, it.dst.y)
             }
