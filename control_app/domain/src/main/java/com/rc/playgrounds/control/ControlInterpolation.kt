@@ -2,7 +2,6 @@ package com.rc.playgrounds.control
 
 import android.graphics.PointF
 import android.view.animation.AccelerateInterpolator
-import com.rc.playgrounds.config.ActiveConfigProvider
 import com.rc.playgrounds.config.model.ControlTuning
 import com.rc.playgrounds.config.model.MappingZone
 import com.rc.playgrounds.control.steering.SteerValue
@@ -13,10 +12,10 @@ import kotlin.math.sign
 import kotlin.math.withSign
 
 class ControlInterpolationProvider(
-    private val activeConfigProvider: ActiveConfigProvider,
+    private val controlTuningProvider: ControlTuningProvider,
 ) {
-    val interpolation: Flow<ControlInterpolation> = activeConfigProvider.configFlow.map {
-        it.controlTuning.asInterpolation()
+    val interpolation: Flow<ControlInterpolation> = controlTuningProvider.controlTuning.map {
+        it.asInterpolation()
     }
 }
 

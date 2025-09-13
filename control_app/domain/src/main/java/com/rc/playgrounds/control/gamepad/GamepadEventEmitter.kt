@@ -85,6 +85,14 @@ class GamepadEventEmitter(
                 eventStream.emit(GamepadButtonPress.SELECT)
                 return true
             }
+            KeyEvent.KEYCODE_BUTTON_L1 -> {
+                eventStream.emit(GamepadButtonPress.LeftBumper)
+                return true
+            }
+            KeyEvent.KEYCODE_BUTTON_R1 -> {
+                eventStream.emit(GamepadButtonPress.RightBumper)
+                return true
+            }
         }
         return false
     }

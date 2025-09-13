@@ -9,6 +9,8 @@ import kotlinx.serialization.Transient
 
 @Serializable
 data class ControlTuning(
+    @SerialName("name")
+    val name: String? = "initial",
     @SerialName("pitch_factor")
     val pitchFactor: Float? = null,
     @SerialName("pitch_zone")
@@ -30,19 +32,19 @@ data class ControlTuning(
      * Key is your trigger position for long. Value is steering limit at that position
      */
     @SerialName("steer_limit_at_trigger")
-    val rawSteerLimitAtTrigger: Map<String, String> = emptyMap(),
+    val rawSteerLimitAtTrigger: Map<String, String>? = null,
 
     /**
      * Key is your right trigger position. Value is 'long' value that will be sent to the car.
      */
     @SerialName("forward_long_zones")
-    val rawForwardLongZones: Map<String, String> = emptyMap(),
+    val rawForwardLongZones: Map<String, String>? = null,
 
     /**
      * Key is your left trigger position. Value is 'long' value that will be sent to the car.
      */
     @SerialName("backward_long_zones")
-    val rawBackwardLongZones: Map<String, String> = emptyMap(),
+    val rawBackwardLongZones: Map<String, String>? = null,
 
     @SerialName("wheel")
     val wheel: WheelConfig? = null,

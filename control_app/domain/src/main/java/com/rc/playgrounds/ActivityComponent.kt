@@ -18,6 +18,7 @@ import com.rc.playgrounds.control.gamepad.GamepadEventEmitter
 import com.rc.playgrounds.domain.R
 import com.rc.playgrounds.fullscreen.FullscreenView
 import com.rc.playgrounds.navigation.NaiveNavigator
+import com.rc.playgrounds.presentation.announce.AnnounceView
 import com.rc.playgrounds.presentation.lock.LockView
 import com.rc.playgrounds.presentation.main.MainView
 import com.rc.playgrounds.presentation.quickconfig.QuickConfigView
@@ -96,6 +97,14 @@ class ActivityComponent(
         appComponent.gamepadEventStream,
         appComponent.activeScreenProvider,
     )
+
+    private val announceView = AnnounceView(
+        activity,
+        appComponent.announceModel,
+        lifecycleScope,
+        appComponent.activeScreenProvider,
+    )
+
     private val quickConfigView = QuickConfigView(
         activity,
         appComponent.quickConfigModel,

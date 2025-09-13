@@ -56,6 +56,7 @@ class QuickConfigView(
             GamepadButtonPress.START -> viewModel.onBackButton()
             GamepadButtonPress.Left -> viewModel.onButtonLeftPressed()
             GamepadButtonPress.Right -> viewModel.onButtonRightPressed()
+            else -> Unit
         }
     }
 }

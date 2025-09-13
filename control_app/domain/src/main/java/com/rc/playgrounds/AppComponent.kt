@@ -5,6 +5,7 @@ import com.rc.playgrounds.config.ActiveConfigProvider
 import com.rc.playgrounds.config.ConfigRepository
 import com.rc.playgrounds.config.view.ConfigModel
 import com.rc.playgrounds.control.ControlInterpolationProvider
+import com.rc.playgrounds.control.ControlTuningProvider
 import com.rc.playgrounds.control.RcEventStream
 import com.rc.playgrounds.control.gamepad.GamePadEventSessionProvider
 import com.rc.playgrounds.control.gamepad.GamepadEventStream
@@ -12,6 +13,7 @@ import com.rc.playgrounds.control.lock.ControlLock
 import com.rc.playgrounds.control.steering.SteerProvider
 import com.rc.playgrounds.fullscreen.FullscreenStateController
 import com.rc.playgrounds.navigation.ActiveScreenProvider
+import com.rc.playgrounds.presentation.announce.AnnounceModel
 import com.rc.playgrounds.presentation.lock.LockModel
 import com.rc.playgrounds.presentation.main.MainModel
 import com.rc.playgrounds.presentation.quickconfig.QuickConfigModel
@@ -58,13 +60,18 @@ class AppComponent(app: Application) {
         gamepadEventStream,
     )
     private val controlLock = ControlLock()
-    private val controlInterpolationProvider = ControlInterpolationProvider(
+    private val controlTuningProvider = ControlTuningProvider(
         activeConfigProvider,
+        scope,
+    )
+    private val controlInterpolationProvider = ControlInterpolationProvider(
+        controlTuningProvider,
     )
     private val steerProvider = SteerProvider(
         gamePadEventSessionProvider,
         controlInterpolationProvider,
         activeConfigProvider,
+        controlTuningProvider,
         scope,
     )
     private val rcEventStream = RcEventStream(
@@ -125,10 +132,18 @@ class AppComponent(app: Application) {
         streamerEvents,
         frameDropStatus,
         remoteStreamConfigController,
+        controlTuningProvider,
     )
 
     val lockModel = LockModel(
         controlLock,
+    )
+
+    val announceModel = AnnounceModel(
+        controlTuningProvider,
+        activeConfigProvider,
+        gamepadEventStream,
+        scope,
     )
 
     companion object {

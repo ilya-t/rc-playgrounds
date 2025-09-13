@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/announce_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#8000"
+    android:visibility="gone"
+    tools:visibility="visible">
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/announce_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        tools:text="Your AD could be here!"
+        android:textColor="@android:color/white"
+        android:textSize="72sp"
+        android:gravity="center"
+        />
+
+</FrameLayout>

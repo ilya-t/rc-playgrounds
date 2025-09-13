@@ -5,4 +5,5 @@ enum class Screen {
     CONFIG,
     QUICK_CONFIG,
     LOCK_SCREEN,
+    ANNOUNCE,
 }

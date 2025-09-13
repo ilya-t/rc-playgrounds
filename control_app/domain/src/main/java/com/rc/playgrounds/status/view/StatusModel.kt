@@ -1,6 +1,7 @@
 package com.rc.playgrounds.status.view
 
 import com.rc.playgrounds.config.ActiveConfigProvider
+import com.rc.playgrounds.control.ControlTuningProvider
 import com.rc.playgrounds.control.RcEvent
 import com.rc.playgrounds.control.RcEventStream
 import com.rc.playgrounds.remote.stream.RemoteStreamConfig
@@ -25,6 +26,7 @@ class StatusModel(
     private val streamerEvents: StreamerEvents,
     private val frameDropStatus: FrameDropStatus,
     private val remoteStreamConfigController: RemoteStreamConfigController,
+    private val tuningProvider: ControlTuningProvider,
 ) {
 
     private val pingTarget: Flow<String?> = config.configFlow.map { it.controlServer?.address }
@@ -52,7 +54,8 @@ class StatusModel(
                 rcEventStream.events,
                 _ping,
                 streamerEvents.events,
-                frameDropStatus.frameDropsPerSecond,
+                //TODO: maybe bring back? frameDropStatus.frameDropsPerSecond,
+                tuningProvider.activeControlProfile,
                 ::asStatus
             ).collect {
                 _text.value = it
@@ -66,7 +69,7 @@ private fun asStatus(
     event: RcEvent,
     ping: String,
     streamerEvent: Event,
-    framesDropped: Int,
+    activeControlProfile: String?,
 ): String {
     val streamer: String? = if ((System.currentTimeMillis() - streamerEvent.time) < 10_000L) {
         when (streamerEvent) {
@@ -85,7 +88,6 @@ private fun asStatus(
             appendLine("- stream: ?")
         }
         appendLine("- $ping")
-        appendLine("- frameDrop/sec: $framesDropped")
         if (streamer != null) {
             appendLine("- $streamer")
         }
@@ -94,6 +96,7 @@ private fun asStatus(
         appendLine("- steer: %.3f (raw: %.2f) ".format(event.steer, event.rawSteer))
         appendLine("- pitch: %.2f (raw: %.2f) ".format(event.pitch, event.rawPitch))
         appendLine("- yaw: %.2f (raw: %.2f)".format(event.yaw, event.rawYaw))
+        appendLine("- control profile: $activeControlProfile")
     }
 }
 
