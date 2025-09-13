@@ -11,7 +11,7 @@
         />
 
     <LinearLayout
-        android:id="@+id/controls"
+        android:id="@+id/main_controls_container"
         android:layout_width="64dp"
         android:layout_height="match_parent"
         android:layout_gravity="right"
