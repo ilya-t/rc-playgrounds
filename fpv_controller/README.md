@@ -22,21 +22,20 @@ Adjust these values to match your hardware and network environment.
 ```
 
 ## Launch at start
-- create `startup.service`:
+## pigpiod.service for camera
+- create `/etc/systemd/system/pigpiod.service`:
 ```
 [Unit]
-Description=Startup Script
-After=network.target wg-quick@wg0.service
-Wants=wg-quick@wg0.service
+Description=Pigpio daemon
+After=network.target
 
 [Service]
-ExecStart=/home/pi/rc-playgrounds/fpv_controller/run.sh
-Restart=always
-User=pi
-Group=pi
-WorkingDirectory=/usr/local/bin
-StandardOutput=append:/tmp/fpv_controller.log
-StandardError=append:/tmp/fpv_controller.log
+Type=forking
+PIDFile=/var/run/pigpio.pid
+ExecStart=/usr/bin/pigpiod
+ExecStop=/bin/kill -TERM $MAINPID
+Restart=on-failure
+RestartSec=2
 
 [Install]
 WantedBy=multi-user.target
@@ -44,13 +43,41 @@ WantedBy=multi-user.target
 
 - enable it:
 ```sh
-sudo cp ./startup.service /etc/systemd/system/startup.service
 sudo systemctl daemon-reload
-sudo systemctl enable startup.service
-sudo systemctl start startup.service
+sudo systemctl enable pigpiod.service
+sudo systemctl start pigpiod.service
+```
+show journals if something is wrong: `journalctl -u pigpiod.service`
+
+## service for fpv app
+- create `/etc/systemd/system/fpv_controller.service`:
+```
+[Unit]
+Description=fpv controller startup script
+After=pigpiod.service
+Requires=pigpiod.service
+
+[Service]
+ExecStart=/home/fpvcar/rc-playgrounds/fpv_controller/run.sh > /tmp/fpv_controller.log
+Restart=always
+User=fpvcar
+Group=fpvcar
+WorkingDirectory=/usr/local/bin
+StandardOutput=append:/tmp/fpv_controller_service.log
+StandardError=append:/tmp/fpv_controller_service.log
+
+[Install]
+WantedBy=multi-user.target
 ```
 
-## Fake video stream from existing raspberry binary
+- enable it:
+```sh
+sudo systemctl daemon-reload
+sudo systemctl enable fpv_controller.service
+sudo systemctl start fpv_controller.service
+```
+
+# Fake video stream from existing raspberry binary
 ```sh
 cd src
 python3 fake_video_stream.py |
