@@ -1,5 +1,7 @@
 package com.rc.playgrounds.control
 
+import com.rc.playgrounds.control.steering.SteerValue
+
 data class RcEvent(
     val pitch: Float,
     val yaw: Float,
@@ -11,7 +13,27 @@ data class RcEvent(
     val rawLong: Float
 ) {
     companion object {
-        val STILL = RcEvent(
+        fun create(
+            pitch: Float,
+            yaw: Float,
+            steer: SteerValue,
+            long: Float,
+            rawPitch: Float,
+            rawYaw: Float,
+            rawSteer: Float,
+            rawLong: Float,
+        ) = RcEvent(
+            pitch = pitch.coerceIn(-1f, 1f),
+            yaw = yaw.coerceIn(-1f, 1f),
+            steer = steer.coerceIn(-1f, 1f),
+            long = long.coerceIn(-1f, 1f),
+            rawPitch = rawPitch,
+            rawYaw = rawYaw,
+            rawSteer = rawSteer,
+            rawLong = rawLong,
+        )
+
+        val STILL: RcEvent = create(
             pitch = 0f,
             yaw = 0f,
             steer = 0f,

@@ -1,5 +1,6 @@
 package com.rc.playgrounds.config
 
+import com.rc.playgrounds.config.model.ControlTuning
 import com.rc.playgrounds.config.model.MappingZone
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -120,7 +121,8 @@ class ConfigTest {
     private fun assertJsonEquals(expected: JsonElement, actual: JsonElement) {
         when {
             expected is JsonObject && actual is JsonObject -> {
-                Assert.assertEquals("Keys mismatch", expected.keys, actual.keys)
+                val actualKeys = actual.keys.filter { it.contains("_comment_") }.toSet()
+                Assert.assertEquals("Keys mismatch", expected.keys, actualKeys)
                 for (key in expected.keys) {
                     assertJsonEquals(expected[key]!!, actual[key]!!)
                 }
@@ -197,6 +199,9 @@ class ConfigTest {
         )
     }
 }
+
+private val Config.controlTuning: ControlTuning
+    get() = controlProfiles.first()
 
 private val TEST_JSON = """{
             "stream": {

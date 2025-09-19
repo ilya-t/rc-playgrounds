@@ -45,7 +45,7 @@ class RcEventStream(
         val longTrigger = event.longTrigger
         val rawLong = -longTrigger
 
-        val rcEvent = RcEvent(
+        val rcEvent = RcEvent.create(
             pitch = interpolation.fixPitch(rawPitch) + offsets.pitch,
             yaw = interpolation.fixYaw(rawYaw) + offsets.yaw,
             steer = steer,
