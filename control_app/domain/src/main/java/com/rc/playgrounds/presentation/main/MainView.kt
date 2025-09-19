@@ -20,12 +20,13 @@ class MainView(
     private val mainControls = activity.findViewById<View>(R.id.main_controls_container)
     private val surface = activity.findViewById<View>(R.id.surface_container)
     private val root = activity.findViewById<View>(R.id.layer_main)
-    private val showControlsAnimator = ValueAnimator.ofFloat(0f, 1f)
+    private val showControlsAnimator = ValueAnimator.ofFloat(0.2f, 1f)
 
     init {
         activeScreenProvider.switchTo(Screen.MAIN)
         configureButton.setOnClickListener {
             activeScreenProvider.switchTo(Screen.CONFIG)
+            mainModel.onScreenClick()
         }
 
         root.setOnClickListener {
@@ -37,7 +38,7 @@ class MainView(
         }
 
         showControlsAnimator.addUpdateListener {
-            mainControls.alpha = it.animatedFraction
+            mainControls.alpha = it.animatedValue as Float
         }
 
         scope.launch {
@@ -56,7 +57,7 @@ class MainView(
     private fun moveAnimationTo(show: Boolean) {
         val dst: Float = if (show) 1f else 0f
         if (dst == showControlsAnimator.animatedFraction) {
-            mainControls.alpha = showControlsAnimator.animatedFraction
+            mainControls.alpha = showControlsAnimator.animatedValue as Float
             return
         }
 

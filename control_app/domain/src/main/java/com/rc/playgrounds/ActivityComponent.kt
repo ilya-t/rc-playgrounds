@@ -125,6 +125,7 @@ class ActivityComponent(
         }
 
         resetButton.setOnClickListener {
+            appComponent.mainModel.onScreenClick()
             resetButton.isEnabled = false
             lifecycleScope.launch {
                 doReset()
