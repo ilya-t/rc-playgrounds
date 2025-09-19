@@ -4,7 +4,6 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.rc.playgrounds.domain.R
 import com.rc.playgrounds.navigation.ActiveScreenProvider
-import com.rc.playgrounds.navigation.Screen
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -19,11 +18,8 @@ class AnnounceView(
         scope.launch {
             model.viewModel.collect { viewModel ->
                 when (viewModel) {
-                    AnnounceViewModel.Hidden -> {
-                        activeScreenProvider.switchTo(Screen.MAIN)
-                    }
+                    AnnounceViewModel.Hidden -> Unit // Do nothing. This is a job for OverlayView.
                     is AnnounceViewModel.Visible -> {
-                        activeScreenProvider.switchTo(Screen.ANNOUNCE)
                         announceText.text = viewModel.title
                     }
                 }

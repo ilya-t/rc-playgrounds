@@ -11,9 +11,6 @@ class NaiveNavigator(a: AppCompatActivity,
                      private val activeScreenProvider: ActiveScreenProvider,) {
     private val mainRoot = a.findViewById<View>(R.id.layer_main)
     private val configRoot = a.findViewById<View>(R.id.layer_config)
-    private val lockRoot = a.findViewById<View>(R.id.controls_lock_container)
-    private val quickConfig = a.findViewById<View>(R.id.quick_config_container)
-    private val announceRoot = a.findViewById<View>(R.id.announce_container)
 
     init {
         activeScreenProvider.switchTo(Screen.MAIN)
@@ -28,19 +25,6 @@ class NaiveNavigator(a: AppCompatActivity,
                     Screen.CONFIG -> {
                         configRoot.isVisible = true
                     }
-                    Screen.QUICK_CONFIG -> {
-                        mainRoot.isVisible = true
-                        quickConfig.isVisible = true
-                    }
-                    Screen.LOCK_SCREEN -> {
-                        mainRoot.isVisible = true
-                        lockRoot.isVisible = true
-                    }
-
-                    Screen.ANNOUNCE -> {
-                        mainRoot.isVisible = true
-                        announceRoot.isVisible = true
-                    }
                 }
             }
         }
@@ -49,9 +33,6 @@ class NaiveNavigator(a: AppCompatActivity,
     private fun hideAllLayers() {
         mainRoot.isVisible = false
         configRoot.isVisible = false
-        lockRoot.isVisible = false
-        quickConfig.isVisible = false
-        announceRoot.isVisible = false
     }
 
     fun openMain() {

@@ -3,6 +3,7 @@ package com.rc.playgrounds.presentation.main
 import com.rc.playgrounds.control.gamepad.GamepadButtonPress
 import com.rc.playgrounds.control.gamepad.GamepadEventStream
 import com.rc.playgrounds.control.lock.ControlLock
+import com.rc.playgrounds.control.quick.QuickConfigState
 import com.rc.playgrounds.navigation.ActiveScreenProvider
 import com.rc.playgrounds.navigation.Screen
 import kotlinx.coroutines.CoroutineScope
@@ -21,6 +22,7 @@ class MainModel(
     private val scope: CoroutineScope,
     private val gamepadEventStream: GamepadEventStream,
     private val lock: ControlLock,
+    private val quickConfig: QuickConfigState,
 ) {
     private val userActivity = MutableStateFlow(System.currentTimeMillis())
 
@@ -29,7 +31,12 @@ class MainModel(
     }
 
     private val _viewModel = MutableStateFlow<MainViewModel>(
-        MainViewModel.Visible(showControls = true)
+        MainViewModel.Visible(
+            showControls = true,
+            onSelectStartPressed = {
+                quickConfig.toggle()
+            },
+        )
     )
     val viewModel: Flow<MainViewModel> = _viewModel.filterNotNull()
     private var job: Job? = null
@@ -45,14 +52,20 @@ class MainModel(
                         Screen.MAIN -> {
                             val timePassed: Long = System.currentTimeMillis() - userClickTime
                             _viewModel.value = MainViewModel.Visible(
-                                showControls = timePassed < SHOW_DURATION
+                                showControls = timePassed < SHOW_DURATION,
+                                onSelectStartPressed = {
+                                    quickConfig.toggle()
+                                },
                             )
 
                             scope.launch {
                                 delay(SHOW_DURATION)
                                 if (_viewModel.value is MainViewModel.Visible) {
                                     _viewModel.value = MainViewModel.Visible(
-                                        showControls = false
+                                        showControls = false,
+                                        onSelectStartPressed = {
+                                            quickConfig.toggle()
+                                        },
                                     )
                                 }
                             }
@@ -80,7 +93,7 @@ class MainModel(
                                     }
                                     GamepadButtonPress.START,
                                     GamepadButtonPress.SELECT -> {
-                                        activeScreenProvider.switchTo(Screen.QUICK_CONFIG)
+                                        viewModel.onSelectStartPressed()
                                     }
                                     else -> Unit
                                 }

@@ -1,6 +1,7 @@
 package com.rc.playgrounds.presentation.quickconfig
 
 import com.rc.playgrounds.config.ActiveConfigProvider
+import com.rc.playgrounds.control.quick.QuickConfigState
 import com.rc.playgrounds.navigation.ActiveScreenProvider
 import com.rc.playgrounds.navigation.Screen
 import com.rc.playgrounds.remote.stream.StreamQualityProvider
@@ -15,39 +16,38 @@ class QuickConfigModel(
     activeScreenProvider: ActiveScreenProvider,
     private val activeConfigProvider: ActiveConfigProvider,
     qualityProvider: StreamQualityProvider,
+    quickConfig: QuickConfigState,
 ) {
     private val _viewModel = MutableStateFlow<QuickConfigViewModel>(QuickConfigViewModel.Hidden)
     val viewModel: StateFlow<QuickConfigViewModel> = _viewModel
-
 
     init {
         scope.launch {
             combine(
                 activeConfigProvider.configFlow,
-                activeScreenProvider.screen,
+                quickConfig.opened,
                 qualityProvider.currentQuality,
-            ) { config, screen, p ->
-                when (screen) {
-                    Screen.QUICK_CONFIG -> {
-                        QuickConfigViewModel.Visible(
-                            resolution = "${p.width}x${p.height} ${p.framerate}fps (${p.bitrate / 1_000_000f}mbit/s)",
-                            steeringOffset = "steer offset: %.3f".format(config.controlOffsets.steer),
-                            onButtonUpPressed = {
-                                qualityProvider.nextQuality()
-                            },
-                            onButtonDownPressed = {
-                                qualityProvider.prevQuality()
-                            },
-                            onButtonLeftPressed = {
-                                shiftSteerOffset(-STEER_OFFSET_STEP)
-                            },
-                            onButtonRightPressed = {
-                                shiftSteerOffset(STEER_OFFSET_STEP)
-                            },
-                            onBackButton = { activeScreenProvider.switchTo(Screen.MAIN) }
-                        )
-                    }
-                    else -> QuickConfigViewModel.Hidden
+            ) { config, opened, p ->
+                if (opened) {
+                    QuickConfigViewModel.Visible(
+                        resolution = "${p.width}x${p.height} ${p.framerate}fps (${p.bitrate / 1_000_000f}mbit/s)",
+                        steeringOffset = "steer offset: %.3f".format(config.controlOffsets.steer),
+                        onButtonUpPressed = {
+                            qualityProvider.nextQuality()
+                        },
+                        onButtonDownPressed = {
+                            qualityProvider.prevQuality()
+                        },
+                        onButtonLeftPressed = {
+                            shiftSteerOffset(-STEER_OFFSET_STEP)
+                        },
+                        onButtonRightPressed = {
+                            shiftSteerOffset(STEER_OFFSET_STEP)
+                        },
+                        onBackButton = { activeScreenProvider.switchTo(Screen.MAIN) }
+                    )
+                } else {
+                    QuickConfigViewModel.Hidden
                 }
             }
             .collect {

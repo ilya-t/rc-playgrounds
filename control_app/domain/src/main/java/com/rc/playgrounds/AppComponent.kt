@@ -10,12 +10,14 @@ import com.rc.playgrounds.control.RcEventStream
 import com.rc.playgrounds.control.gamepad.GamePadEventSessionProvider
 import com.rc.playgrounds.control.gamepad.GamepadEventStream
 import com.rc.playgrounds.control.lock.ControlLock
+import com.rc.playgrounds.control.quick.QuickConfigState
 import com.rc.playgrounds.control.steering.SteerProvider
 import com.rc.playgrounds.fullscreen.FullscreenStateController
 import com.rc.playgrounds.navigation.ActiveScreenProvider
 import com.rc.playgrounds.presentation.announce.AnnounceModel
 import com.rc.playgrounds.presentation.lock.LockModel
 import com.rc.playgrounds.presentation.main.MainModel
+import com.rc.playgrounds.presentation.overlay.OverlayModel
 import com.rc.playgrounds.presentation.quickconfig.QuickConfigModel
 import com.rc.playgrounds.remote.OutputEventStream
 import com.rc.playgrounds.remote.StreamCmdHash
@@ -88,12 +90,14 @@ class AppComponent(app: Application) {
         activeConfigProvider,
         scope,
     )
+    private val quickConfigState = QuickConfigState()
 
     val mainModel = MainModel(
         activeScreenProvider,
         scope,
         gamepadEventStream,
         controlLock,
+        quickConfigState,
     )
 
     val quickConfigModel = QuickConfigModel(
@@ -101,6 +105,7 @@ class AppComponent(app: Application) {
         activeScreenProvider,
         activeConfigProvider,
         streamQualityProvider,
+        quickConfigState,
     )
     private val remoteStreamConfigController = RemoteStreamConfigController(
         activeConfigProvider,
@@ -144,6 +149,13 @@ class AppComponent(app: Application) {
         activeConfigProvider,
         gamepadEventStream,
         scope,
+    )
+
+    val overlayModel = OverlayModel(
+        activeScreenProvider,
+        lockModel,
+        announceModel,
+        quickConfigModel,
     )
 
     companion object {

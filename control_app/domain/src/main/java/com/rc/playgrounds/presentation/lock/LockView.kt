@@ -5,7 +5,6 @@ import androidx.appcompat.app.AppCompatActivity
 import com.rc.playgrounds.control.gamepad.GamepadButtonPress
 import com.rc.playgrounds.control.gamepad.GamepadEventStream
 import com.rc.playgrounds.navigation.ActiveScreenProvider
-import com.rc.playgrounds.navigation.Screen
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -25,11 +24,8 @@ class LockView(
                 job?.cancel()
                 job = null
                 when (viewModel) {
-                    LockViewModel.Hidden -> {
-                        activeScreenProvider.switchTo(Screen.MAIN)
-                    }
+                    LockViewModel.Hidden -> Unit // Do nothing. This is a job for OverlayView.
                     is LockViewModel.Visible -> {
-                        activeScreenProvider.switchTo(Screen.LOCK_SCREEN)
                         job = scope.launch {
                             gamepadEventStream.buttonEvents.collect { buttonPress ->
                                 when (buttonPress) {

@@ -21,6 +21,7 @@ import com.rc.playgrounds.navigation.NaiveNavigator
 import com.rc.playgrounds.presentation.announce.AnnounceView
 import com.rc.playgrounds.presentation.lock.LockView
 import com.rc.playgrounds.presentation.main.MainView
+import com.rc.playgrounds.presentation.overlay.OverlayView
 import com.rc.playgrounds.presentation.quickconfig.QuickConfigView
 import com.rc.playgrounds.status.view.StatusView
 import com.rc.playgrounds.stopwatch.StopwatchView
@@ -110,6 +111,11 @@ class ActivityComponent(
         appComponent.quickConfigModel,
         lifecycleScope,
         appComponent.gamepadEventStream,
+    )
+    private val overlayView = OverlayView(
+        appComponent.overlayModel,
+        lifecycleScope,
+        activity,
     )
     private var gamepadEventEmitter = GamepadEventEmitter(appComponent.gamepadEventStream)
 
