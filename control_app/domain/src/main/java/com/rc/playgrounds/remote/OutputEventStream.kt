@@ -2,7 +2,6 @@ package com.rc.playgrounds.remote
 
 import com.rc.playgrounds.config.ActiveConfigProvider
 import com.rc.playgrounds.config.Config
-import com.rc.playgrounds.config.model.NetworkTarget
 import com.rc.playgrounds.control.RcEvent
 import com.rc.playgrounds.control.RcEventStream
 import com.rc.playgrounds.remote.stream.RemoteStreamConfig
@@ -31,15 +30,20 @@ class OutputEventStream(
     private val remoteStreamConfigController: RemoteStreamConfigController,
 ) {
 
-    private val controlServer = MutableStateFlow<NetworkTarget?>(null)
+    private val controlServer = MutableStateFlow<ControlServer?>(null)
     private var emitter: EventEmitter? = null
 
     init {
         scope.launch {
             activeConfigProvider.configFlow.collect {
-                if (controlServer.value != it.controlServer) {
-                    controlServer.value = it.controlServer
+                val cs = it.controlServer ?: run {
+                    controlServer.value = null
+                    return@collect
                 }
+                controlServer.value = ControlServer(
+                    server = cs.address(it.env),
+                    port = cs.port,
+                )
             }
         }
 
@@ -50,7 +54,7 @@ class OutputEventStream(
         }
     }
 
-    private fun restart(c: NetworkTarget?) {
+    private fun restart(c: ControlServer?) {
         emitter?.stop()
         emitter = null
         c?.let {
@@ -67,7 +71,7 @@ class OutputEventStream(
 }
 
 private class EventEmitter(
-    val config: NetworkTarget,
+    val config: ControlServer,
     private val scope: CoroutineScope,
     private val rcEventStream: RcEventStream,
     private val configFlow: Flow<Config>,
@@ -82,7 +86,7 @@ private class EventEmitter(
     ) { streamConfig: RemoteStreamConfig?, config: Config, event: RcEvent, streamHash: String ->
         asJson(
             event,
-            streamCmd = streamConfig?.remoteCmd ?: config.stream.remoteCmd,
+            streamCmd = streamConfig?.remoteCmd ?: config.stream.remoteCmd(config.env),
             streamCmdHash = streamHash,
         )
     }
@@ -105,7 +109,7 @@ private class EventEmitter(
     private fun send(message: String) {
         try {
             val socket = DatagramSocket()
-            val address = InetAddress.getByName(config.address)
+            val address = InetAddress.getByName(config.server)
             val buffer = message.toByteArray()
             val packet = DatagramPacket(buffer, buffer.size, address, config.port)
             socket.send(packet)
@@ -137,3 +141,7 @@ private class EventEmitter(
     }
 }
 
+private data class ControlServer(
+    val server: String,
+    val port: Int,
+)

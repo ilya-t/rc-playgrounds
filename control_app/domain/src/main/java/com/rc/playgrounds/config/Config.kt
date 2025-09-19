@@ -12,6 +12,9 @@ import org.intellij.lang.annotations.Language
 
 @Serializable
 data class Config(
+    @SerialName("environment_variables")
+    val env: Map<String, String> = emptyMap(),
+    @SerialName("stream")
     val stream: StreamConfig,
     @SerialName("control_server")
     val controlServer: NetworkTarget?,
@@ -58,6 +61,7 @@ data class Config(
             }.onFailure(errorCollector)
                 .getOrElse {
                     Config(
+                        env = emptyMap(),
                         stream = StreamConfig(
                             qualityProfiles = QualityProfile.DEFAULT_PROFILES,
                             remoteCmd = "",
@@ -92,9 +96,13 @@ data class Config(
 @Language("Json")
 internal const val DEFAULT_CONFIG = """
 {
+  "environment_variables": {
+    "fpv_car_server": "192.168.2.5",
+    "mobile_client_addr": "192.168.2.2"
+  },
   "stream": {
     "local_cmd": "udpsrc port=12345 caps=\"application/x-rtp, media=video, encoding-name=H264, payload=96\" ! rtph264depay ! h264parse ! decodebin ! videoconvert ! autovideosink",
-    "remote_cmd": "raspivid -pf baseline -fl -g 1 -w @{width} -h @{height} --bitrate @{bitrate} --nopreview -fps @{framerate}/1 -t 0 -o - | gst-launch-1.0 fdsrc ! h264parse ! rtph264pay ! udpsink host=@{stream_target} port=@{stream_target_port}",
+    "remote_cmd": "raspivid -pf baseline -fl -g 1 -w @{width} -h @{height} --bitrate @{bitrate} --nopreview -fps @{framerate}/1 -t 0 -o - | gst-launch-1.0 fdsrc ! h264parse ! rtph264pay ! udpsink host=@{mobile_client_addr} port=12345",
     "quality_profiles": [
         {
             "width": 320,
@@ -129,11 +137,11 @@ internal const val DEFAULT_CONFIG = """
     ]
   },
   "stream_target": {
-    "address": "192.168.2.5",
+    "address": "@{mobile_client_addr}",
     "port": 12345
   },  
   "control_server": {
-    "address": "192.168.2.2",
+    "address": "@{fpv_car_server}",
     "port": 12346
   },
   "control_offsets": {

@@ -28,8 +28,7 @@ class StatusModel(
     private val remoteStreamConfigController: RemoteStreamConfigController,
     private val tuningProvider: ControlTuningProvider,
 ) {
-
-    private val pingTarget: Flow<String?> = config.configFlow.map { it.controlServer?.address }
+    private val pingTarget: Flow<String?> = config.configFlow.map { it.controlServer?.address(it.env) }
     private val _text = MutableStateFlow("(?)")
     private val _ping = MutableStateFlow("(?)")
     val text: StateFlow<String> = _text

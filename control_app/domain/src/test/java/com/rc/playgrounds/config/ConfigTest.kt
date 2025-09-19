@@ -33,8 +33,8 @@ class ConfigTest {
         Assert.assertTrue(config.controlTuning.forwardLongZones.isNotEmpty())
         Assert.assertTrue(config.controlTuning.backwardLongZones.isNotEmpty())
 
-        Assert.assertNotNull(config.stream.localCmd)
-        Assert.assertNotNull(config.stream.remoteCmd)
+        Assert.assertNotNull(config.stream.localCmd(config.env))
+        Assert.assertNotNull(config.stream.remoteCmd(config.env))
         Assert.assertTrue(config.stream.qualityProfiles.isNotEmpty())
         Assert.assertNotNull(config.controlServer)
         Assert.assertNotNull(config.controlOffsets)
@@ -45,7 +45,7 @@ class ConfigTest {
     fun testRemoteStreamCmd_InvalidJson() {
         val json = "{}"
         val config = Config(json)
-        Assert.assertEquals("", config.stream.remoteCmd)
+        Assert.assertEquals("", config.stream.remoteCmd(config.env))
     }
 
     @Test

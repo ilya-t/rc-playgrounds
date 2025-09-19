@@ -1,5 +1,6 @@
 package com.rc.playgrounds.config.stream
 
+import com.rc.playgrounds.config.env.applyEnv
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -10,7 +11,15 @@ data class StreamConfig(
     @SerialName("default_quality_profile_index")
     val defaultQualityProfile: Int? = null,
     @SerialName("remote_cmd")
-    val remoteCmd: String,
+    private val remoteCmd: String,
     @SerialName("local_cmd")
-    val localCmd: String,
-)
+    private val localCmd: String,
+) {
+    fun localCmd(env: Map<String, String>): String {
+        return localCmd.applyEnv(env)
+    }
+
+    fun remoteCmd(env: Map<String, String>): String {
+        return remoteCmd.applyEnv(env)
+    }
+}
