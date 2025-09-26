@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/quick_config_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -9,34 +8,9 @@
     android:orientation="vertical"
     android:visibility="gone">
 
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/current_resolution"
-        tools:text="640x480"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="28sp" />
-
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/change_hint"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="up/down to change"
-        android:textColor="#d3d3d3"
-        android:textSize="16sp" />
-
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/steer_offset"
-        tools:text="steering offset: 0.18"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="28sp" />
-
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/steer_offset_hint"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="left/right to change"
-        android:textColor="#d3d3d3"
-
-        android:textSize="16sp" />
+    <androidx.compose.ui.platform.ComposeView
+        android:id="@+id/quick_config_compose_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        />
 </LinearLayout>
