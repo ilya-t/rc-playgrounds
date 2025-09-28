@@ -50,6 +50,17 @@ class QuickConfigView(
                                 }
                             }
                         }
+
+                        is QuickConfigViewModel.DashboardVisible -> {
+                            composeView.setContent {
+                                RenderDashboard(viewModel)
+                            }
+                            job = scope.launch {
+                                gamepadEventStream.buttonEvents.collect {
+                                    processGamepadButtonPress(viewModel, it)
+                                }
+                            }
+                        }
                     }
                 }
         }
@@ -57,6 +68,23 @@ class QuickConfigView(
 
     private fun processGamepadButtonPress(
         viewModel: QuickConfigViewModel.Visible,
+        buttonPress: GamepadButtonPress
+    ) {
+        when (buttonPress) {
+            GamepadButtonPress.A -> viewModel.onBackButton()
+            GamepadButtonPress.B -> viewModel.onBackButton()
+            GamepadButtonPress.Down -> viewModel.onButtonDownPressed()
+            GamepadButtonPress.Up -> viewModel.onButtonUpPressed()
+            GamepadButtonPress.SELECT -> viewModel.onBackButton()
+            GamepadButtonPress.START -> viewModel.onBackButton()
+            GamepadButtonPress.Left -> viewModel.onButtonLeftPressed()
+            GamepadButtonPress.Right -> viewModel.onButtonRightPressed()
+            else -> Unit
+        }
+    }
+
+    private fun processGamepadButtonPress(
+        viewModel: QuickConfigViewModel.DashboardVisible,
         buttonPress: GamepadButtonPress
     ) {
         when (buttonPress) {
