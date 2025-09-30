@@ -12,7 +12,7 @@ sealed interface QuickConfigViewModel {
         val onBackButton: () -> Unit,
     ) : QuickConfigViewModel
     data class DashboardVisible(
-        val elements: List<Element>,
+        val elementGroups: List<ElementGroup>,
         val onButtonUpPressed: () -> Unit,
         val onButtonDownPressed: () -> Unit,
         val onButtonLeftPressed: () -> Unit,
@@ -22,18 +22,15 @@ sealed interface QuickConfigViewModel {
     ) : QuickConfigViewModel
 }
 
-sealed interface Element {
-    val title: String
-    val active: Boolean
-
-    class ToggleGroup(
-        override val title: String,
-        val toggles: List<Toggle>,
-        override val active: Boolean,
-    ) : Element
-}
-
-class Toggle(
+class ElementGroup(
+    val title: String,
     val active: Boolean,
+    val focused: Boolean,
+    val elements: List<Element>,
+)
+
+class Element(
+    val active: Boolean,
+    val focused: Boolean,
     val title: String,
 )
