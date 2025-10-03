@@ -1,5 +1,6 @@
 package com.rc.playgrounds.presentation.quickconfig
 
+import a.debug.stuff.Log
 import android.graphics.Point
 import com.rc.playgrounds.config.ActiveConfigProvider
 import com.rc.playgrounds.control.quick.QuickConfigState
@@ -49,72 +50,48 @@ class QuickConfigModel(
                         },
                         onBackButton = { activeScreenProvider.switchTo(Screen.MAIN) }
                     )
-                    val envProfiles = listOf(
-                        EnvironmentProfiles(
-                            title = "modes",
-                            profiles = listOf(
-                                EnvironmentProfile(
-                                    title = "normal",
-                                ),
-                                EnvironmentProfile(
-                                    title = "crawling",
-                                ),
-                                EnvironmentProfile(
-                                    title = "max long",
-                                ),
-                            ),
-                        ),
-                        EnvironmentProfiles(
-                            title = "resolution",
-                            profiles = listOf(
-                                EnvironmentProfile(
-                                    title = "320x240",
-                                ),
-                                EnvironmentProfile(
-                                    title = "640x480",
-                                ),
-                                EnvironmentProfile(
-                                    title = "800x600",
-                                ),
-                                EnvironmentProfile(
-                                    title = "1024x768",
-                                ),
-                            ),
+                    val envOverrides: List<EnvironmentOverrides> = config.envOverrides
+                    val maxX = envOverrides.lastIndex
+                    val maxY = (envOverrides.getOrNull(focus.x)?.profiles?.lastIndex ?: -1) + 1
+                    Log.that("making profile from config:${config.hashCode()} opened: $opened: quality: $p focus: $focus")
+
+                    val elementGroups: List<ElementGroup> = envOverrides.mapIndexed { x, override ->
+                        ElementGroup(
+                            title = override.name,
+                            elements = override.profiles.mapIndexed { i, profile ->
+                                val y = i + 1
+                                Element(
+                                    active = false,
+                                    focused = focus.x == x && focus.y == y,
+                                    title = profile.name,
+                                    onClick = {
+                                        toggleElement(
+                                            overrideName = override.name,
+                                            profileName = profile.name,
+                                        )
+                                    }
+                                )
+                            },
+                            active = false,
+                            focused = focus.x == x && focus.y == 0
                         )
-                    )
-
-                    val maxX = envProfiles.lastIndex
-                    val maxY = (envProfiles.getOrNull(focus.x)?.profiles?.lastIndex ?: -1) + 1
-
+                    }
+                    val focusPoint = focusState.value
                     QuickConfigViewModel.DashboardVisible(
-                        elementGroups = envProfiles.mapIndexed { x, profiles ->
-                            ElementGroup(
-                                title = profiles.title,
-                                elements = profiles.profiles.mapIndexed { i, profile ->
-                                    val y = i + 1
-                                    Element(
-                                        active = false,
-                                        focused = focus.x == x && focus.y == y,
-                                        title = profile.title,
-                                    )
-                                },
-                                active = false,
-                                focused = focus.x == x && focus.y == 0
-                            )
-                        },
+                        elementGroups = elementGroups,
                         onButtonUpPressed = {
-                            moveFocus(y = (focus.y - 1).coerceIn(0, maxY))
+                            moveFocus(elementGroups, y = (focus.y - 1).coerceIn(0, maxY))
                         },
                         onButtonDownPressed = {
-                            moveFocus(y = (focus.y + 1).coerceIn(0, maxY))
+                            moveFocus(elementGroups, y = (focus.y + 1).coerceIn(0, maxY))
                         },
                         onButtonLeftPressed = {
-                            moveFocus(x = (focus.x - 1).coerceIn(0, maxX))
+                            moveFocus(elementGroups, x = (focus.x - 1).coerceIn(0, maxX))
                         },
                         onButtonRightPressed = {
-                            moveFocus(x = (focus.x + 1).coerceIn(0, maxX))
+                            moveFocus(elementGroups, x = (focus.x + 1).coerceIn(0, maxX))
                         },
-                        onApplyButton = { },
+                        onApplyButton = { onTileClicked(elementGroups, focusPoint) },
                         onBackButton = { activeScreenProvider.switchTo(Screen.MAIN) }
                     )
                 } else {
@@ -127,7 +104,39 @@ class QuickConfigModel(
         }
     }
 
-    private fun moveFocus(x: Int = focusState.value.x, y: Int = focusState.value.y) {
+    private fun toggleElement(overrideName: String, profileName: String) {
+        activeConfigProvider.update { config ->
+            val override = config.envOverrides.find { it.name == overrideName } ?: return@update config
+            val p = override.profiles.find { it.name == profileName } ?: return@update config
+            val targetProfileIndex = override.profiles.indexOf(p)
+            val newActiveIndex = if (override.lastActiveIndex == targetProfileIndex) {
+                (override.lastActiveIndex - 1).coerceAtLeast(-1)
+            } else {
+                targetProfileIndex.coerceAtMost(override.profiles.lastIndex)
+            }
+
+            if (newActiveIndex == override.lastActiveIndex) {
+                return@update config
+            }
+
+            val overrides = config.envOverrides.toMutableList()
+            overrides[overrides.indexOf(override)] = override.copy(
+                lastActiveIndex = newActiveIndex
+            )
+
+            config.copy(envOverrides = overrides)
+        }
+
+    }
+
+    private fun onTileClicked(elementGroups: List<ElementGroup>, focusPoint: Point) {
+        elementGroups.getOrNull(focusPoint.x)
+            ?.elements?.getOrNull(focusPoint.y)?.onClick()
+    }
+    private fun moveFocus(elementGroups: List<ElementGroup>,
+                          x: Int = focusState.value.x,
+                          y: Int = focusState.value.y) {
+        //TODO: trim point coords according to current column.
         focusState.value = Point(x, y)
     }
 

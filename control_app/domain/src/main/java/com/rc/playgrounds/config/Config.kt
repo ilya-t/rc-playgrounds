@@ -5,6 +5,7 @@ import com.rc.playgrounds.config.model.ControlTuning
 import com.rc.playgrounds.config.model.NetworkTarget
 import com.rc.playgrounds.config.stream.QualityProfile
 import com.rc.playgrounds.config.stream.StreamConfig
+import com.rc.playgrounds.presentation.quickconfig.EnvironmentOverrides
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -13,7 +14,9 @@ import org.intellij.lang.annotations.Language
 @Serializable
 data class Config(
     @SerialName("environment_variables")
-    val env: Map<String, String> = emptyMap(),
+    private val rawEnv: Map<String, String> = emptyMap(),
+    @SerialName("environment_variables_overrides")
+    val envOverrides: List<EnvironmentOverrides> = emptyList(),
     @SerialName("stream")
     val stream: StreamConfig,
     @SerialName("control_server")
@@ -41,6 +44,8 @@ data class Config(
         )
     ),
 ) {
+    val env: Map<String, String> = buildEnv(rawEnv, envOverrides)
+
     fun writeToJson(): String {
         return jsonParser.encodeToString(Config.serializer(), this)
     }
@@ -61,7 +66,7 @@ data class Config(
             }.onFailure(errorCollector)
                 .getOrElse {
                     Config(
-                        env = emptyMap(),
+                        rawEnv = emptyMap(),
                         stream = StreamConfig(
                             qualityProfiles = QualityProfile.DEFAULT_PROFILES,
                             remoteCmd = "",
@@ -93,6 +98,29 @@ data class Config(
     }
 }
 
+private fun buildEnv(rawEnv: Map<String, String>,
+                     overrides: List<EnvironmentOverrides>
+): Map<String, String> {
+    val env = rawEnv.toMutableMap()
+    overrides.forEach {
+        val lastActiveIndex = it.lastActiveIndex ?: return@forEach
+        if (lastActiveIndex < 0) {
+            return@forEach
+        }
+
+        val overrideProfiles = it.profiles.subList(
+            fromIndex = 0,
+            toIndex = lastActiveIndex.coerceIn(0, it.profiles.lastIndex)
+        )
+        overrideProfiles.forEach { profile ->
+            env.putAll(profile.env)
+        }
+    }
+
+    return env
+}
+
+
 @Language("Json")
 internal const val DEFAULT_CONFIG = """
 {
@@ -100,41 +128,77 @@ internal const val DEFAULT_CONFIG = """
     "fpv_car_server": "192.168.2.5",
     "mobile_client_addr": "192.168.2.2"
   },
+  "environment_variables_overrides": [
+    {
+      "name": "control",
+      "last_active_index": 0,
+      "override_profiles": [
+         {
+           "name": "default",
+           "environment_variables": {
+              "pitch_factor": "1.0",
+              "pitch_zone": "0..0.5",
+              "yaw_factor": "1.0",
+              "yaw_zone": "0..0.5",
+              "steer_zone": "-0.7..0.7"
+           }
+         }
+      ]
+    },
+    {
+      "name": "stream quality",
+      "last_active_index": 1,
+      "override_profiles": [
+        { 
+          "name": "320x240 (0.8mb)",
+          "environment_variables": {
+            "width": "320",
+            "height": "240",
+            "framerate": "30",
+            "bitrate": "800000"
+        }
+        },
+        { 
+          "name": "640x480 (1.6mb)",
+          "environment_variables": {
+            "width": "640",
+            "height": "480",
+            "framerate": "30",
+            "bitrate": "1600000"
+        }
+        },
+        { 
+          "name": "1024x778 (3mb)",
+          "environment_variables": {
+            "width": "1024",
+            "height": "778",
+            "framerate": "30",
+            "bitrate": "3000000"
+        }
+        },
+        { 
+          "name": "1280x720 (4.2mb)",
+          "environment_variables": {
+            "width": "1280",
+            "height": "720",
+            "framerate": "30",
+            "bitrate": "4200000"
+        }
+        },
+        { 
+          "name": "1920x1080 (8mb)",
+          "environment_variables": {
+            "width": "1920",
+            "height": "1080",
+            "framerate": "30",
+            "bitrate": "8000000"
+        }
+        }]
+    }
+  ],
   "stream": {
     "local_cmd": "udpsrc port=12345 caps=\"application/x-rtp, media=video, encoding-name=H264, payload=96\" ! rtph264depay ! h264parse ! decodebin ! videoconvert ! autovideosink",
-    "remote_cmd": "raspivid -pf baseline -fl -g 1 -w @{width} -h @{height} --bitrate @{bitrate} --nopreview -fps @{framerate}/1 -t 0 -o - | gst-launch-1.0 fdsrc ! h264parse ! rtph264pay ! udpsink host=@{mobile_client_addr} port=12345",
-    "quality_profiles": [
-        {
-            "width": 320,
-            "height": 240,
-            "framerate": 30,
-            "bitrate": 800000
-        },
-        {
-            "width": 640,
-            "height": 480,
-            "framerate": 30,
-            "bitrate": 1600000
-        },
-        {
-            "width": 1024,
-            "height": 778,
-            "framerate": 30,
-            "bitrate": 3000000
-        },
-        {
-            "width": 1280,
-            "height": 720,
-            "framerate": 30,
-            "bitrate": 4200000
-        },
-        {
-            "width": 1920,
-            "height": 1080,
-            "framerate": 30,
-            "bitrate": 8000000
-        }
-    ]
+    "remote_cmd": "raspivid -pf baseline -fl -g 1 -w @{width} -h @{height} --bitrate @{bitrate} --nopreview -fps @{framerate}/1 -t 0 -o - | gst-launch-1.0 fdsrc ! h264parse ! rtph264pay ! udpsink host=@{mobile_client_addr} port=12345"
   },
   "stream_target": {
     "address": "@{mobile_client_addr}",
@@ -173,7 +237,7 @@ internal const val DEFAULT_CONFIG = """
           "0.0": "0.01",
           "1.0": "0.2"
       },
-    "_comment_steer_mode_": "available modes 'steer_limit_at_trigger', 'wheel' and 'exponent'",
+    "_steer_mode_comment_": "available modes 'steer_limit_at_trigger', 'wheel' and 'exponent'",
     "steer_mode": "wheel",
     "steer_exponent_factor": 2.0,
       "wheel": {

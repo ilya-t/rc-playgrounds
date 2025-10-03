@@ -33,4 +33,5 @@ class Element(
     val active: Boolean,
     val focused: Boolean,
     val title: String,
+    internal val onClick: () -> Unit = {},
 )

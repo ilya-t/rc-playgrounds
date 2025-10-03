@@ -6,8 +6,9 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class StreamConfig(
+    @Deprecated("use env profiles instead")
     @SerialName("quality_profiles")
-    val qualityProfiles: List<QualityProfile>,
+    val qualityProfiles: List<QualityProfile> = emptyList(),
     @SerialName("default_quality_profile_index")
     val defaultQualityProfile: Int? = null,
     @SerialName("remote_cmd")

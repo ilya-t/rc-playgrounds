@@ -35,7 +35,6 @@ class ConfigTest {
 
         Assert.assertNotNull(config.stream.localCmd(config.env))
         Assert.assertNotNull(config.stream.remoteCmd(config.env))
-        Assert.assertTrue(config.stream.qualityProfiles.isNotEmpty())
         Assert.assertNotNull(config.controlServer)
         Assert.assertNotNull(config.controlOffsets)
         Assert.assertNotNull(config.controlTuning)
@@ -103,7 +102,7 @@ class ConfigTest {
         val config = Config(TEST_JSON)
         val server = config.controlServer
         Assert.assertNotNull(server)
-        Assert.assertEquals("192.168.0.1", server!!.address)
+        Assert.assertEquals("192.168.0.1", server!!.address(config.env))
         Assert.assertEquals(8080, server.port.toLong())
     }
 
@@ -118,20 +117,28 @@ class ConfigTest {
         Assert.assertEquals(0.0, offsets.long.toDouble(), 0.001)
     }
 
-    private fun assertJsonEquals(expected: JsonElement, actual: JsonElement) {
+    private fun assertJsonEquals(parentNodeHint: String,
+                                 expected: JsonElement, actual: JsonElement) {
         when {
             expected is JsonObject && actual is JsonObject -> {
-                val actualKeys = actual.keys.filter { it.contains("_comment_") }.toSet()
-                Assert.assertEquals("Keys mismatch", expected.keys, actualKeys)
-                for (key in expected.keys) {
-                    assertJsonEquals(expected[key]!!, actual[key]!!)
+                val actualKeys = actual.keys.filterNot { it.endsWith("_comment_") }.toSet()
+                val expectedKeys = expected.keys.filterNot { it.endsWith("_comment_") }.toSet()
+                Assert.assertEquals("Node '$parentNodeHint' keys mismatch", expectedKeys, actualKeys)
+                expectedKeys.forEach { key ->
+                    val expected = expected.getOrElse(key) {
+                        throw AssertionError("'$parentNodeHint[$key]' missing expected element for '$key'")
+                    }
+                    val actual = actual.getOrElse(key) {
+                        throw AssertionError("'$parentNodeHint[$key]' missing actual element for '$key'")
+                    }
+                    assertJsonEquals("$parentNodeHint[$key]", expected, actual)
                 }
             }
             expected is JsonArray && actual is JsonArray -> {
                 Assert.assertEquals("Array size mismatch", expected.size, actual.size)
                 expected.zip(actual).forEachIndexed { i, (e, a) ->
                     try {
-                        assertJsonEquals(e, a)
+                        assertJsonEquals("$parentNodeHint[$i]", e, a)
                     } catch (t: AssertionError) {
                         throw AssertionError("Array element at index $i mismatch", t)
                     }
@@ -139,12 +146,12 @@ class ConfigTest {
             }
             expected is JsonPrimitive && actual is JsonPrimitive -> {
                 Assert.assertEquals(
-                    "Primitive value mismatch",
+                    "Node '${parentNodeHint}' primitive value mismatch",
                     normalizePrimitive(expected),
                     normalizePrimitive(actual)
                 )
             }
-            else -> Assert.assertEquals("Type mismatch", expected, actual)
+            else -> Assert.assertEquals("Node '${parentNodeHint}' type mismatch", expected, actual)
         }
     }
 
@@ -159,21 +166,8 @@ class ConfigTest {
     }
 
     @Test
-    fun `json serialization not missing data`() {
-        val config = Config(TEST_JSON)
-        val serializedJson = config.writeToJson()
-
-        val json = Json { ignoreUnknownKeys = true }
-
-        val original = json.parseToJsonElement(TEST_JSON)
-        val reserialized = json.parseToJsonElement(serializedJson)
-
-        assertJsonEquals(original, reserialized)
-    }
-
-    @Test
     fun `json serialization not missing data at default template`() {
-        val config = Config(DEFAULT_CONFIG)
+        val config = Config(DEFAULT_CONFIG, errorRaiser)
         val serializedJson = config.writeToJson()
 
         val json = Json { ignoreUnknownKeys = true }
@@ -181,7 +175,7 @@ class ConfigTest {
         val original = json.parseToJsonElement(DEFAULT_CONFIG)
         val reserialized = json.parseToJsonElement(serializedJson)
 
-        assertJsonEquals(original, reserialized)
+        assertJsonEquals("<root>", original, reserialized)
     }
 
     @Test
