@@ -5,13 +5,12 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
@@ -33,7 +32,6 @@ import androidx.compose.ui.unit.dp
 fun RenderDashboard(viewModel: QuickConfigViewModel.DashboardVisible) {
     val columns: List<ElementGroup> = viewModel.elementGroups
 
-    val maxRows = columns.maxOfOrNull { it.size() } ?: 0
     val tileHeight = 72.dp
     val tileWidth = 120.dp
     val gap = 12.dp
@@ -47,47 +45,104 @@ fun RenderDashboard(viewModel: QuickConfigViewModel.DashboardVisible) {
         horizontalArrangement = Arrangement.spacedBy(gap),
     ) {
         columns.forEach { col: ElementGroup ->
-            val padTop = (maxRows - col.size()) / 2
-            val padBottom = maxRows - col.size() - padTop
-
-            Column(
+            // Each column measures its available height and keeps a centered window around focus.
+            BoxWithConstraints(
                 modifier = Modifier.wrapContentWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(gap)
+                contentAlignment = Alignment.TopCenter
             ) {
-                RenderSquareTile(
-                    label = col.title,
-                    isActiveToggle = col.active,
-                    width = tileWidth,
-                    height = tileHeight,
-                    isFocused = col.focused,
-                    corner = corner,
-                )
+                val availableHeight = maxHeight           // height available for this column
+                val oneTile = tileHeight + gap            // tile + vertical gap
+                val titleSlots = 1                        // group title always visible
+                val minSlots = titleSlots + 1             // title + at least 1 element
 
-                col.elements.forEach { tile ->
+                // How many tiles (including title) can we show?
+                val maxVisibleTiles = maxOf(minSlots, (availableHeight / oneTile).toInt())
+
+                // How many element slots remain after the title?
+                val elementSlots = maxVisibleTiles - titleSlots
+
+                // Determine the focused element in this group
+                val focusedIndex = col.elements.indexOfFirst { it.focused }.let { if (it == -1) 0 else it }
+                val total = col.elements.size
+
+                // Compute a centered window around the focus
+                val (start, endExclusive) = computeWindow(total, focusedIndex, elementSlots)
+
+                // Flags for “more” indicators
+                val hasMoreAbove = start > 0
+                val hasMoreBelow = endExclusive < total
+
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(gap)
+                ) {
+                    // Always show the group "title" tile
                     RenderSquareTile(
-                        label = tile.title,
-                        isActiveToggle = tile.active,
+                        label = col.title,
+                        isActiveToggle = col.active,
                         width = tileWidth,
                         height = tileHeight,
-                        isFocused = tile.focused,
-                        corner = corner
+                        isFocused = col.focused,
+                        corner = corner,
                     )
-                }
 
-                repeat(padBottom) { EmptySquare(tileHeight) }
+                    if (hasMoreAbove) {
+                        MoreIndicator(width = tileWidth, height = 24.dp)
+                    }
+
+                    // Visible window of elements
+                    col.elements.subList(start, endExclusive).forEach { tile ->
+                        RenderSquareTile(
+                            label = tile.title,
+                            isActiveToggle = tile.active,
+                            width = tileWidth,
+                            height = tileHeight,
+                            isFocused = tile.focused,
+                            corner = corner
+                        )
+                    }
+
+                    if (hasMoreBelow) {
+                        MoreIndicator(width = tileWidth, height = 24.dp)
+                    }
+                }
             }
         }
     }
 }
 
-private fun ElementGroup.size(): Int {
-    return this.elements.size
+/**
+ * Returns a [start, endExclusive] window of size up to [windowSize] centered on [focus].
+ */
+private fun computeWindow(total: Int, focus: Int, windowSize: Int): Pair<Int, Int> {
+    if (total <= windowSize) return 0 to total
+    val half = windowSize / 2
+    var start = focus - half
+    start = start.coerceAtLeast(0)
+    // Ensure we always have windowSize items where possible
+    if (start + windowSize > total) {
+        start = (total - windowSize).coerceAtLeast(0)
+    }
+    val end = (start + windowSize).coerceAtMost(total)
+    return start to end
 }
 
 @Composable
-private fun EmptySquare(size: Dp) {
-    Spacer(Modifier.size(size))
+private fun MoreIndicator(width: Dp, height: Dp) {
+    Box(
+        modifier = Modifier
+            .width(width)
+            .height(height),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            "•••",
+            style = MaterialTheme.typography.labelLarge.copy(
+                color = Color.Gray.copy(alpha = 0.8f),
+                fontWeight = FontWeight.SemiBold
+            )
+        )
+    }
 }
 
 @Composable
@@ -99,16 +154,12 @@ private fun RenderSquareTile(
     height: Dp,
     corner: Dp
 ) {
-    val isTitle = false
-
     val borderWidth = if (isActiveToggle) 2.dp else 1.dp
-    val borderColor = if (isFocused)
-        Color(0xFFFF5722).copy(alpha = 0.6f)
-    else if (isActiveToggle)
-            Color(0xFF1D3557).copy(alpha = 0.6f)
-    else
-        Color.Gray.copy(alpha = 0.4f)
-
+    val borderColor = when {
+        isFocused -> Color(0xFFFF5722).copy(alpha = 0.6f)
+        isActiveToggle -> Color(0xFF1D3557).copy(alpha = 0.6f)
+        else -> Color.Gray.copy(alpha = 0.4f)
+    }
     val bgColor = if (isActiveToggle)
         Color(0xFF1D3557).copy(alpha = 0.25f)
     else
@@ -131,13 +182,7 @@ private fun RenderSquareTile(
             textAlign = TextAlign.Center,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
-            style = if (isTitle)
-                MaterialTheme.typography.labelLarge.copy(
-                    fontWeight = FontWeight.Medium,
-                    color = Color.White
-                )
-            else
-                MaterialTheme.typography.bodyMedium.copy(color = Color.White)
+            style = MaterialTheme.typography.bodyMedium.copy(color = Color.White)
         )
     }
 }
