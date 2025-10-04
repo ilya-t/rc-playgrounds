@@ -7,4 +7,7 @@ object Dependencies {
     val composeBomVersion: String = "2025.09.01"
     val composeCompilerVersion: String = "1.5.7"
     val kotlinxSerializationJson: String = "1.9.0"
+    private val mockitoVersion: String = "5.4.0"
+    val mockitoCore: String = "org.mockito:mockito-core:$mockitoVersion"
+    val kotlinMockito: String = "org.mockito.kotlin:mockito-kotlin:$mockitoVersion"
 }

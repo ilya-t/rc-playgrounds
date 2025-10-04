@@ -22,14 +22,14 @@ sealed interface QuickConfigViewModel {
     ) : QuickConfigViewModel
 }
 
-class ElementGroup(
+data class ElementGroup(
     val title: String,
     val active: Boolean,
     val focused: Boolean,
     val elements: List<Element>,
 )
 
-class Element(
+data class Element(
     val active: Boolean,
     val focused: Boolean,
     val title: String,

@@ -1,7 +1,5 @@
 package com.rc.playgrounds.presentation.quickconfig
 
-import a.debug.stuff.Log
-import android.graphics.Point
 import com.rc.playgrounds.config.ActiveConfigProvider
 import com.rc.playgrounds.control.quick.QuickConfigState
 import com.rc.playgrounds.navigation.ActiveScreenProvider
@@ -22,7 +20,7 @@ class QuickConfigModel(
 ) {
     private val _viewModel = MutableStateFlow<QuickConfigViewModel>(QuickConfigViewModel.Hidden)
     val viewModel: StateFlow<QuickConfigViewModel> = _viewModel
-    private val focusState = MutableStateFlow<Point>(Point())
+    private val focusState = MutableStateFlow(FocusPoint())
 
     init {
         scope.launch {
@@ -33,35 +31,40 @@ class QuickConfigModel(
                 focusState,
             ) { config, opened, p, focus ->
                 if (opened) {
-                    QuickConfigViewModel.Visible(
-                        resolution = "${p.width}x${p.height} ${p.framerate}fps (${p.bitrate / 1_000_000f}mbit/s)",
-                        steeringOffset = "steer offset: %.3f".format(config.controlOffsets.steer),
-                        onButtonUpPressed = {
-                            qualityProvider.nextQuality()
-                        },
-                        onButtonDownPressed = {
-                            qualityProvider.prevQuality()
-                        },
-                        onButtonLeftPressed = {
-                            shiftSteerOffset(-STEER_OFFSET_STEP)
-                        },
-                        onButtonRightPressed = {
-                            shiftSteerOffset(STEER_OFFSET_STEP)
-                        },
-                        onBackButton = { activeScreenProvider.switchTo(Screen.MAIN) }
-                    )
                     val envOverrides: List<EnvironmentOverrides> = config.envOverrides
-                    val maxX = envOverrides.lastIndex
-                    val maxY = (envOverrides.getOrNull(focus.x)?.profiles?.lastIndex ?: -1) + 1
-                    Log.that("making profile from config:${config.hashCode()} opened: $opened: quality: $p focus: $focus")
-
-                    val elementGroups: List<ElementGroup> = envOverrides.mapIndexed { x, override ->
+                    val builtInGroups = listOf(
+                        ElementGroup(
+                            title = "steer offset: %.3f".format(config.controlOffsets.steer),
+                            active = false,
+                            focused = focus.x == 0 && focus.y == 0,
+                            elements = listOf(
+                                Element(
+                                    active = false,
+                                    focused = focus.x == 0 && focus.y == 1,
+                                    title = "-$STEER_OFFSET_STEP",
+                                    onClick = {
+                                        shiftSteerOffset(-STEER_OFFSET_STEP)
+                                    }
+                                ),
+                                Element(
+                                    active = false,
+                                    focused = focus.x == 0 && focus.y == 2,
+                                    title = "+$STEER_OFFSET_STEP",
+                                    onClick = {
+                                        shiftSteerOffset(STEER_OFFSET_STEP)
+                                    }
+                                )
+                            )
+                        )
+                    )
+                    val elementGroups: List<ElementGroup> = builtInGroups + envOverrides.mapIndexed { x, override: EnvironmentOverrides ->
+                        val x = x + builtInGroups.size
                         ElementGroup(
                             title = override.name,
                             elements = override.profiles.mapIndexed { i, profile ->
                                 val y = i + 1
                                 Element(
-                                    active = false,
+                                    active = i < (override.lastActiveIndex ?: -1),
                                     focused = focus.x == x && focus.y == y,
                                     title = profile.name,
                                     onClick = {
@@ -80,16 +83,16 @@ class QuickConfigModel(
                     QuickConfigViewModel.DashboardVisible(
                         elementGroups = elementGroups,
                         onButtonUpPressed = {
-                            moveFocus(elementGroups, y = (focus.y - 1).coerceIn(0, maxY))
+                            moveFocus(elementGroups, focusPoint, y = focus.y - 1)
                         },
                         onButtonDownPressed = {
-                            moveFocus(elementGroups, y = (focus.y + 1).coerceIn(0, maxY))
+                            moveFocus(elementGroups, focusPoint, y = focus.y + 1)
                         },
                         onButtonLeftPressed = {
-                            moveFocus(elementGroups, x = (focus.x - 1).coerceIn(0, maxX))
+                            moveFocus(elementGroups, focusPoint, x = focus.x - 1)
                         },
                         onButtonRightPressed = {
-                            moveFocus(elementGroups, x = (focus.x + 1).coerceIn(0, maxX))
+                            moveFocus(elementGroups, focusPoint, x = focus.x + 1)
                         },
                         onApplyButton = { onTileClicked(elementGroups, focusPoint) },
                         onBackButton = { activeScreenProvider.switchTo(Screen.MAIN) }
@@ -129,15 +132,31 @@ class QuickConfigModel(
 
     }
 
-    private fun onTileClicked(elementGroups: List<ElementGroup>, focusPoint: Point) {
+    private fun onTileClicked(elementGroups: List<ElementGroup>, focusPoint: FocusPoint) {
         elementGroups.getOrNull(focusPoint.x)
             ?.elements?.getOrNull(focusPoint.y)?.onClick()
     }
-    private fun moveFocus(elementGroups: List<ElementGroup>,
-                          x: Int = focusState.value.x,
-                          y: Int = focusState.value.y) {
-        //TODO: trim point coords according to current column.
-        focusState.value = Point(x, y)
+
+    private fun moveFocus(
+        elementGroups: List<ElementGroup>,
+        current: FocusPoint,
+        x: Int = focusState.value.x,
+        y: Int = focusState.value.y,
+    ) {
+        val trimmedX = x.coerceIn(0, elementGroups.lastIndex)
+        val lastColumnElementIndex = elementGroups.getOrNull(trimmedX)?.elements?.lastIndex ?: -1
+        val trimmedY = if (lastColumnElementIndex == -1) {
+            0
+        } else {
+            y.coerceIn(0, lastColumnElementIndex + 1)
+        }
+        val focusPoint = if (current.x != trimmedX) {
+            FocusPoint(trimmedX, 0)
+        } else {
+            FocusPoint(trimmedX, trimmedY)
+        }
+
+        focusState.value = focusPoint
     }
 
     private fun shiftSteerOffset(value: Float) {
@@ -151,5 +170,9 @@ class QuickConfigModel(
     }
 }
 
+private data class FocusPoint(
+    val x: Int = 0,
+    val y: Int = 0,
+)
 
 private const val STEER_OFFSET_STEP = 0.005f
