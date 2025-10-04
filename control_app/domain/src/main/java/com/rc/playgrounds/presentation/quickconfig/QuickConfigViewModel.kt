@@ -12,6 +12,7 @@ sealed interface QuickConfigViewModel {
         val onBackButton: () -> Unit,
     ) : QuickConfigViewModel
     data class DashboardVisible(
+        val description: String,
         val elementGroups: List<ElementGroup>,
         val onButtonUpPressed: () -> Unit,
         val onButtonDownPressed: () -> Unit,

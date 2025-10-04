@@ -110,7 +110,7 @@ private fun buildEnv(rawEnv: Map<String, String>,
 
         val overrideProfiles = it.profiles.subList(
             fromIndex = 0,
-            toIndex = lastActiveIndex.coerceIn(0, it.profiles.lastIndex)
+            toIndex = lastActiveIndex.coerceIn(0, it.profiles.lastIndex) + 1
         )
         overrideProfiles.forEach { profile ->
             env.putAll(profile.env)

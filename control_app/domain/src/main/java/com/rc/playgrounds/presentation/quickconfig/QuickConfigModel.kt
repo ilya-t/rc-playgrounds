@@ -81,6 +81,7 @@ class QuickConfigModel(
                     val elementGroups: List<ElementGroup> = builtInGroups + envGroups
                     val focusPoint = focusState.value
                     QuickConfigViewModel.DashboardVisible(
+                        description = renderEnvInfo(config.env),
                         elementGroups = elementGroups,
                         onButtonUpPressed = {
                             moveFocus(elementGroups, focusPoint, y = focus.y - 1)
@@ -105,6 +106,12 @@ class QuickConfigModel(
                 _viewModel.value = it
             }
         }
+    }
+
+    private fun renderEnvInfo(env: Map<String, String>): String {
+        return "Environment Variables:\n" +
+                env.map { (variable, value) -> "- $variable: $value" }
+                    .joinToString(separator = "\n")
     }
 
     private fun toggleElement(overrideName: String, profileName: String) {

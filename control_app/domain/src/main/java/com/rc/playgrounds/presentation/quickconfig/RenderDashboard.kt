@@ -195,6 +195,7 @@ fun Preview() {
     Box(modifier = Modifier.background(Color.Black)) {
         RenderDashboard(
             QuickConfigViewModel.DashboardVisible(
+                description = "",
                 elementGroups = listOf(
                     ElementGroup(
                         title = "modes",
