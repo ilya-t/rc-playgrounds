@@ -9,8 +9,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,7 +34,8 @@ fun RenderDashboard(viewModel: QuickConfigViewModel.DashboardVisible) {
     val columns: List<ElementGroup> = viewModel.elementGroups
 
     val maxRows = columns.maxOfOrNull { it.size() } ?: 0
-    val tileSize = 72.dp
+    val tileHeight = 72.dp
+    val tileWidth = 120.dp
     val gap = 12.dp
     val corner = 10.dp
 
@@ -42,7 +45,6 @@ fun RenderDashboard(viewModel: QuickConfigViewModel.DashboardVisible) {
             .horizontalScroll(rememberScrollState())
             .padding(horizontal = 12.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(gap),
-        verticalAlignment = Alignment.CenterVertically
     ) {
         columns.forEach { col: ElementGroup ->
             val padTop = (maxRows - col.size()) / 2
@@ -56,7 +58,8 @@ fun RenderDashboard(viewModel: QuickConfigViewModel.DashboardVisible) {
                 RenderSquareTile(
                     label = col.title,
                     isActiveToggle = col.active,
-                    size = tileSize,
+                    width = tileWidth,
+                    height = tileHeight,
                     isFocused = col.focused,
                     corner = corner,
                 )
@@ -65,13 +68,14 @@ fun RenderDashboard(viewModel: QuickConfigViewModel.DashboardVisible) {
                     RenderSquareTile(
                         label = tile.title,
                         isActiveToggle = tile.active,
-                        size = tileSize,
+                        width = tileWidth,
+                        height = tileHeight,
                         isFocused = tile.focused,
                         corner = corner
                     )
                 }
 
-                repeat(padBottom) { EmptySquare(tileSize) }
+                repeat(padBottom) { EmptySquare(tileHeight) }
             }
         }
     }
@@ -91,14 +95,17 @@ private fun RenderSquareTile(
     label: String,
     isActiveToggle: Boolean,
     isFocused: Boolean,
-    size: Dp,
+    width: Dp,
+    height: Dp,
     corner: Dp
 ) {
     val isTitle = false
 
     val borderWidth = if (isActiveToggle) 2.dp else 1.dp
-    val borderColor = if (isActiveToggle)
-        Color(0xFF1D3557).copy(alpha = 0.6f)
+    val borderColor = if (isFocused)
+        Color(0xFFFF5722).copy(alpha = 0.6f)
+    else if (isActiveToggle)
+            Color(0xFF1D3557).copy(alpha = 0.6f)
     else
         Color.Gray.copy(alpha = 0.4f)
 
@@ -107,11 +114,13 @@ private fun RenderSquareTile(
     else
         Color.Gray.copy(alpha = 0.15f)
 
-    val actualSize = if (isFocused) size + 16.dp else size
+    val actualHeight = if (isFocused) height + 24.dp else height
+    val actualWidth = if (isFocused) width + 24.dp else width
 
     Box(
         modifier = Modifier
-            .size(actualSize)
+            .width(actualWidth)
+            .height(actualHeight)
             .border(borderWidth, borderColor, RoundedCornerShape(corner))
             .background(bgColor, RoundedCornerShape(corner))
             .padding(6.dp),
@@ -138,75 +147,77 @@ private fun RenderSquareTile(
 @Preview
 @Composable
 fun Preview() {
-    RenderDashboard(
-        QuickConfigViewModel.DashboardVisible(
-            elementGroups = listOf(
-                ElementGroup(
-                    title = "modes",
-                    elements = listOf(
-                        Element(
-                            active = true,
-                            focused = false,
-                            title = "normal",
+    Box(modifier = Modifier.background(Color.Black)) {
+        RenderDashboard(
+            QuickConfigViewModel.DashboardVisible(
+                elementGroups = listOf(
+                    ElementGroup(
+                        title = "modes",
+                        elements = listOf(
+                            Element(
+                                active = true,
+                                focused = false,
+                                title = "normal",
+                            ),
+                            Element(
+                                active = true,
+                                focused = true,
+                                title = "crawling",
+                            ),
+                            Element(
+                                active = false,
+                                focused = false,
+                                title = "max long",
+                            ),
                         ),
-                        Element(
-                            active = true,
-                            focused = true,
-                            title = "crawling",
-                        ),
-                        Element(
-                            active = false,
-                            focused = false,
-                            title = "max long",
-                        ),
+                        active = true,
+                        focused = false,
                     ),
-                    active = true,
-                    focused = false,
+                    ElementGroup(
+                        title = "resolution",
+                        elements = listOf(
+                            Element(
+                                active = false,
+                                focused = false,
+                                title = "320x240",
+                            ),
+                            Element(
+                                active = false,
+                                focused = false,
+                                title = "640x480",
+                            ),
+                            Element(
+                                active = false,
+                                focused = false,
+                                title = "800x600",
+                            ),
+                            Element(
+                                active = false,
+                                focused = false,
+                                title = "1024x768",
+                            ),
+                        ),
+                        active = false,
+                        focused = false,
+                    )
                 ),
-                ElementGroup(
-                    title = "resolution",
-                    elements = listOf(
-                        Element(
-                            active = false,
-                            focused = false,
-                            title = "320x240",
-                        ),
-                        Element(
-                            active = false,
-                            focused = false,
-                            title = "640x480",
-                        ),
-                        Element(
-                            active = false,
-                            focused = false,
-                            title = "800x600",
-                        ),
-                        Element(
-                            active = false,
-                            focused = false,
-                            title = "1024x768",
-                        ),
-                    ),
-                    active = false,
-                    focused = false,
-                )
-            ),
-            onButtonUpPressed = {
+                onButtonUpPressed = {
 //                            qualityProvider.nextQuality()
-            },
-            onButtonDownPressed = {
+                },
+                onButtonDownPressed = {
 //                            qualityProvider.prevQuality()
-            },
-            onButtonLeftPressed = {
+                },
+                onButtonLeftPressed = {
 //                            shiftSteerOffset(-STEER_OFFSET_STEP)
-            },
-            onButtonRightPressed = {
+                },
+                onButtonRightPressed = {
 //                            shiftSteerOffset(STEER_OFFSET_STEP)
-            },
-            onApplyButton = { },
-            onBackButton = {
-                //    activeScreenProvider.switchTo(Screen.MAIN)
-            }
+                },
+                onApplyButton = { },
+                onBackButton = {
+                    //    activeScreenProvider.switchTo(Screen.MAIN)
+                }
+            )
         )
-    )
+    }
 }

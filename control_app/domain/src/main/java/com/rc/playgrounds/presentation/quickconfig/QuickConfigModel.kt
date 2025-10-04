@@ -3,7 +3,6 @@ package com.rc.playgrounds.presentation.quickconfig
 import com.rc.playgrounds.config.ActiveConfigProvider
 import com.rc.playgrounds.control.quick.QuickConfigState
 import com.rc.playgrounds.navigation.ActiveScreenProvider
-import com.rc.playgrounds.navigation.Screen
 import com.rc.playgrounds.remote.stream.StreamQualityProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -57,14 +56,14 @@ class QuickConfigModel(
                             )
                         )
                     )
-                    val elementGroups: List<ElementGroup> = builtInGroups + envOverrides.mapIndexed { x, override: EnvironmentOverrides ->
+                    val envGroups = envOverrides.mapIndexed { x, override: EnvironmentOverrides ->
                         val x = x + builtInGroups.size
                         ElementGroup(
                             title = override.name,
                             elements = override.profiles.mapIndexed { i, profile ->
                                 val y = i + 1
                                 Element(
-                                    active = i < (override.lastActiveIndex ?: -1),
+                                    active = i <= (override.lastActiveIndex ?: -1),
                                     focused = focus.x == x && focus.y == y,
                                     title = profile.name,
                                     onClick = {
@@ -79,6 +78,7 @@ class QuickConfigModel(
                             focused = focus.x == x && focus.y == 0
                         )
                     }
+                    val elementGroups: List<ElementGroup> = builtInGroups + envGroups
                     val focusPoint = focusState.value
                     QuickConfigViewModel.DashboardVisible(
                         elementGroups = elementGroups,
@@ -95,7 +95,7 @@ class QuickConfigModel(
                             moveFocus(elementGroups, focusPoint, x = focus.x + 1)
                         },
                         onApplyButton = { onTileClicked(elementGroups, focusPoint) },
-                        onBackButton = { activeScreenProvider.switchTo(Screen.MAIN) }
+                        onBackButton = { quickConfig.close() },
                     )
                 } else {
                     QuickConfigViewModel.Hidden
@@ -134,7 +134,7 @@ class QuickConfigModel(
 
     private fun onTileClicked(elementGroups: List<ElementGroup>, focusPoint: FocusPoint) {
         elementGroups.getOrNull(focusPoint.x)
-            ?.elements?.getOrNull(focusPoint.y)?.onClick()
+            ?.elements?.getOrNull(focusPoint.y - 1)?.onClick()
     }
 
     private fun moveFocus(

@@ -4,6 +4,8 @@ import com.rc.playgrounds.config.ActiveConfigProvider
 import com.rc.playgrounds.control.ControlTuningProvider
 import com.rc.playgrounds.control.RcEvent
 import com.rc.playgrounds.control.RcEventStream
+import com.rc.playgrounds.presentation.quickconfig.QuickConfigModel
+import com.rc.playgrounds.presentation.quickconfig.QuickConfigViewModel
 import com.rc.playgrounds.remote.stream.RemoteStreamConfig
 import com.rc.playgrounds.remote.stream.RemoteStreamConfigController
 import com.rc.playgrounds.status.PingService
@@ -27,10 +29,12 @@ class StatusModel(
     private val frameDropStatus: FrameDropStatus,
     private val remoteStreamConfigController: RemoteStreamConfigController,
     private val tuningProvider: ControlTuningProvider,
+    private val quickConfigModel: QuickConfigModel,
 ) {
     private val pingTarget: Flow<String?> = config.configFlow.map { it.controlServer?.address(it.env) }
-    private val _text = MutableStateFlow("(?)")
+    private val _text = MutableStateFlow("")
     private val _ping = MutableStateFlow("(?)")
+    private val canShowStatus = MutableStateFlow(true)
     val text: StateFlow<String> = _text
 
     init {
@@ -48,7 +52,17 @@ class StatusModel(
         }
 
         scope.launch {
-            combine(
+            quickConfigModel.viewModel.collect { viewModel ->
+                canShowStatus.value = when (viewModel) {
+                    is QuickConfigViewModel.Hidden -> true
+                    is QuickConfigViewModel.Visible -> false
+                    is QuickConfigViewModel.DashboardVisible -> false
+                }
+            }
+        }
+
+        scope.launch {
+            val statusText: Flow<String> = combine(
                 remoteStreamConfigController.state,
                 rcEventStream.events,
                 _ping,
@@ -56,7 +70,14 @@ class StatusModel(
                 //TODO: maybe bring back? frameDropStatus.frameDropsPerSecond,
                 tuningProvider.activeControlProfile,
                 ::asStatus
-            ).collect {
+            )
+
+            combine(
+                statusText,
+                canShowStatus,
+            ){ text, canShow ->
+                if (canShow) text else ""
+            }.collect {
                 _text.value = it
             }
         }

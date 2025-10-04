@@ -138,6 +138,7 @@ class AppComponent(app: Application) {
         frameDropStatus,
         remoteStreamConfigController,
         controlTuningProvider,
+        quickConfigModel,
     )
 
     val lockModel = LockModel(
