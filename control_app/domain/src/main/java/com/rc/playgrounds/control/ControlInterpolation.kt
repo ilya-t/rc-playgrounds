@@ -2,20 +2,26 @@ package com.rc.playgrounds.control
 
 import android.graphics.PointF
 import android.view.animation.AccelerateInterpolator
+import com.rc.playgrounds.config.ActiveConfigProvider
+import com.rc.playgrounds.config.Config
 import com.rc.playgrounds.config.model.ControlTuning
 import com.rc.playgrounds.config.model.MappingZone
 import com.rc.playgrounds.control.steering.SteerValue
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlin.math.absoluteValue
 import kotlin.math.sign
 import kotlin.math.withSign
 
 class ControlInterpolationProvider(
     private val controlTuningProvider: ControlTuningProvider,
+    private val activeConfigProvider: ActiveConfigProvider,
 ) {
-    val interpolation: Flow<ControlInterpolation> = controlTuningProvider.controlTuning.map {
-        it.asInterpolation()
+    val interpolation: Flow<ControlInterpolation> = combine(
+        activeConfigProvider.configFlow,
+        controlTuningProvider.controlTuning,
+    ) { config, tuning ->
+        tuning.asInterpolation(config)
     }
 }
 
@@ -79,11 +85,11 @@ class ControlInterpolation(
     }
 }
 
-private fun ControlTuning.asInterpolation() = ControlInterpolation(
-    pitch = create(pitchFactor),
-    pitchTranslator = create(pitchZone),
-    yaw = create(yawFactor),
-    yawTranslator = create(yawZone),
+private fun ControlTuning.asInterpolation(c: Config) = ControlInterpolation(
+    pitch = create(pitchFactor(c.env)),
+    pitchTranslator = create(pitchZone(c.env)),
+    yaw = create(yawFactor(c.env)),
+    yawTranslator = create(yawZone(c.env)),
     steerTranslator = { steer: Float, rawTrigger: Float ->
         val trigger = rawTrigger.absoluteValue
         steerLimitAtTrigger
@@ -94,7 +100,7 @@ private fun ControlTuning.asInterpolation() = ControlInterpolation(
                 translate(steer.absoluteValue, 0f, 1f, 0f, maxSteer) * steer.sign
             }
 
-            ?: steerZone?.let {
+            ?: steerZone(c.env)?.let {
                 translate(steer.absoluteValue, 0f, 1f, it.x, it.y) * steer.sign
             }
 

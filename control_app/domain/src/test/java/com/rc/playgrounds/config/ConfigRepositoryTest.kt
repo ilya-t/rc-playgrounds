@@ -2,7 +2,7 @@ package com.rc.playgrounds.config
 
 import com.rc.playgrounds.storage.PersistentStorage
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -11,11 +11,12 @@ import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.util.concurrent.Executors
 
 @RunWith(RobolectricTestRunner::class)
 class ConfigRepositoryTest {
     private val storage = InMemoryStorage()
-    private val scope = CoroutineScope(Dispatchers.IO)
+    private val scope = CoroutineScope(Executors.newSingleThreadExecutor().asCoroutineDispatcher())
     private val underTest = ConfigRepository(
         storage,
         scope,

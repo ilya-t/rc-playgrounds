@@ -26,10 +26,10 @@ class ConfigTest {
         val config = Config(DEFAULT_CONFIG, errorRaiser)
         Assert.assertNotNull(config.controlTuning)
         Assert.assertNotNull(config.controlTuning.pitchFactor)
-        Assert.assertNotNull(config.controlTuning.pitchZone)
+        Assert.assertNotNull(config.controlTuning.pitchZone(config.env))
         Assert.assertNotNull(config.controlTuning.yawFactor)
-        Assert.assertNotNull(config.controlTuning.yawZone)
-        Assert.assertNotNull(config.controlTuning.steerZone)
+        Assert.assertNotNull(config.controlTuning.yawZone(config.env))
+        Assert.assertNotNull(config.controlTuning.steerZone(config.env))
         Assert.assertTrue(config.controlTuning.forwardLongZones.isNotEmpty())
         Assert.assertTrue(config.controlTuning.backwardLongZones.isNotEmpty())
 
@@ -103,7 +103,7 @@ class ConfigTest {
         val server = config.controlServer
         Assert.assertNotNull(server)
         Assert.assertEquals("192.168.0.1", server!!.address(config.env))
-        Assert.assertEquals(8080, server.port.toLong())
+        Assert.assertEquals(8080, server.port(config.env))
     }
 
     @Test
@@ -205,11 +205,11 @@ private val TEST_JSON = """{
             },
             "control_server": {
                 "address": "192.168.0.1", 
-                "port": 8080
+                "port": "8080"
             },
             "stream_target": {
                 "address": "192.168.0.2", 
-                "port": 8181
+                "port": "8181"
             },
             "control_offsets": {
                 "pitch": 0.0,

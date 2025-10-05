@@ -19,9 +19,10 @@ class ControlTuningProvider(
     val activeControlProfile: Flow<String?> = activeProfile
 
     val controlTuning: Flow<ControlTuning> = combine(
+        activeConfigProvider.configFlow.map { it.env }.distinctUntilChanged(),
         activeConfigProvider.configFlow.map { it.controlProfiles }.distinctUntilChanged(),
         activeControlProfile
-    ) { profiles: List<ControlTuning>, activeProfileName: String? ->
+    ) { env: Map<String,String>, profiles: List<ControlTuning>, activeProfileName: String? ->
         if (activeProfileName == null) {
             return@combine profiles.firstOrNull() ?: ControlTuning()
         }

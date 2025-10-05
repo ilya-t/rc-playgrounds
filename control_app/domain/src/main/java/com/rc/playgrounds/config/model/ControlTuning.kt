@@ -1,6 +1,7 @@
 package com.rc.playgrounds.config.model
 
 import android.graphics.PointF
+import com.rc.playgrounds.config.env.applyEnv
 import com.rc.playgrounds.config.serial.Zones
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
@@ -12,11 +13,11 @@ data class ControlTuning(
     @SerialName("name")
     val name: String? = "initial",
     @SerialName("pitch_factor")
-    val pitchFactor: Float? = null,
+    val pitchFactor: String? = null,
     @SerialName("pitch_zone")
     internal val rawPitchZone: String? = null,
     @SerialName("yaw_factor")
-    val yawFactor: Float? = null,
+    val yawFactor: String? = null,
     @Contextual
     @SerialName("yaw_zone")
     val rawYawZone: String? = null,
@@ -27,7 +28,7 @@ data class ControlTuning(
     val steerMode: String? = null,
 
     @SerialName("steer_exponent_factor")
-    val steerExponentFactor: Float? = null,
+    val steerExponentFactor: String? = null,
     /**
      * Key is your trigger position for long. Value is steering limit at that position
      */
@@ -50,16 +51,35 @@ data class ControlTuning(
     val wheel: WheelConfig? = null,
 ) {
     @Transient
-    val pitchZone: PointF? = Zones.parseZone(rawPitchZone)
-    @Transient
-    val yawZone: PointF? = Zones.parseZone(rawYawZone)
-    @Transient
-    val steerZone: PointF? = Zones.parseZone(rawSteerZone)
-    @Transient
     val forwardLongZones: List<MappingZone> = Zones.parseZones(rawForwardLongZones)
     @Transient
     val backwardLongZones: List<MappingZone> = Zones.parseZones(rawBackwardLongZones)
 
     @Transient
     val steerLimitAtTrigger: List<MappingZone> = Zones.parseZones(rawSteerLimitAtTrigger)
+
+    fun pitchFactor(env: Map<String, String>): Float? {
+        return pitchFactor?.applyEnv(env)?.toFloat()
+    }
+
+    fun yawFactor(env: Map<String, String>): Float? {
+        return yawFactor?.applyEnv(env)?.toFloat()
+    }
+
+    fun pitchZone(env: Map<String, String>): PointF?  {
+        return Zones.parseZone(rawPitchZone?.applyEnv(env))
+    }
+
+    fun yawZone(env: Map<String, String>): PointF?  {
+        return Zones.parseZone(rawYawZone?.applyEnv(env))
+    }
+
+    fun steerZone(env: Map<String, String>): PointF?  {
+        return Zones.parseZone(rawSteerZone?.applyEnv(env))
+    }
+
+    fun steerExponentFactor(env: Map<String, String>): Float? {
+        return steerExponentFactor?.applyEnv(env)?.toFloat()
+    }
+
 }

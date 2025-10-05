@@ -1,6 +1,7 @@
 package com.rc.playgrounds.presentation.quickconfig
 
 import com.rc.playgrounds.config.ActiveConfigProvider
+import com.rc.playgrounds.config.Config
 import com.rc.playgrounds.control.quick.QuickConfigState
 import com.rc.playgrounds.navigation.ActiveScreenProvider
 import com.rc.playgrounds.remote.stream.StreamQualityProvider
@@ -81,7 +82,7 @@ class QuickConfigModel(
                     val elementGroups: List<ElementGroup> = builtInGroups + envGroups
                     val focusPoint = focusState.value
                     QuickConfigViewModel.DashboardVisible(
-                        description = renderEnvInfo(config.env),
+                        description = renderEnvInfo(config),
                         elementGroups = elementGroups,
                         onButtonUpPressed = {
                             moveFocus(elementGroups, focusPoint, y = focus.y - 1)
@@ -108,9 +109,9 @@ class QuickConfigModel(
         }
     }
 
-    private fun renderEnvInfo(env: Map<String, String>): String {
+    private fun renderEnvInfo(c: Config): String {
         return "Environment Variables:\n" +
-                env.map { (variable, value) -> "- $variable: $value" }
+                c.env.map { (variable, value) -> "- $variable: $value" }
                     .joinToString(separator = "\n")
     }
 

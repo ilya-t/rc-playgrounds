@@ -2,6 +2,7 @@ package com.rc.playgrounds.control.steering
 
 import android.graphics.PointF
 import com.rc.playgrounds.config.ActiveConfigProvider
+import com.rc.playgrounds.config.Config
 import com.rc.playgrounds.config.model.ControlOffsets
 import com.rc.playgrounds.config.model.ControlTuning
 import com.rc.playgrounds.control.ControlInterpolation
@@ -59,12 +60,13 @@ class SteerProvider(
 
         scope.launch {
             combine(
-                activeConfigProvider.configFlow.map { it.controlOffsets },
+                activeConfigProvider.configFlow,
                 controlTuningProvider.controlTuning,
                 steerState,
-            ) { offsets: ControlOffsets, tuning: ControlTuning, steer: Float ->
+            ) { c: Config, tuning: ControlTuning, steer: Float ->
+                val offsets: ControlOffsets = c.controlOffsets
                 val steerWithOffsets: Float = steer + offsets.steer
-                val steerZone: PointF? = tuning.steerZone
+                val steerZone: PointF? = tuning.steerZone(c.env)
 
                 if (steerZone != null) {
                     val limitedSteer = steerWithOffsets.coerceIn(

@@ -33,9 +33,9 @@ data class Config(
     @SerialName("control_profiles")
     val controlProfiles: List<ControlTuning> = listOf(
         ControlTuning(
-            pitchFactor = 0f,
+            pitchFactor = "0",
             rawPitchZone = null,
-            yawFactor = 0f,
+            yawFactor = "0",
             rawYawZone = null,
             rawSteerZone = null,
             rawForwardLongZones = emptyMap(),
@@ -82,9 +82,9 @@ data class Config(
                         ),
                         controlProfiles = listOf(
                             ControlTuning(
-                                pitchFactor = 0f,
+                                pitchFactor = "0",
                                 rawPitchZone = null,
-                                yawFactor = 0f,
+                                yawFactor = "0",
                                 rawYawZone = null,
                                 rawSteerZone = null,
                                 rawForwardLongZones = emptyMap(),
@@ -124,135 +124,202 @@ private fun buildEnv(rawEnv: Map<String, String>,
 @Language("Json")
 internal const val DEFAULT_CONFIG = """
 {
-  "environment_variables": {
-    "fpv_car_server": "192.168.2.5",
-    "mobile_client_addr": "192.168.2.2"
-  },
-  "environment_variables_overrides": [
-    {
-      "name": "control",
-      "last_active_index": 0,
-      "override_profiles": [
-         {
-           "name": "default",
-           "environment_variables": {
-              "pitch_factor": "1.0",
-              "pitch_zone": "0..0.5",
-              "yaw_factor": "1.0",
-              "yaw_zone": "0..0.5",
-              "steer_zone": "-0.7..0.7"
-           }
-         }
-      ]
+    "environment_variables": {
+        "fpv_car_server": "192.168.4.1",
+        "fpv_car_server_port": "12346",
+        "mobile_client_addr": "192.168.4.13",
+        "mobile_client_port": "12345"
     },
-    {
-      "name": "stream quality",
-      "last_active_index": 1,
-      "override_profiles": [
-        { 
-          "name": "320x240 (0.8mb)",
-          "environment_variables": {
-            "width": "320",
-            "height": "240",
-            "framerate": "30",
-            "bitrate": "800000"
-        }
+    "environment_variables_overrides": [
+        {
+            "name": "stream quality",
+            "last_active_index": 1,
+            "override_profiles": [
+                {
+                    "name": "350x200",
+                    "environment_variables": {
+                        "width": "350",
+                        "height": "200",
+                        "framerate": "30",
+                        "bitrate": "6000"
+                    }
+                },
+                {
+                    "name": "800x600 (0.06mb)",
+                    "environment_variables": {
+                        "width": "800",
+                        "height": "600",
+                        "bitrate": "6000"
+                    }
+                },
+                {
+                    "name": "800x600 (0.12mb)",
+                    "environment_variables": {
+                        "bitrate": "12000"
+                    }
+                },
+                {
+                    "name": "1024x768 (1mb)",
+                    "environment_variables": {
+                        "width": "1024",
+                        "height": "768",
+                        "bitrate": "1000000"
+                    }
+                },
+                {
+                    "name": "1024x778 (3mb)",
+                    "environment_variables": {
+                        "width": "1024",
+                        "height": "778",
+                        "framerate": "30",
+                        "bitrate": "3000000"
+                    }
+                },
+                {
+                    "name": "1280x720 (4.2mb)",
+                    "environment_variables": {
+                        "width": "1280",
+                        "height": "720",
+                        "framerate": "30",
+                        "bitrate": "4200000"
+                    }
+                },
+                {
+                    "name": "1920x1080 (8mb)",
+                    "environment_variables": {
+                        "width": "1920",
+                        "height": "1080",
+                        "framerate": "30",
+                        "bitrate": "8000000"
+                    }
+                }
+            ]
         },
-        { 
-          "name": "640x480 (1.6mb)",
-          "environment_variables": {
-            "width": "640",
-            "height": "480",
-            "framerate": "30",
-            "bitrate": "1600000"
-        }
+        {
+            "name": "control",
+            "last_active_index": 0,
+            "override_profiles": [
+                {
+                    "name": "balanced",
+                    "environment_variables": {
+                        "pitch_factor": "1",
+                        "pitch_zone": "0..0.5",
+                        "yaw_factor": "1.0",
+                        "yaw_zone": "0..0.7",
+                        "steer_zone": "-0.47..0.5",
+                        "steer_mode": "exponent",
+                        "steer_exponent_factor": "4.4"
+                    }
+                }
+            ]
         },
-        { 
-          "name": "1024x778 (3mb)",
-          "environment_variables": {
-            "width": "1024",
-            "height": "778",
-            "framerate": "30",
-            "bitrate": "3000000"
+        {
+            "name": "network",
+            "last_active_index": 0,
+            "override_profiles": [
+                {
+                    "name": "mobile",
+                    "environment_variables": {
+                        "fpv_car_server": "192.168.2.2",
+                        "mobile_client_addr": "192.168.2.4"
+                    }
+                },
+                {
+                    "name": "fpv_access_point",
+                    "environment_variables": {
+                        "fpv_car_server": "192.168.4.1",
+                        "mobile_client_addr": "192.168.4.13"
+                    }
+                }
+            ]
         }
+    ],
+    "stream": {
+        "local_cmd": "udpsrc port=@{mobile_client_port} caps=\"application/x-rtp, media=video, encoding-name=H264, payload=96\" ! rtph264depay ! h264parse ! decodebin ! videoconvert ! autovideosink",
+        "remote_cmd": "raspivid -pf baseline -fl -g 1 -w @{width} -h @{height} --bitrate @{bitrate} --nopreview -fps @{framerate}/1 -t 0 -o - | gst-launch-1.0 fdsrc ! h264parse ! rtph264pay ! udpsink host=@{mobile_client_addr} port=@{mobile_client_port}"
+    },
+    "stream_target": {
+        "address": "@{mobile_client_addr}",
+        "port": "@{mobile_client_port}"
+    },
+    "control_server": {
+        "address": "@{fpv_car_server}",
+        "port": "@{fpv_car_server_port}"
+    },
+    "control_offsets": {
+        "pitch": 0.0,
+        "yaw": 0.0,
+        "steer": 0.08,
+        "long": 0.18
+    },
+    "_control_profiles_comment_": "control_profiles switched via gamepad bumpers. Each profile overrides props of last one so on.",
+    "control_profiles": [
+        {
+            "name": "default",
+            "pitch_factor": "@{pitch_factor}",
+            "pitch_zone": "@{pitch_zone}",
+            "yaw_factor": "@{yaw_factor}",
+            "yaw_zone": "@{yaw_zone}",
+            "steer_zone": "@{steer_zone}",
+            "_steer_mode_comment_": "available modes 'steer_limit_at_trigger', 'wheel' and 'exponent'",
+            "steer_mode": "@{steer_mode}",
+            "steer_exponent_factor": "@{steer_exponent_factor}",
+            "steer_limit_at_trigger": {
+                "0.0": "1",
+                "0.01": "0.2",
+                "0.7": "0.3",
+                "1.0": "0.5"
+            },
+            "forward_long_zones": {
+                "0.28": "0.01",
+                "0.5": "0.2",
+                "0.9": "0.5",
+                "1.0": "0.6"
+            },
+            "backward_long_zones": {
+                "0.0": "0.01",
+                "0.9": "0.5"
+            },
+            "wheel": {
+                "_comment_": "All values are optional. See: WheelEmulator.kt",
+                "max_angle_deg": 28.0,
+                "max_turn_rate_deg_per_sec": 420.0,
+                "center_return_rate_deg_per_sec": 140.0,
+                "deadzone": 0.06,
+                "curve_blend": 0.55,
+                "ema_cutoff_hz": 10.0,
+                "center_stick_threshold": 0.02,
+                "damping": 0.9
+            }
         },
-        { 
-          "name": "1280x720 (4.2mb)",
-          "environment_variables": {
-            "width": "1280",
-            "height": "720",
-            "framerate": "30",
-            "bitrate": "4200000"
-        }
+        {
+            "name": "crawling",
+            "forward_long_zones": {
+                "0.28": "0.01",
+                "0.5": "0.1",
+                "0.9": "0.2",
+                "1.0": "0.3"
+            },
+            "backward_long_zones": {
+                "0.0": "0.01",
+                "0.9": "0.4"
+            }
         },
-        { 
-          "name": "1920x1080 (8mb)",
-          "environment_variables": {
-            "width": "1920",
-            "height": "1080",
-            "framerate": "30",
-            "bitrate": "8000000"
+        {
+            "name": "maximum long",
+            "forward_long_zones": {
+                "0.28": "0.01",
+                "0.5": "0.1",
+                "0.9": "0.5",
+                "1.0": "1.0"
+            },
+            "backward_long_zones": {
+                "0.0": "0.01",
+                "0.5": "0.4",
+                "1.0": "1.0"
+            }
         }
-        }]
-    }
-  ],
-  "stream": {
-    "local_cmd": "udpsrc port=12345 caps=\"application/x-rtp, media=video, encoding-name=H264, payload=96\" ! rtph264depay ! h264parse ! decodebin ! videoconvert ! autovideosink",
-    "remote_cmd": "raspivid -pf baseline -fl -g 1 -w @{width} -h @{height} --bitrate @{bitrate} --nopreview -fps @{framerate}/1 -t 0 -o - | gst-launch-1.0 fdsrc ! h264parse ! rtph264pay ! udpsink host=@{mobile_client_addr} port=12345"
-  },
-  "stream_target": {
-    "address": "@{mobile_client_addr}",
-    "port": 12345
-  },  
-  "control_server": {
-    "address": "@{fpv_car_server}",
-    "port": 12346
-  },
-  "control_offsets": {
-    "pitch": 0.0,
-    "yaw": 0.0,
-    "steer": 0.08,
-    "long": 0.18
-  },
-  "_control_profiles_comment_": "control_profiles switched via gamepad bumpers. Each profile overrides props of last one so on.",
-  "control_profiles": [
-    {
-      "name": "default",
-      "pitch_factor": 1.0,
-      "pitch_zone": "0..0.5",
-      "yaw_factor": 1.0,
-      "yaw_zone": "0..0.5",
-      "steer_zone": "-0.7..0.7",
-      "steer_limit_at_trigger": {
-          "0.0": "1.0",
-          "0.5": "0.7",
-          "1.0": "0.3"
-      },
-      "forward_long_zones": {
-          "0.0": "0.01",
-          "0.5": "0.2",
-          "1.0": "0.7"
-      },
-      "backward_long_zones": {
-          "0.0": "0.01",
-          "1.0": "0.2"
-      },
-    "_steer_mode_comment_": "available modes 'steer_limit_at_trigger', 'wheel' and 'exponent'",
-    "steer_mode": "wheel",
-    "steer_exponent_factor": 2.0,
-      "wheel": {
-        "_comment_": "All values are optional. See: WheelEmulator.kt",
-        "max_angle_deg": 28.0,
-        "max_turn_rate_deg_per_sec": 420.0,
-        "center_return_rate_deg_per_sec": 140.0,
-        "deadzone": 0.06,
-        "curve_blend": 0.55,
-        "ema_cutoff_hz": 10.0,
-        "center_stick_threshold": 0.02,
-        "damping": 0.9
-      }
-    }
-  ]
+    ]
 }
 """
 

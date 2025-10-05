@@ -68,6 +68,7 @@ class AppComponent(app: Application) {
     )
     private val controlInterpolationProvider = ControlInterpolationProvider(
         controlTuningProvider,
+        activeConfigProvider,
     )
     private val steerProvider = SteerProvider(
         gamePadEventSessionProvider,

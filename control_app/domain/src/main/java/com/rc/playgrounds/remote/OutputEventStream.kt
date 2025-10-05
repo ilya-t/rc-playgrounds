@@ -42,7 +42,7 @@ class OutputEventStream(
                 }
                 controlServer.value = ControlServer(
                     server = cs.address(it.env),
-                    port = cs.port,
+                    port = cs.port(it.env),
                 )
             }
         }
