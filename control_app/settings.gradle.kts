@@ -7,7 +7,8 @@ if (localProperties.exists()) {
     localProperties.inputStream().use { properties.load(it) }
 }
 
-val useGStreamerStub = properties.getProperty("gstreamer-stub")?.toBoolean() == true
+val useGStreamerStub: Boolean = properties.getProperty("gstreamer-stub")?.toBoolean() == true ||
+        properties.getProperty("gstAndroidRoot").orEmpty().isEmpty()
 
 include(":app")
 include(":domain")
