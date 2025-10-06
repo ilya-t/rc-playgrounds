@@ -29,6 +29,43 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 @Composable
+fun Render(viewModel: QuickConfigViewModel.DashboardVisible) {
+    BoxWithConstraints {
+        val isPortrait = maxWidth < maxHeight
+
+        if (isPortrait) {
+            Column {
+                DescriptionBox(viewModel)
+                RenderDashboard(viewModel)
+            }
+        } else {
+            Row {
+                RenderDashboard(viewModel)
+                DescriptionBox(viewModel)
+            }
+        }
+    }
+}
+
+@Composable
+fun DescriptionBox(viewModel: QuickConfigViewModel.DashboardVisible) {
+    Row {
+        Box(
+            modifier = Modifier.width(200.dp)
+                .padding(all = 12.dp)
+        ) {
+            androidx.compose.material.Text(
+                text = viewModel.description,
+                textAlign = TextAlign.Left,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.bodyMedium.copy(color = Color.White),
+            )
+        }
+        RenderDashboard(viewModel)
+    }
+}
+
+@Composable
 fun RenderDashboard(viewModel: QuickConfigViewModel.DashboardVisible) {
     val columns: List<ElementGroup> = viewModel.elementGroups
 
