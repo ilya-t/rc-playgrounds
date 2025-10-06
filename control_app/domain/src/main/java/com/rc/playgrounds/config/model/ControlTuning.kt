@@ -30,22 +30,25 @@ data class ControlTuning(
     @SerialName("steer_exponent_factor")
     val steerExponentFactor: String? = null,
     /**
+     * Key/value pairs in format "key:value;key1:value1;".
      * Key is your trigger position for long. Value is steering limit at that position
      */
     @SerialName("steer_limit_at_trigger")
-    val rawSteerLimitAtTrigger: Map<String, String>? = null,
+    val rawSteerLimitAtTrigger: String? = null,
 
     /**
+     * Key/value pairs in format "key:value;key1:value1;".
      * Key is your right trigger position. Value is 'long' value that will be sent to the car.
      */
     @SerialName("forward_long_zones")
-    val rawForwardLongZones: Map<String, String>? = null,
+    val rawForwardLongZones: String? = null,
 
     /**
+     * Key/value pairs in format "key:value;key1:value1;".
      * Key is your left trigger position. Value is 'long' value that will be sent to the car.
      */
     @SerialName("backward_long_zones")
-    val rawBackwardLongZones: Map<String, String>? = null,
+    val rawBackwardLongZones: String? = null,
 
     @SerialName("wheel")
     val wheel: WheelConfig? = null,

@@ -71,13 +71,7 @@ class ConfigTest {
             },
             "control_profiles": [{
                 "name": "default",
-                "forward_long_zones": {
-                    "0": "0.01",
-                    "0.3": "0.21",
-                    "0.7": "0.4",
-                    "0.9": "0.5",
-                    "1": "0.7"
-                }
+                "forward_long_zones": "0:0.01; 0.3:0.21; 0.7:0.4; 0.9:0.5; 1:0.7;"
             }]
         }""".trimIndent()
         val config = Config(json) {

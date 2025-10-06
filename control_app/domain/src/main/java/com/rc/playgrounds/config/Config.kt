@@ -38,8 +38,8 @@ data class Config(
             yawFactor = "0",
             rawYawZone = null,
             rawSteerZone = null,
-            rawForwardLongZones = emptyMap(),
-            rawBackwardLongZones = emptyMap(),
+            rawForwardLongZones = null,
+            rawBackwardLongZones = null,
             wheel = null,
         )
     ),
@@ -87,8 +87,8 @@ data class Config(
                                 yawFactor = "0",
                                 rawYawZone = null,
                                 rawSteerZone = null,
-                                rawForwardLongZones = emptyMap(),
-                                rawBackwardLongZones = emptyMap(),
+                                rawForwardLongZones = null,
+                                rawBackwardLongZones = null,
                                 wheel = null,
                             )
                         )
@@ -264,22 +264,12 @@ internal const val DEFAULT_CONFIG = """
             "_steer_mode_comment_": "available modes 'steer_limit_at_trigger', 'wheel' and 'exponent'",
             "steer_mode": "@{steer_mode}",
             "steer_exponent_factor": "@{steer_exponent_factor}",
-            "steer_limit_at_trigger": {
-                "0.0": "1",
-                "0.01": "0.2",
-                "0.7": "0.3",
-                "1.0": "0.5"
-            },
-            "forward_long_zones": {
-                "0.28": "0.01",
-                "0.5": "0.2",
-                "0.9": "0.5",
-                "1.0": "0.6"
-            },
-            "backward_long_zones": {
-                "0.0": "0.01",
-                "0.9": "0.5"
-            },
+            "_steer_limit_at_trigger_comment_": "Mapping of trigger value to maximum steer value. Should be sorted in ascending order. Format: 'trigger0:long0;trigger1:long1;'",
+            "steer_limit_at_trigger": "0.0:1; 0.01:0.2; 0.7:0.3; 1.0:0.5;",
+            "_forward_long_zones_comment_": "Mapping of trigger value to long. Should be sorted in ascending order. Format: 'trigger0:long0;trigger1:long1;'",
+            "forward_long_zones": "0.28:0.01; 0.5:0.2; 0.9:0.5; 1.0:0.6;",
+            "_backward_long_zones_comment_": "Mapping of trigger value to long. Should be sorted in ascending order. Format: 'trigger0:long0;trigger1:long1;'",
+            "backward_long_zones": "0.0:0.01; 0.9: 0.5",
             "wheel": {
                 "_comment_": "All values are optional. See: WheelEmulator.kt",
                 "max_angle_deg": 28.0,
@@ -290,33 +280,6 @@ internal const val DEFAULT_CONFIG = """
                 "ema_cutoff_hz": 10.0,
                 "center_stick_threshold": 0.02,
                 "damping": 0.9
-            }
-        },
-        {
-            "name": "crawling",
-            "forward_long_zones": {
-                "0.28": "0.01",
-                "0.5": "0.1",
-                "0.9": "0.2",
-                "1.0": "0.3"
-            },
-            "backward_long_zones": {
-                "0.0": "0.01",
-                "0.9": "0.4"
-            }
-        },
-        {
-            "name": "maximum long",
-            "forward_long_zones": {
-                "0.28": "0.01",
-                "0.5": "0.1",
-                "0.9": "0.5",
-                "1.0": "1.0"
-            },
-            "backward_long_zones": {
-                "0.0": "0.01",
-                "0.5": "0.4",
-                "1.0": "1.0"
             }
         }
     ]

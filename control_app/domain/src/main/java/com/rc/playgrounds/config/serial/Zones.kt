@@ -25,13 +25,22 @@ internal object Zones {
         return rawPoint
     }
 
-    fun parseZones(zones: Map<String, String>?): List<MappingZone> {
-        if (zones == null) {
+    fun parseZones(zonesStr: String?): List<MappingZone> {
+        if (zonesStr == null) {
             return emptyList()
         }
-        val unsortedMapping = mutableListOf<PointF>()
-        zones.forEach { (k, v) ->
-            unsortedMapping.add(PointF(k.toFloat(), v.toFloat()))
+
+        val unsortedMapping: List<PointF> = zonesStr.replace(" ", "").split(";").mapNotNull { kvp ->
+            if (kvp.isEmpty()) {
+                return@mapNotNull null
+            }
+            val keyAndValue = kvp.split(":")
+            if (keyAndValue.size != 2) {
+                throw IllegalArgumentException(
+                    "Invalid format! Excepting pair of numbers at '$zonesStr', got: '$kvp'")
+            }
+
+            PointF(keyAndValue[0].toFloat(), keyAndValue[1].toFloat())
         }
 
         val results = mutableListOf<MappingZone>()
