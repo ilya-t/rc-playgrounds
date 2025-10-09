@@ -4,9 +4,9 @@ import android.graphics.PointF
 import com.rc.playgrounds.config.ActiveConfigProvider
 import com.rc.playgrounds.config.Config
 import com.rc.playgrounds.config.model.ControlOffsets
-import com.rc.playgrounds.config.model.ControlTuning
 import com.rc.playgrounds.control.ControlInterpolation
 import com.rc.playgrounds.control.ControlInterpolationProvider
+import com.rc.playgrounds.control.ControlTuning
 import com.rc.playgrounds.control.ControlTuningProvider
 import com.rc.playgrounds.control.gamepad.GamePadEventSessionProvider
 import com.rc.playgrounds.control.gamepad.SessionGamepadEvent
@@ -66,7 +66,7 @@ class SteerProvider(
             ) { c: Config, tuning: ControlTuning, steer: Float ->
                 val offsets: ControlOffsets = c.controlOffsets
                 val steerWithOffsets: Float = steer + offsets.steer
-                val steerZone: PointF? = tuning.steerZone(c.env)
+                val steerZone: PointF? = tuning.steerZone
 
                 if (steerZone != null) {
                     val limitedSteer = steerWithOffsets.coerceIn(

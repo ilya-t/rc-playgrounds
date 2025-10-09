@@ -68,7 +68,7 @@ class StatusModel(
                 _ping,
                 streamerEvents.events,
                 //TODO: maybe bring back? frameDropStatus.frameDropsPerSecond,
-                tuningProvider.activeControlProfile,
+                MutableStateFlow("TOD0: active env column"),//tuningProvider.activeControlProfile,
                 ::asStatus
             )
 

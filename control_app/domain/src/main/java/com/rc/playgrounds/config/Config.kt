@@ -1,7 +1,7 @@
 package com.rc.playgrounds.config
 
 import com.rc.playgrounds.config.model.ControlOffsets
-import com.rc.playgrounds.config.model.ControlTuning
+import com.rc.playgrounds.config.model.ControlTuningConfig
 import com.rc.playgrounds.config.model.NetworkTarget
 import com.rc.playgrounds.config.stream.QualityProfile
 import com.rc.playgrounds.config.stream.StreamConfig
@@ -30,9 +30,9 @@ data class Config(
         steer = 0f,
         long = 0f,
     ),
-    @SerialName("control_profiles")
-    val controlProfiles: List<ControlTuning> = listOf(
-        ControlTuning(
+    @SerialName("control_tuning")
+    val controlTuning: ControlTuningConfig =
+        ControlTuningConfig(
             pitchFactor = "0",
             rawPitchZone = null,
             yawFactor = "0",
@@ -41,7 +41,6 @@ data class Config(
             rawForwardLongZones = null,
             rawBackwardLongZones = null,
             wheel = null,
-        )
     ),
 ) {
     val env: Map<String, String> = buildEnv(rawEnv, envOverrides)
@@ -80,17 +79,15 @@ data class Config(
                             steer = 0f,
                             long = 0f,
                         ),
-                        controlProfiles = listOf(
-                            ControlTuning(
-                                pitchFactor = "0",
-                                rawPitchZone = null,
-                                yawFactor = "0",
-                                rawYawZone = null,
-                                rawSteerZone = null,
-                                rawForwardLongZones = null,
-                                rawBackwardLongZones = null,
-                                wheel = null,
-                            )
+                        controlTuning = ControlTuningConfig(
+                            pitchFactor = "0",
+                            rawPitchZone = null,
+                            yawFactor = "0",
+                            rawYawZone = null,
+                            rawSteerZone = null,
+                            rawForwardLongZones = null,
+                            rawBackwardLongZones = null,
+                            wheel = null,
                         )
                     )
                 }
@@ -128,7 +125,16 @@ internal const val DEFAULT_CONFIG = """
         "fpv_car_server": "192.168.4.1",
         "fpv_car_server_port": "12346",
         "mobile_client_addr": "192.168.4.13",
-        "mobile_client_port": "12345"
+        "mobile_client_port": "12345",
+        "forward_long_zones": "0.28:0.01; 0.5:0.2; 0.9:0.5; 1.0:0.6;",
+        "backward_long_zones": "0.0:0.01; 0.9:0.5;",
+        "pitch_factor": "1",
+        "pitch_zone": "0..0.5",
+        "yaw_factor": "1.0",
+        "yaw_zone": "0..0.7",
+        "steer_zone": "-0.47..0.5",
+        "steer_mode": "exponent",
+        "steer_exponent_factor": "4.4"
     },
     "environment_variables_overrides": [
         {
@@ -202,13 +208,21 @@ internal const val DEFAULT_CONFIG = """
                 {
                     "name": "balanced",
                     "environment_variables": {
-                        "pitch_factor": "1",
-                        "pitch_zone": "0..0.5",
-                        "yaw_factor": "1.0",
-                        "yaw_zone": "0..0.7",
-                        "steer_zone": "-0.47..0.5",
-                        "steer_mode": "exponent",
-                        "steer_exponent_factor": "4.4"
+                        "forward_long_zones": "0.28:0.01; 0.5:0.2; 0.9:0.5; 1.0:0.6;"
+                    }
+                },
+                {
+                    "name": "crawling",
+                    "environment_variables": {
+                        "forward_long_zones": "0.28:0.01; 0.5:0.1; 0.9:0.2; 1.0:0.3;",
+                        "backward_long_zones": "0.0:0.01; 0.9:0.4;"
+                    }
+                },
+                {
+                    "name": "maximum long",
+                    "environment_variables": {
+                        "forward_long_zones": "0.28:0.01; 0.5:0.1; 0.9:0.5; 1.0:1.0;",
+                        "backward_long_zones": "0.0:0.01; 1.0:1.0;"
                     }
                 }
             ]
@@ -253,36 +267,34 @@ internal const val DEFAULT_CONFIG = """
         "long": 0.18
     },
     "_control_profiles_comment_": "control_profiles switched via gamepad bumpers. Each profile overrides props of last one so on.",
-    "control_profiles": [
-        {
-            "name": "default",
-            "pitch_factor": "@{pitch_factor}",
-            "pitch_zone": "@{pitch_zone}",
-            "yaw_factor": "@{yaw_factor}",
-            "yaw_zone": "@{yaw_zone}",
-            "steer_zone": "@{steer_zone}",
-            "_steer_mode_comment_": "available modes 'steer_limit_at_trigger', 'wheel' and 'exponent'",
-            "steer_mode": "@{steer_mode}",
-            "steer_exponent_factor": "@{steer_exponent_factor}",
-            "_steer_limit_at_trigger_comment_": "Mapping of trigger value to maximum steer value. Should be sorted in ascending order. Format: 'trigger0:long0;trigger1:long1;'",
-            "steer_limit_at_trigger": "0.0:1; 0.01:0.2; 0.7:0.3; 1.0:0.5;",
-            "_forward_long_zones_comment_": "Mapping of trigger value to long. Should be sorted in ascending order. Format: 'trigger0:long0;trigger1:long1;'",
-            "forward_long_zones": "0.28:0.01; 0.5:0.2; 0.9:0.5; 1.0:0.6;",
-            "_backward_long_zones_comment_": "Mapping of trigger value to long. Should be sorted in ascending order. Format: 'trigger0:long0;trigger1:long1;'",
-            "backward_long_zones": "0.0:0.01; 0.9: 0.5",
-            "wheel": {
-                "_comment_": "All values are optional. See: WheelEmulator.kt",
-                "max_angle_deg": 28.0,
-                "max_turn_rate_deg_per_sec": 420.0,
-                "center_return_rate_deg_per_sec": 140.0,
-                "deadzone": 0.06,
-                "curve_blend": 0.55,
-                "ema_cutoff_hz": 10.0,
-                "center_stick_threshold": 0.02,
-                "damping": 0.9
-            }
+    "control_tuning": {
+        "name": "default",
+        "pitch_factor": "@{pitch_factor}",
+        "pitch_zone": "@{pitch_zone}",
+        "yaw_factor": "@{yaw_factor}",
+        "yaw_zone": "@{yaw_zone}",
+        "steer_zone": "@{steer_zone}",
+        "_steer_mode_comment_": "available modes 'steer_limit_at_trigger', 'wheel' and 'exponent'",
+        "steer_mode": "@{steer_mode}",
+        "steer_exponent_factor": "@{steer_exponent_factor}",
+        "_steer_limit_at_trigger_comment_": "Mapping of trigger value to maximum steer value. Should be sorted in ascending order. Format: 'trigger0:long0;trigger1:long1;'",
+        "steer_limit_at_trigger": "0.0:1; 0.01:0.2; 0.7:0.3; 1.0:0.5;",
+        "_forward_long_zones_comment_": "Mapping of trigger value to long. Should be sorted in ascending order. Format: 'trigger0:long0;trigger1:long1;'",
+        "forward_long_zones": "@{forward_long_zones}",
+        "_backward_long_zones_comment_": "Mapping of trigger value to long. Should be sorted in ascending order. Format: 'trigger0:long0;trigger1:long1;'",
+        "backward_long_zones": "@{backward_long_zones}",
+        "wheel": {
+            "_comment_": "All values are optional. See: WheelEmulator.kt",
+            "max_angle_deg": 28.0,
+            "max_turn_rate_deg_per_sec": 420.0,
+            "center_return_rate_deg_per_sec": 140.0,
+            "deadzone": 0.06,
+            "curve_blend": 0.55,
+            "ema_cutoff_hz": 10.0,
+            "center_stick_threshold": 0.02,
+            "damping": 0.9
         }
-    ]
+    }
 }
 """
 

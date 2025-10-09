@@ -1,6 +1,5 @@
 package com.rc.playgrounds.config
 
-import com.rc.playgrounds.config.model.ControlTuning
 import com.rc.playgrounds.config.model.MappingZone
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -30,8 +29,8 @@ class ConfigTest {
         Assert.assertNotNull(config.controlTuning.yawFactor)
         Assert.assertNotNull(config.controlTuning.yawZone(config.env))
         Assert.assertNotNull(config.controlTuning.steerZone(config.env))
-        Assert.assertTrue(config.controlTuning.forwardLongZones.isNotEmpty())
-        Assert.assertTrue(config.controlTuning.backwardLongZones.isNotEmpty())
+        Assert.assertTrue(config.controlTuning.forwardLongZones(config.env).isNotEmpty())
+        Assert.assertTrue(config.controlTuning.backwardLongZones(config.env).isNotEmpty())
 
         Assert.assertNotNull(config.stream.localCmd(config.env))
         Assert.assertNotNull(config.stream.remoteCmd(config.env))
@@ -69,15 +68,14 @@ class ConfigTest {
                 "steer": 0.0,
                 "long": 0.0
             },
-            "control_profiles": [{
-                "name": "default",
+            "control_tuning": {
                 "forward_long_zones": "0:0.01; 0.3:0.21; 0.7:0.4; 0.9:0.5; 1:0.7;"
-            }]
+            }
         }""".trimIndent()
         val config = Config(json) {
             throw it
         }
-        val longZones: List<MappingZone> = config.controlTuning.forwardLongZones
+        val longZones: List<MappingZone> = config.controlTuning.forwardLongZones(config.env)
         Assert.assertEquals(4, longZones.size)
 
         Assert.assertEquals(0f, longZones[0].src.x)
@@ -93,7 +91,7 @@ class ConfigTest {
 
     @Test
     fun testControlServer_ValidJson() {
-        val config = Config(TEST_JSON)
+        val config = Config(MINIMAL_TEST_CONFIG)
         val server = config.controlServer
         Assert.assertNotNull(server)
         Assert.assertEquals("192.168.0.1", server!!.address(config.env))
@@ -188,10 +186,7 @@ class ConfigTest {
     }
 }
 
-private val Config.controlTuning: ControlTuning
-    get() = controlProfiles.first()
-
-private val TEST_JSON = """{
+internal val MINIMAL_TEST_CONFIG = """{
             "stream": {
                 "local_cmd": "pwd",
                 "remote_cmd": "ls",

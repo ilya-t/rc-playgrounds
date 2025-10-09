@@ -7,11 +7,14 @@ import android.view.MotionEvent
 import android.view.ViewGroup
 import androidx.annotation.OptIn
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
 import com.rc.playgrounds.config.Config
+import com.rc.playgrounds.control.gamepad.GamepadButtonPress
 import com.rc.playgrounds.domain.R
 import com.rc.playgrounds.stream.GStreamerReceiver
 import com.rc.playgrounds.stream.StreamReceiver
+import kotlinx.coroutines.launch
 
 
 class MainActivity : AppCompatActivity() {
@@ -68,5 +71,19 @@ class MainActivity : AppCompatActivity() {
             return true
         }
         return super.onKeyDown(keyCode, event)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        fun send(p: GamepadButtonPress) {
+            lifecycleScope.launch { AppComponent.instance.gamepadEventStream.emit(p) }
+        }
+
+//        ControlPanel.setup(this)
+//            .trigger("Select") { send(GamepadButtonPress.SELECT) }
+//            .trigger("Up") { send(GamepadButtonPress.Up) }
+//            .trigger("Down") { send(GamepadButtonPress.Down) }
+//            .trigger("Left") { send(GamepadButtonPress.Left) }
+//            .trigger("Right") { send(GamepadButtonPress.Right) }
     }
 }

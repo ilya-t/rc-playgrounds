@@ -9,7 +9,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 private const val ANNOUNCE_DURATION = 500L
@@ -27,15 +26,16 @@ class AnnounceModel(
 
     init {
         scope.launch {
-            controlTuningProvider.activeControlProfile.filterNotNull().collect {
-                if (profileSwitchEvent.value?.name == it) {
-                    return@collect
-                }
-
-                profileSwitchEvent.value = ProfileSwitch(
-                    it, System.currentTimeMillis()
-                )
-            }
+            //TODO: tuning profiles are dead now.
+//            controlTuningProvider.activeControlProfile.filterNotNull().collect {
+//                if (profileSwitchEvent.value?.name == it) {
+//                    return@collect
+//                }
+//
+//                profileSwitchEvent.value = ProfileSwitch(
+//                    it, System.currentTimeMillis()
+//                )
+//            }
         }
 
         scope.launch {
@@ -67,11 +67,11 @@ class AnnounceModel(
     }
 
     private suspend fun moveProfileIndexBy(amount: Int) {
-        val currentProfile = controlTuningProvider.activeControlProfile.first()
-        val allProfiles = activeConfigProvider.configFlow.first().controlProfiles
-        val currentIndex = allProfiles.indexOfFirst { it.name == currentProfile }
-        val newProfile = allProfiles.getOrNull(currentIndex + amount)?.name ?: return
-        controlTuningProvider.changeProfile(newProfile)
+//        val currentProfile = controlTuningProvider.activeControlProfile.first()
+//        val allProfiles = activeConfigProvider.configFlow.first().controlTuning
+//        val currentIndex = allProfiles.indexOfFirst { it.name == currentProfile }
+//        val newProfile = allProfiles.getOrNull(currentIndex + amount)?.name ?: return
+//        controlTuningProvider.changeProfile(newProfile)
     }
 }
 

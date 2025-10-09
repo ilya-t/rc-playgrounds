@@ -12,9 +12,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.util.concurrent.Executors
+import kotlin.time.Duration.Companion.seconds
 
 @RunWith(RobolectricTestRunner::class)
 class ConfigRepositoryTest {
+    private val testTimeout = 10.seconds
     private val storage = InMemoryStorage()
     private val scope = CoroutineScope(Executors.newSingleThreadExecutor().asCoroutineDispatcher())
     private val underTest = ConfigRepository(
@@ -33,10 +35,10 @@ class ConfigRepositoryTest {
         Assert.assertEquals(DEFAULT_CONFIG, underTest.activeVersion.value.rawConfig)
     }
 
-    @Test(timeout = 5000L)
-    fun `config updates`() = runTest {
-        val newVersion = ConfigVersion("v.2", "{}")
-        underTest.storeConfig(newVersion)
+    @Test
+    fun `config updates`() = runTest(timeout = testTimeout) {
+        val newVersion = ConfigVersion("v.2", MINIMAL_TEST_CONFIG)
+        underTest.storeConfigOrThrow(newVersion)
         underTest.switchActive(newVersion.version)
 
         val newActiveVersion = underTest.activeVersion
@@ -44,20 +46,27 @@ class ConfigRepositoryTest {
         Assert.assertEquals(newVersion.rawConfig, newActiveVersion)
     }
 
-    @Test(timeout = 5000L)
-    fun `update active config`() = runTest {
-        val newVersion = underTest.activeVersion.value.copy(rawConfig = "{}")
-        underTest.storeConfig(newVersion)
+    @Test
+    fun `update active config`() = runTest(timeout = testTimeout) {
+        val newVersion = underTest.activeVersion.value.copy(rawConfig = MINIMAL_TEST_CONFIG)
+        underTest.storeConfigOrThrow(newVersion)
 
         val newActiveVersion = underTest.activeVersion
             .first { it.rawConfig == newVersion.rawConfig }
         Assert.assertEquals(newVersion, newActiveVersion)
     }
 
+    private suspend fun ConfigRepository.storeConfigOrThrow(newVersion: ConfigVersion) {
+        val result = this.storeConfig(newVersion)
+        result.await().onFailure {
+            throw AssertionError(it)
+        }
+    }
+
     @Test
-    fun `data restored between sessions`() = runTest {
-        val newVersion = underTest.activeVersion.value.copy(rawConfig = "{}")
-        underTest.storeConfig(newVersion)
+    fun `data restored between sessions`() = runTest(timeout = testTimeout) {
+        val newVersion = underTest.activeVersion.value.copy(rawConfig = MINIMAL_TEST_CONFIG)
+        underTest.storeConfigOrThrow(newVersion)
 
         underTest.activeVersion.first { it.rawConfig == newVersion.rawConfig }
 
@@ -67,16 +76,15 @@ class ConfigRepositoryTest {
     }
 
     @Test
-    fun `data restored between sessions (multi-config)`() = runTest {
-        val v1 = underTest.activeVersion.value.copy(rawConfig = "{}")
-        val v4 = ConfigVersion(version = "v.4", rawConfig = "[]")
-        underTest.storeConfig(v4)
-        underTest.storeConfig(v1)
+    fun `data restored between sessions (multi-config)`() = runTest(timeout = testTimeout) {
+        val v1 = underTest.activeVersion.value.copy(rawConfig = MINIMAL_TEST_CONFIG)
+        val v4 = ConfigVersion(version = "v.4", rawConfig = MINIMAL_TEST_CONFIG_2)
+        underTest.storeConfigOrThrow(v4)
+        underTest.storeConfigOrThrow(v1)
 
         underTest.activeVersion.first { it.rawConfig == v1.rawConfig }
 
         val underTest2 = ConfigRepository(storage, scope)
-        println("+${underTest2}")
         underTest2.switchActive(v4.version)
 
         underTest2.activeVersion.first { it.rawConfig == v4.rawConfig }
@@ -96,3 +104,25 @@ class InMemoryStorage : PersistentStorage {
     }
 
 }
+
+internal val MINIMAL_TEST_CONFIG_2 = """{
+            "stream": {
+                "local_cmd": "pwd",
+                "remote_cmd": "ls",
+                "quality_profiles": []
+            },
+            "control_server": {
+                "address": "127.0.0.1", 
+                "port": "7070"
+            },
+            "stream_target": {
+                "address": "127.0.0.2", 
+                "port": "7171"
+            },
+            "control_offsets": {
+                "pitch": 0.0,
+                "yaw": 0.1,
+                "steer": 0.0,
+                "long": 0.0
+            }
+        }""".trimIndent()

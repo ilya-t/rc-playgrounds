@@ -6,10 +6,9 @@ import com.rc.playgrounds.config.serial.Zones
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 
 @Serializable
-data class ControlTuning(
+data class ControlTuningConfig(
     @SerialName("name")
     val name: String? = "initial",
     @SerialName("pitch_factor")
@@ -53,14 +52,6 @@ data class ControlTuning(
     @SerialName("wheel")
     val wheel: WheelConfig? = null,
 ) {
-    @Transient
-    val forwardLongZones: List<MappingZone> = Zones.parseZones(rawForwardLongZones)
-    @Transient
-    val backwardLongZones: List<MappingZone> = Zones.parseZones(rawBackwardLongZones)
-
-    @Transient
-    val steerLimitAtTrigger: List<MappingZone> = Zones.parseZones(rawSteerLimitAtTrigger)
-
     fun pitchFactor(env: Map<String, String>): Float? {
         return pitchFactor?.applyEnv(env)?.toFloat()
     }
@@ -85,4 +76,16 @@ data class ControlTuning(
         return steerExponentFactor?.applyEnv(env)?.toFloat()
     }
 
+    fun forwardLongZones(env: Map<String, String>): List<MappingZone> =
+        Zones.parseZones(rawForwardLongZones?.applyEnv(env))
+
+    fun backwardLongZones(env: Map<String, String>): List<MappingZone> =
+        Zones.parseZones(rawBackwardLongZones?.applyEnv(env))
+
+    fun steerLimitAtTrigger(env: Map<String, String>): List<MappingZone> =
+        Zones.parseZones(rawSteerLimitAtTrigger?.applyEnv(env))
+
+    fun steerMode(env: Map<String, String>): String? {
+        return steerMode?.applyEnv(env)
+    }
 }
