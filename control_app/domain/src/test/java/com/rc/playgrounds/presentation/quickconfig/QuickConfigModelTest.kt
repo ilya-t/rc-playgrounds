@@ -100,7 +100,7 @@ class QuickConfigModelTest {
     fun `dashboard visible`() = runTest(timeout = timeout) {
         quickConfigOpened.value = true
         val view = underTest.viewModel
-            .filterIsInstance<QuickConfigViewModel.DashboardVisible>()
+            .filterIsInstance<QuickConfigViewModel.Visible>()
             .first()
 
         Assert.assertEquals(3, view.elementGroups.size)
@@ -117,7 +117,7 @@ class QuickConfigModelTest {
     fun `dashboard steer offset built-in group`() = runTest(timeout = timeout) {
         quickConfigOpened.value = true
         val view = underTest.viewModel
-            .filterIsInstance<QuickConfigViewModel.DashboardVisible>()
+            .filterIsInstance<QuickConfigViewModel.Visible>()
             .first()
 
         Assert.assertEquals(2, view.elementGroups[0].elements.size)
@@ -129,7 +129,7 @@ class QuickConfigModelTest {
     @Test
     fun `dashboard move focus from column title to first element`() = runTest(timeout = timeout) {
         quickConfigOpened.value = true
-        val focusDownView: QuickConfigViewModel.DashboardVisible = onView { v ->
+        val focusDownView: QuickConfigViewModel.Visible = onView { v ->
             v.onButtonDownPressed()
         }
 
@@ -180,22 +180,22 @@ class QuickConfigModelTest {
             }
         }
         val v = underTest.viewModel
-            .filterIsInstance<QuickConfigViewModel.DashboardVisible>()
+            .filterIsInstance<QuickConfigViewModel.Visible>()
             .first()
         val elements = v.elementGroups[colIndex].elements
         Assert.assertTrue("Expecting last element focused: $columnElements", elements.last().focused)
     }
 
-    private suspend fun onView(action: (QuickConfigViewModel.DashboardVisible) -> Unit):
-            QuickConfigViewModel.DashboardVisible {
+    private suspend fun onView(action: (QuickConfigViewModel.Visible) -> Unit):
+            QuickConfigViewModel.Visible {
         val view = underTest.viewModel
-            .filterIsInstance<QuickConfigViewModel.DashboardVisible>()
+            .filterIsInstance<QuickConfigViewModel.Visible>()
             .first()
 
         action(view)
 
         return underTest.viewModel
-            .filterIsInstance<QuickConfigViewModel.DashboardVisible>()
+            .filterIsInstance<QuickConfigViewModel.Visible>()
             .first { it != view }
     }
 

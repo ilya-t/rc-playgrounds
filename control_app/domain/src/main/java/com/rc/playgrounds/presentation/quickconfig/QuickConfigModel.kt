@@ -18,6 +18,7 @@ class QuickConfigModel(
     qualityProvider: StreamQualityProvider,
     quickConfig: QuickConfigState,
 ) {
+    internal val _visibleViewModel = MutableStateFlow<QuickConfigViewModel.Visible?>(null)
     private val _viewModel = MutableStateFlow<QuickConfigViewModel>(QuickConfigViewModel.Hidden)
     val viewModel: StateFlow<QuickConfigViewModel> = _viewModel
     private val focusState = MutableStateFlow(FocusPoint())
@@ -26,84 +27,94 @@ class QuickConfigModel(
         scope.launch {
             combine(
                 activeConfigProvider.configFlow,
-                quickConfig.opened,
                 qualityProvider.currentQuality,
                 focusState,
-            ) { config, opened, p, focus ->
-                if (opened) {
-                    val envOverrides: List<EnvironmentOverrides> = config.envOverrides
-                    val builtInGroups = listOf(
-                        ElementGroup(
-                            title = "steer offset: %.3f".format(config.controlOffsets.steer),
-                            active = false,
-                            focused = focus.x == 0 && focus.y == 0,
-                            elements = listOf(
-                                Element(
-                                    active = false,
-                                    focused = focus.x == 0 && focus.y == 1,
-                                    title = "-$STEER_OFFSET_STEP",
-                                    onClick = {
-                                        shiftSteerOffset(-STEER_OFFSET_STEP)
-                                    }
-                                ),
-                                Element(
-                                    active = false,
-                                    focused = focus.x == 0 && focus.y == 2,
-                                    title = "+$STEER_OFFSET_STEP",
-                                    onClick = {
-                                        shiftSteerOffset(STEER_OFFSET_STEP)
-                                    }
-                                )
+            ) { config, p, focus ->
+                val envOverrides: List<EnvironmentOverrides> = config.envOverrides
+                val builtInGroups = listOf(
+                    ElementGroup(
+                        title = "steer offset: %.3f".format(config.controlOffsets.steer),
+                        active = false,
+                        focused = focus.x == 0 && focus.y == 0,
+                        elements = listOf(
+                            Element(
+                                active = false,
+                                focused = focus.x == 0 && focus.y == 1,
+                                title = "-$STEER_OFFSET_STEP",
+                                onClick = {
+                                    shiftSteerOffset(-STEER_OFFSET_STEP)
+                                }
+                            ),
+                            Element(
+                                active = false,
+                                focused = focus.x == 0 && focus.y == 2,
+                                title = "+$STEER_OFFSET_STEP",
+                                onClick = {
+                                    shiftSteerOffset(STEER_OFFSET_STEP)
+                                }
                             )
                         )
                     )
-                    val envGroups = envOverrides.mapIndexed { x, override: EnvironmentOverrides ->
-                        val x = x + builtInGroups.size
-                        ElementGroup(
-                            title = override.name,
-                            elements = override.profiles.mapIndexed { i, profile ->
-                                val y = i + 1
-                                Element(
-                                    active = i <= (override.lastActiveIndex ?: -1),
-                                    focused = focus.x == x && focus.y == y,
-                                    title = profile.name,
-                                    onClick = {
-                                        toggleElement(
-                                            overrideName = override.name,
-                                            profileName = profile.name,
-                                        )
-                                    }
-                                )
-                            },
-                            active = false,
-                            focused = focus.x == x && focus.y == 0
-                        )
-                    }
-                    val elementGroups: List<ElementGroup> = builtInGroups + envGroups
-                    val focusPoint = focusState.value
-                    QuickConfigViewModel.DashboardVisible(
-                        description = renderEnvInfo(config),
-                        elementGroups = elementGroups,
-                        onButtonUpPressed = {
-                            moveFocus(elementGroups, focusPoint, y = focus.y - 1)
+                )
+                val envGroups = envOverrides.mapIndexed { x, override: EnvironmentOverrides ->
+                    val x = x + builtInGroups.size
+                    ElementGroup(
+                        title = override.name,
+                        elements = override.profiles.mapIndexed { i, profile ->
+                            val y = i + 1
+                            Element(
+                                active = i <= (override.lastActiveIndex ?: -1),
+                                focused = focus.x == x && focus.y == y,
+                                title = profile.name,
+                                onClick = {
+                                    toggleElement(
+                                        overrideName = override.name,
+                                        profileName = profile.name,
+                                    )
+                                }
+                            )
                         },
-                        onButtonDownPressed = {
-                            moveFocus(elementGroups, focusPoint, y = focus.y + 1)
-                        },
-                        onButtonLeftPressed = {
-                            moveFocus(elementGroups, focusPoint, x = focus.x - 1)
-                        },
-                        onButtonRightPressed = {
-                            moveFocus(elementGroups, focusPoint, x = focus.x + 1)
-                        },
-                        onApplyButton = { onTileClicked(elementGroups, focusPoint) },
-                        onBackButton = { quickConfig.close() },
+                        active = false,
+                        focused = focus.x == x && focus.y == 0
                     )
+                }
+                val elementGroups: List<ElementGroup> = builtInGroups + envGroups
+                val focusPoint = focusState.value
+                QuickConfigViewModel.Visible(
+                    description = renderEnvInfo(config),
+                    elementGroups = elementGroups,
+                    onButtonUpPressed = {
+                        moveFocus(elementGroups, focusPoint, y = focus.y - 1)
+                    },
+                    onButtonDownPressed = {
+                        moveFocus(elementGroups, focusPoint, y = focus.y + 1)
+                    },
+                    onButtonLeftPressed = {
+                        moveFocus(elementGroups, focusPoint, x = focus.x - 1)
+                    },
+                    onButtonRightPressed = {
+                        moveFocus(elementGroups, focusPoint, x = focus.x + 1)
+                    },
+                    onApplyButton = { onTileClicked(elementGroups, focusPoint) },
+                    onBackButton = { quickConfig.close() },
+                )
+            }
+            .collect {
+                _visibleViewModel.value = it
+            }
+        }
+
+        scope.launch {
+            combine(
+                quickConfig.opened,
+                _visibleViewModel,
+            ) { opened: Boolean, visibleView: QuickConfigViewModel.Visible? ->
+                if (opened && visibleView != null) {
+                    visibleView
                 } else {
                     QuickConfigViewModel.Hidden
                 }
-            }
-            .collect {
+            }.collect {
                 _viewModel.value = it
             }
         }

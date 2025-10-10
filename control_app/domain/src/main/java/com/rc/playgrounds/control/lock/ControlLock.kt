@@ -12,6 +12,6 @@ class ControlLock() {
     }
 
     fun lock() {
-        _locked.value = !_locked.value
+        _locked.value = true
     }
 }

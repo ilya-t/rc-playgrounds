@@ -56,7 +56,6 @@ class StatusModel(
                 canShowStatus.value = when (viewModel) {
                     is QuickConfigViewModel.Hidden -> true
                     is QuickConfigViewModel.Visible -> false
-                    is QuickConfigViewModel.DashboardVisible -> false
                 }
             }
         }

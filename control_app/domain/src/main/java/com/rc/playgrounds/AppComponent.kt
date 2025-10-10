@@ -147,8 +147,7 @@ class AppComponent(app: Application) {
     )
 
     val announceModel = AnnounceModel(
-        controlTuningProvider,
-        activeConfigProvider,
+        quickConfigModel,
         gamepadEventStream,
         scope,
     )

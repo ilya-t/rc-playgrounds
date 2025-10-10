@@ -34,7 +34,7 @@ class OverlayModel(
 
         when (quickConfig) {
             QuickConfigViewModel.Hidden -> Unit
-            is QuickConfigViewModel.DashboardVisible, is QuickConfigViewModel.Visible -> return@combine OverlayViewModel.QUICK_CONFIG
+            is QuickConfigViewModel.Visible -> return@combine OverlayViewModel.QUICK_CONFIG
         }
 
         when (lock) {

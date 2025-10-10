@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun Render(viewModel: QuickConfigViewModel.DashboardVisible) {
+fun Render(viewModel: QuickConfigViewModel.Visible) {
     BoxWithConstraints {
         val isPortrait = maxWidth < maxHeight
 
@@ -48,7 +48,7 @@ fun Render(viewModel: QuickConfigViewModel.DashboardVisible) {
 }
 
 @Composable
-fun DescriptionBox(viewModel: QuickConfigViewModel.DashboardVisible) {
+fun DescriptionBox(viewModel: QuickConfigViewModel.Visible) {
     Row {
         Box(
             modifier = Modifier.width(200.dp)
@@ -66,7 +66,7 @@ fun DescriptionBox(viewModel: QuickConfigViewModel.DashboardVisible) {
 }
 
 @Composable
-fun RenderDashboard(viewModel: QuickConfigViewModel.DashboardVisible) {
+fun RenderDashboard(viewModel: QuickConfigViewModel.Visible) {
     val columns: List<ElementGroup> = viewModel.elementGroups
 
     val tileHeight = 72.dp
@@ -231,7 +231,7 @@ private fun RenderSquareTile(
 fun Preview() {
     Box(modifier = Modifier.background(Color.Black)) {
         RenderDashboard(
-            QuickConfigViewModel.DashboardVisible(
+            QuickConfigViewModel.Visible(
                 description = "",
                 elementGroups = listOf(
                     ElementGroup(
