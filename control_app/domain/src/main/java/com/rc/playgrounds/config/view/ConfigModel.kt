@@ -55,7 +55,11 @@ class ConfigModel(
             } else {
                 activeConfig.version
             },
-            rawJson = runCatching { JSONObject(text).toString(2) }.getOrElse { text },
+            rawJson = if (unsaved) {
+                text
+            } else {
+                runCatching { JSONObject(text).toString(2) }.getOrElse { text }
+            },
             saveEnabled = unsaved,
             nextEnabled = !isLastConfig,
             prevEnabled = !isFirstConfig,
