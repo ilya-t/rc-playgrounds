@@ -3,21 +3,26 @@ package com.rc.playgrounds.presentation.quickconfig
 import com.rc.playgrounds.config.ActiveConfigProvider
 import com.rc.playgrounds.config.Config
 import com.rc.playgrounds.control.quick.QuickConfigState
+import com.rc.playgrounds.storage.PersistentStorage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 
 class QuickConfigModel(
     scope: CoroutineScope,
     private val activeConfigProvider: ActiveConfigProvider,
     quickConfig: QuickConfigState,
+    private val storage: PersistentStorage,
 ) {
     internal val _visibleViewModel = MutableStateFlow<QuickConfigViewModel.Visible?>(null)
     private val _viewModel = MutableStateFlow<QuickConfigViewModel>(QuickConfigViewModel.Hidden)
     val viewModel: StateFlow<QuickConfigViewModel> = _viewModel
-    private val focusState = MutableStateFlow(FocusPoint())
+
+    private val focusState = MutableStateFlow(FocusPoint(storage))
 
     init {
         scope.launch {
@@ -113,6 +118,10 @@ class QuickConfigModel(
                 _viewModel.value = it
             }
         }
+
+        scope.launch {
+            focusState.drop(1).distinctUntilChanged().collect { it.store(storage) }
+        }
     }
 
     private fun renderEnvInfo(c: Config): String {
@@ -187,6 +196,21 @@ class QuickConfigModel(
 private data class FocusPoint(
     val x: Int = 0,
     val y: Int = 0,
-)
+) {
+    companion object {
+        operator fun invoke(storage: PersistentStorage): FocusPoint {
+            val xAndY = storage.readString(FOCUS_POINT_KEY)?.split(":")
+            return FocusPoint(
+                x = xAndY?.getOrNull(0)?.toIntOrNull() ?: 0,
+                y = xAndY?.getOrNull(1)?.toIntOrNull() ?: 0,
+            )
+        }
+    }
 
+    suspend fun store(storage: PersistentStorage) {
+        storage.writeString(FOCUS_POINT_KEY, "$x:$y")
+    }
+}
+
+private const val FOCUS_POINT_KEY = "quick_config_focus"
 private const val STEER_OFFSET_STEP = 0.005f

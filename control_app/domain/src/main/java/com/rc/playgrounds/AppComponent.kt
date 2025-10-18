@@ -99,6 +99,7 @@ class AppComponent(app: Application) {
         scope,
         activeConfigProvider,
         quickConfigState,
+        storage,
     )
     private val outputEventStream = OutputEventStream(
         rcEventStream,

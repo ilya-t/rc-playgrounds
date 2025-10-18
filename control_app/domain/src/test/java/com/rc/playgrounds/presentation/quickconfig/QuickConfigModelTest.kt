@@ -4,6 +4,7 @@ import com.rc.playgrounds.config.ActiveConfigProvider
 import com.rc.playgrounds.config.Config
 import com.rc.playgrounds.config.model.ControlOffsets
 import com.rc.playgrounds.control.quick.QuickConfigState
+import com.rc.playgrounds.storage.PersistentStorage
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert
 import org.junit.Test
+import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import java.util.concurrent.Executors
@@ -63,11 +65,15 @@ class QuickConfigModelTest {
     private val quickConfig = mock<QuickConfigState> {
         on { opened } doReturn quickConfigOpened
     }
+    private val storage = mock<PersistentStorage> {
+        on { readString(any()) } doReturn "some;trash"
+    }
 
     private val underTest = QuickConfigModel(
         scope,
         activeConfigProvider,
         quickConfig,
+        storage,
     )
 
     @Test
