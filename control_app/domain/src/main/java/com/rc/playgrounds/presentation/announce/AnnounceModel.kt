@@ -1,5 +1,6 @@
 package com.rc.playgrounds.presentation.announce
 
+import com.rc.playgrounds.config.ActiveConfigProvider
 import com.rc.playgrounds.control.gamepad.GamepadButtonPress
 import com.rc.playgrounds.control.gamepad.GamepadEventStream
 import com.rc.playgrounds.presentation.quickconfig.Element
@@ -10,13 +11,16 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
-private const val ANNOUNCE_DURATION = 500L
+private const val ANNOUNCE_DURATION = 2000L
 
 class AnnounceModel(
+    private val activeConfigProvider: ActiveConfigProvider,
     private val quickConfigModel: QuickConfigModel,
     gamepadEventStream: GamepadEventStream,
     private val scope: CoroutineScope,
@@ -40,19 +44,19 @@ class AnnounceModel(
         scope.launch {
             profilesInnerViewModel.filterNotNull()
                 .collect { profiles: ProfilesViewModel ->
-                    when (quickConfigModel.viewModel.value) {
-                        QuickConfigViewModel.Hidden -> Unit
-                        // Quick config visible so do nothing
-                        is QuickConfigViewModel.Visible -> return@collect
-                    }
-
                 if (profileSwitchEvent.value?.name == profiles.focused) {
+                    return@collect
+                }
+
+                if (profileSwitchEvent.value?.lastActiveElement == profiles.lastActiveElement) {
+                    // Looks like you're changing offsets which do not have toggle-like buttons.
                     return@collect
                 }
 
                 profileSwitchEvent.value = ProfileSwitch(
                     title = profiles.title,
                     name = profiles.focused,
+                    lastActiveElement = profiles.lastActiveElement,
                     time = System.currentTimeMillis(),
                 )
             }
@@ -76,16 +80,39 @@ class AnnounceModel(
                     return@collect
                 }
 
-                val visible = AnnounceViewModel.Visible(
-                    title = it.title + ":\n"+ it.name.uppercase()
-                )
-                _viewModel.value = visible
-                scope.launch {
-                    delay(ANNOUNCE_DURATION)
-                    _viewModel.compareAndSet(visible, AnnounceViewModel.Hidden)
-                }
+                tryMakeAnnounce(it.title + ":\n"+ it.name.uppercase())
             }
         }
+
+        scope.launch {
+            val steerOffset = activeConfigProvider.configFlow.map { it.controlOffsets.steer }
+            var lastValue: Float = steerOffset.first()
+            steerOffset.distinctUntilChanged().collect {
+                if (lastValue == it) {
+                    return@collect
+                }
+                tryMakeAnnounce("steering offset:\n%.3f".format(it))
+                lastValue = it
+            }
+        }
+    }
+
+    private fun tryMakeAnnounce(announce: String) {
+        when (quickConfigModel.viewModel.value) {
+            QuickConfigViewModel.Hidden -> Unit
+            // Quick config visible so do nothing
+            is QuickConfigViewModel.Visible -> return
+        }
+
+        val visible = AnnounceViewModel.Visible(
+            title = announce.uppercase()
+        )
+        _viewModel.value = visible
+        scope.launch {
+            delay(ANNOUNCE_DURATION)
+            _viewModel.compareAndSet(visible, AnnounceViewModel.Hidden)
+        }
+
     }
 
     private fun toProfilesViewModel(quickViewModel: QuickConfigViewModel.Visible): ProfilesViewModel? {
@@ -99,39 +126,37 @@ class AnnounceModel(
         return ProfilesViewModel(
             title = focusedGroup.title,
             focused = focused.title,
+            lastActiveElement = focusedGroup.elements.indexOfLast { it.active },
             onLeftBumper = {
-                // Emulate click on prev. tile
-                focusedGroup.elements.getOrNull(focusedIndex - 1)?.onClick()
+                val nextElement = (focusedGroup.elements.getOrNull(focusedIndex - 1)
+                    ?: focusedGroup.elements.firstOrNull())
+                nextElement?.onClick()
                 // Emulate move of focus to prev. tile.
                 quickViewModel.onButtonUpPressed()
             },
             onRightBumper = {
                 // Emulate click on prev. tile
-                focusedGroup.elements.getOrNull(focusedIndex + 1)?.onClick()
+                val nextElement = (focusedGroup.elements.getOrNull(focusedIndex + 1)
+                    ?: focusedGroup.elements.lastOrNull())
+                nextElement?.onClick()
                 // Emulate move of focus to prev. tile.
                 quickViewModel.onButtonDownPressed()
             },
         )
-    }
-
-    private suspend fun moveProfileIndexBy(amount: Int) {
-//        val currentProfile = controlTuningProvider.activeControlProfile.first()
-//        val allProfiles = activeConfigProvider.configFlow.first().controlTuning
-//        val currentIndex = allProfiles.indexOfFirst { it.name == currentProfile }
-//        val newProfile = allProfiles.getOrNull(currentIndex + amount)?.name ?: return
-//        controlTuningProvider.changeProfile(newProfile)
     }
 }
 
 private data class ProfileSwitch(
     val title: String,
     val name: String,
+    val lastActiveElement: Int,
     val time: Long,
 )
 
 private class ProfilesViewModel(
     val title: String,
     val focused: String,
+    val lastActiveElement: Int,
     val onLeftBumper: () -> Unit,
     val onRightBumper: () -> Unit,
 )
