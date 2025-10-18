@@ -58,9 +58,7 @@ class AnnounceModel(
                     name = profiles.focused,
                     lastActiveElement = profiles.lastActiveElement,
                     time = System.currentTimeMillis(),
-                ).also {
-                    Log.that(it)
-                }
+                )
             }
         }
 

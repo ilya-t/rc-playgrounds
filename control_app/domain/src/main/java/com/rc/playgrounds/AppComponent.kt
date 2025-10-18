@@ -138,7 +138,6 @@ class AppComponent(app: Application) {
         streamerEvents,
         frameDropStatus,
         remoteStreamConfigController,
-        controlTuningProvider,
         quickConfigModel,
     )
 

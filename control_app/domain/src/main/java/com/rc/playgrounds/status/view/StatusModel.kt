@@ -1,7 +1,6 @@
 package com.rc.playgrounds.status.view
 
 import com.rc.playgrounds.config.ActiveConfigProvider
-import com.rc.playgrounds.control.ControlTuningProvider
 import com.rc.playgrounds.control.RcEvent
 import com.rc.playgrounds.control.RcEventStream
 import com.rc.playgrounds.presentation.quickconfig.QuickConfigModel
@@ -28,9 +27,9 @@ class StatusModel(
     private val streamerEvents: StreamerEvents,
     private val frameDropStatus: FrameDropStatus,
     private val remoteStreamConfigController: RemoteStreamConfigController,
-    private val tuningProvider: ControlTuningProvider,
     private val quickConfigModel: QuickConfigModel,
 ) {
+    private val lastStreamerEvent = MutableStateFlow<Event?>(null)
     private val pingTarget: Flow<String?> = config.configFlow.map { it.controlServer?.address(it.env) }
     private val _text = MutableStateFlow("")
     private val _ping = MutableStateFlow("(?)")
@@ -38,6 +37,11 @@ class StatusModel(
     val text: StateFlow<String> = _text
 
     init {
+        scope.launch {
+            streamerEvents.events.collect {
+                lastStreamerEvent.value = it
+            }
+        }
         scope.launch {
             var collector: StatusCollector? = null
             pingTarget.collect {
@@ -65,7 +69,7 @@ class StatusModel(
                 remoteStreamConfigController.state,
                 rcEventStream.events,
                 _ping,
-                streamerEvents.events,
+                lastStreamerEvent,
                 //TODO: maybe bring back? frameDropStatus.frameDropsPerSecond,
                 MutableStateFlow("TOD0: active env column"),//tuningProvider.activeControlProfile,
                 ::asStatus
@@ -75,7 +79,8 @@ class StatusModel(
                 statusText,
                 canShowStatus,
             ){ text, canShow ->
-                if (canShow) text else ""
+                text
+//                if (canShow) text else ""
             }.collect {
                 _text.value = it
             }
@@ -87,10 +92,10 @@ private fun asStatus(
     streamConfig: RemoteStreamConfig?,
     event: RcEvent,
     ping: String,
-    streamerEvent: Event,
+    streamerEvent: Event?,
     activeControlProfile: String?,
 ): String {
-    val streamer: String? = if ((System.currentTimeMillis() - streamerEvent.time) < 10_000L) {
+    val streamer: String? = if (streamerEvent != null && (System.currentTimeMillis() - streamerEvent.time) < 10_000L) {
         when (streamerEvent) {
             is Event.Message -> null
             is Event.Error -> "streamer error: ${streamerEvent.error.message ?: streamerEvent.error.toString() }}"
