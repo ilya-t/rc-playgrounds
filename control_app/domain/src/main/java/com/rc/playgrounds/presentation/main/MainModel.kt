@@ -31,12 +31,7 @@ class MainModel(
     }
 
     private val _viewModel = MutableStateFlow<MainViewModel>(
-        MainViewModel.Visible(
-            showControls = true,
-            onSelectStartPressed = {
-                quickConfig.toggle()
-            },
-        )
+        createVisibleViewModel(showControls = true)
     )
     val viewModel: Flow<MainViewModel> = _viewModel.filterNotNull()
     private var job: Job? = null
@@ -48,29 +43,21 @@ class MainModel(
                 userActivity,
             ) { a, b -> a to b }
                 .collect { (screen, userClickTime) ->
-                    when (screen) {
+                    _viewModel.value = when (screen) {
                         Screen.MAIN -> {
                             val timePassed: Long = System.currentTimeMillis() - userClickTime
-                            _viewModel.value = MainViewModel.Visible(
-                                showControls = timePassed < SHOW_DURATION,
-                                onSelectStartPressed = {
-                                    quickConfig.toggle()
-                                },
-                            )
 
                             scope.launch {
                                 delay(SHOW_DURATION)
                                 if (_viewModel.value is MainViewModel.Visible) {
-                                    _viewModel.value = MainViewModel.Visible(
-                                        showControls = false,
-                                        onSelectStartPressed = {
-                                            quickConfig.toggle()
-                                        },
-                                    )
+                                    _viewModel.value = createVisibleViewModel(showControls = false)
                                 }
                             }
+
+                            createVisibleViewModel(showControls = timePassed < SHOW_DURATION)
                         }
-                        else -> _viewModel.value = MainViewModel.Hidden
+
+                        else -> MainViewModel.Hidden
                     }
                 }
         }
@@ -89,7 +76,7 @@ class MainModel(
                             gamepadEventStream.buttonEvents.collect { button ->
                                 when (button) {
                                     GamepadButtonPress.B -> {
-                                        lock.lock()
+                                        viewModel.onBKeyPressed()
                                     }
                                     GamepadButtonPress.START,
                                     GamepadButtonPress.SELECT -> {
@@ -103,5 +90,21 @@ class MainModel(
                 }
             }
         }
+    }
+
+    private fun createVisibleViewModel(showControls: Boolean): MainViewModel.Visible {
+        return MainViewModel.Visible(
+            showControls = showControls,
+            onSelectStartPressed = {
+                if (!quickConfig.opened.value) {
+                    quickConfig.toggle()
+                }
+            },
+            onBKeyPressed = {
+                if (!quickConfig.opened.value) {
+                    lock.lock()
+                }
+            },
+        )
     }
 }
