@@ -35,33 +35,30 @@ fun Render(viewModel: QuickConfigViewModel.Visible) {
 
         if (isPortrait) {
             Column {
-                DescriptionBox(viewModel)
+                DescriptionBox(viewModel.description)
                 RenderDashboard(viewModel)
             }
         } else {
             Row {
+                DescriptionBox(viewModel.description)
                 RenderDashboard(viewModel)
-                DescriptionBox(viewModel)
             }
         }
     }
 }
 
 @Composable
-fun DescriptionBox(viewModel: QuickConfigViewModel.Visible) {
-    Row {
-        Box(
-            modifier = Modifier.width(200.dp)
-                .padding(all = 12.dp)
-        ) {
-            androidx.compose.material.Text(
-                text = viewModel.description,
-                textAlign = TextAlign.Left,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.bodyMedium.copy(color = Color.White),
-            )
-        }
-        RenderDashboard(viewModel)
+fun DescriptionBox(description: String) {
+    Box(
+        modifier = Modifier.width(200.dp)
+            .padding(all = 12.dp)
+    ) {
+        androidx.compose.material.Text(
+            text = description,
+            textAlign = TextAlign.Left,
+            overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.bodyMedium.copy(color = Color.White),
+        )
     }
 }
 
