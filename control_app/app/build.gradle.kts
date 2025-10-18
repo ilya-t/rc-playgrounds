@@ -16,8 +16,8 @@ android {
         minSdkVersion(Dependencies.minSdkVersion)
         compileSdkVersion(Dependencies.targetSdkVersion)
         targetSdkVersion(Dependencies.targetSdkVersion)
-        versionCode = 1
-        versionName = "0.1"
+        versionCode = 2
+        versionName = "0.2"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
