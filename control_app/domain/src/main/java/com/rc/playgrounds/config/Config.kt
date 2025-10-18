@@ -211,8 +211,8 @@ internal const val DEFAULT_CONFIG = """
                 {
                     "name": "crawling",
                     "environment_variables": {
-                        "forward_long_zones": "0.28:0.01; 0.5:0.1; 0.9:0.2; 1.0:0.3;",
-                        "backward_long_zones": "0.0:0.01; 0.9:0.4;"
+                        "forward_long_zones": "0.28:0.01; 0.5:0.1; 0.9:0.15; 1.0:0.25;",
+                        "backward_long_zones": "0.0:0.01; 0.8:0.15; 1.0:0.20;"
                     }
                 },
                 {
