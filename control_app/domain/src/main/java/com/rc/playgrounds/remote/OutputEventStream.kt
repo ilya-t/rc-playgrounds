@@ -4,8 +4,6 @@ import com.rc.playgrounds.config.ActiveConfigProvider
 import com.rc.playgrounds.config.Config
 import com.rc.playgrounds.control.RcEvent
 import com.rc.playgrounds.control.RcEventStream
-import com.rc.playgrounds.remote.stream.RemoteStreamConfig
-import com.rc.playgrounds.remote.stream.RemoteStreamConfigController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -27,7 +25,6 @@ class OutputEventStream(
     private val scope: CoroutineScope,
     private val activeConfigProvider: ActiveConfigProvider,
     private val streamCmdHash: StreamCmdHash,
-    private val remoteStreamConfigController: RemoteStreamConfigController,
 ) {
 
     private val controlServer = MutableStateFlow<ControlServer?>(null)
@@ -64,7 +61,6 @@ class OutputEventStream(
                 rcEventStream,
                 activeConfigProvider.configFlow,
                 streamCmdHash.hash,
-                remoteStreamConfigController,
             )
         }
     }
@@ -76,17 +72,15 @@ private class EventEmitter(
     private val rcEventStream: RcEventStream,
     private val configFlow: Flow<Config>,
     private val streamCmdHash: Flow<String>,
-    private val remoteStreamConfigController: RemoteStreamConfigController,
 ) {
     private val messages: Flow<JSONObject> = combine(
-        remoteStreamConfigController.state,
         configFlow,
         rcEventStream.events,
         streamCmdHash,
-    ) { streamConfig: RemoteStreamConfig?, config: Config, event: RcEvent, streamHash: String ->
+    ) { config: Config, event: RcEvent, streamHash: String ->
         asJson(
             event,
-            streamCmd = streamConfig?.remoteCmd ?: config.stream.remoteCmd(config.env),
+            streamCmd = config.stream.remoteCmd(config.env),
             streamCmdHash = streamHash,
         )
     }

@@ -3,8 +3,6 @@ package com.rc.playgrounds.presentation.quickconfig
 import com.rc.playgrounds.config.ActiveConfigProvider
 import com.rc.playgrounds.config.Config
 import com.rc.playgrounds.control.quick.QuickConfigState
-import com.rc.playgrounds.navigation.ActiveScreenProvider
-import com.rc.playgrounds.remote.stream.StreamQualityProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,9 +11,7 @@ import kotlinx.coroutines.launch
 
 class QuickConfigModel(
     scope: CoroutineScope,
-    activeScreenProvider: ActiveScreenProvider,
     private val activeConfigProvider: ActiveConfigProvider,
-    qualityProvider: StreamQualityProvider,
     quickConfig: QuickConfigState,
 ) {
     internal val _visibleViewModel = MutableStateFlow<QuickConfigViewModel.Visible?>(null)
@@ -27,9 +23,8 @@ class QuickConfigModel(
         scope.launch {
             combine(
                 activeConfigProvider.configFlow,
-                qualityProvider.currentQuality,
                 focusState,
-            ) { config, p, focus ->
+            ) { config, focus ->
                 val envOverrides: List<EnvironmentOverrides> = config.envOverrides
                 val builtInGroups = listOf(
                     ElementGroup(

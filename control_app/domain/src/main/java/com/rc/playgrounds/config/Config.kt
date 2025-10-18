@@ -266,7 +266,6 @@ internal const val DEFAULT_CONFIG = """
         "steer": 0.08,
         "long": 0.18
     },
-    "_control_profiles_comment_": "control_profiles switched via gamepad bumpers. Each profile overrides props of last one so on.",
     "control_tuning": {
         "name": "default",
         "pitch_factor": "@{pitch_factor}",

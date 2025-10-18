@@ -3,10 +3,10 @@ package com.rc.playgrounds.status.view
 import com.rc.playgrounds.config.ActiveConfigProvider
 import com.rc.playgrounds.control.RcEvent
 import com.rc.playgrounds.control.RcEventStream
+import com.rc.playgrounds.presentation.quickconfig.EnvironmentOverrides
+import com.rc.playgrounds.presentation.quickconfig.OverrideProfile
 import com.rc.playgrounds.presentation.quickconfig.QuickConfigModel
 import com.rc.playgrounds.presentation.quickconfig.QuickConfigViewModel
-import com.rc.playgrounds.remote.stream.RemoteStreamConfig
-import com.rc.playgrounds.remote.stream.RemoteStreamConfigController
 import com.rc.playgrounds.status.PingService
 import com.rc.playgrounds.status.gstreamer.Event
 import com.rc.playgrounds.status.gstreamer.FrameDropStatus
@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlin.time.Duration
@@ -26,20 +27,19 @@ class StatusModel(
     private val rcEventStream: RcEventStream,
     private val streamerEvents: StreamerEvents,
     private val frameDropStatus: FrameDropStatus,
-    private val remoteStreamConfigController: RemoteStreamConfigController,
     private val quickConfigModel: QuickConfigModel,
 ) {
-    private val lastStreamerEvent = MutableStateFlow<Event?>(null)
+    private val lastStreamerError = MutableStateFlow<Event.Error?>(null)
     private val pingTarget: Flow<String?> = config.configFlow.map { it.controlServer?.address(it.env) }
     private val _text = MutableStateFlow("")
-    private val _ping = MutableStateFlow("(?)")
+    private val _ping = MutableStateFlow("ping: not received yet")
     private val canShowStatus = MutableStateFlow(true)
     val text: StateFlow<String> = _text
 
     init {
         scope.launch {
-            streamerEvents.events.collect {
-                lastStreamerEvent.value = it
+            streamerEvents.events.filterIsInstance<Event.Error>().collect {
+                lastStreamerError.value = it
             }
         }
         scope.launch {
@@ -66,12 +66,11 @@ class StatusModel(
 
         scope.launch {
             val statusText: Flow<String> = combine(
-                remoteStreamConfigController.state,
                 rcEventStream.events,
                 _ping,
-                lastStreamerEvent,
+                lastStreamerError,
                 //TODO: maybe bring back? frameDropStatus.frameDropsPerSecond,
-                MutableStateFlow("TOD0: active env column"),//tuningProvider.activeControlProfile,
+                config.configFlow.map { it.envOverrides },
                 ::asStatus
             )
 
@@ -79,8 +78,7 @@ class StatusModel(
                 statusText,
                 canShowStatus,
             ){ text, canShow ->
-                text
-//                if (canShow) text else ""
+                if (canShow) text else ""
             }.collect {
                 _text.value = it
             }
@@ -89,38 +87,28 @@ class StatusModel(
 }
 
 private fun asStatus(
-    streamConfig: RemoteStreamConfig?,
     event: RcEvent,
     ping: String,
-    streamerEvent: Event?,
-    activeControlProfile: String?,
+    streamerEvent: Event.Error?,
+    envOverrides: List<EnvironmentOverrides>,
 ): String {
-    val streamer: String? = if (streamerEvent != null && (System.currentTimeMillis() - streamerEvent.time) < 10_000L) {
-        when (streamerEvent) {
-            is Event.Message -> null
-            is Event.Error -> "streamer error: ${streamerEvent.error.message ?: streamerEvent.error.toString() }}"
-        }
-    } else {
-        null
-    }
-
     return buildString {
-        if (streamConfig != null) {
-            val p = streamConfig.parameters
-            appendLine("- stream: ${p.width}x${p.height}\n  ${p.framerate}fps (${p.bitrate / 1_000_000f}mbit/s)")
-        } else {
-            appendLine("- stream: ?")
-        }
         appendLine("- $ping")
-        if (streamer != null) {
-            appendLine("- $streamer")
-        }
 
         appendLine("- long: %.2f (raw: %.2f) ".format(event.long, event.rawLong))
         appendLine("- steer: %.3f (raw: %.2f) ".format(event.steer, event.rawSteer))
         appendLine("- pitch: %.2f (raw: %.2f) ".format(event.pitch, event.rawPitch))
         appendLine("- yaw: %.2f (raw: %.2f)".format(event.yaw, event.rawYaw))
-        appendLine("- control profile: $activeControlProfile")
+
+        if (streamerEvent != null && (System.currentTimeMillis() - streamerEvent.time) < 10_000L) {
+            appendLine("- streamer error(!): ${streamerEvent.error.message ?: streamerEvent.error.toString() }}")
+        }
+
+        envOverrides.forEach { overrides ->
+            val activeProfile: OverrideProfile = overrides.profiles.getOrNull(overrides.lastActiveIndex ?: -1)
+                ?: return@forEach
+            appendLine("- ${overrides.name}: ${activeProfile.name}")
+        }
     }
 }
 

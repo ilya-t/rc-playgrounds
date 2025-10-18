@@ -3,15 +3,10 @@ package com.rc.playgrounds.presentation.quickconfig
 import com.rc.playgrounds.config.ActiveConfigProvider
 import com.rc.playgrounds.config.Config
 import com.rc.playgrounds.config.model.ControlOffsets
-import com.rc.playgrounds.config.stream.QualityProfile
 import com.rc.playgrounds.control.quick.QuickConfigState
-import com.rc.playgrounds.navigation.ActiveScreenProvider
-import com.rc.playgrounds.navigation.Screen
-import com.rc.playgrounds.remote.stream.StreamQualityProvider
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
@@ -31,10 +26,6 @@ class QuickConfigModelTest {
     private val scope = CoroutineScope(
         Executors.newSingleThreadExecutor().asCoroutineDispatcher() + exceptionHandler
     )
-    private val screenState = MutableStateFlow<Screen>(Screen.MAIN)
-    private val activeScreenProvider = mock<ActiveScreenProvider> {
-        on { screen } doReturn screenState
-    }
     private val configState = MutableStateFlow<Config>(createConfig())
 
     private fun createConfig(): Config {
@@ -68,16 +59,6 @@ class QuickConfigModelTest {
         on { configFlow } doReturn configState
     }
 
-    private val currentQuality: Flow<QualityProfile> = MutableStateFlow<QualityProfile>(
-        QualityProfile(
-            width = 1920,
-            height = 1080,
-            framerate = 30,
-            bitrate = 3_000_000,
-        ))
-    private val qualityProvider = mock<StreamQualityProvider> {
-        on { currentQuality } doReturn currentQuality
-    }
     private val quickConfigOpened = MutableStateFlow(false)
     private val quickConfig = mock<QuickConfigState> {
         on { opened } doReturn quickConfigOpened
@@ -85,9 +66,7 @@ class QuickConfigModelTest {
 
     private val underTest = QuickConfigModel(
         scope,
-        activeScreenProvider,
         activeConfigProvider,
-        qualityProvider,
         quickConfig,
     )
 

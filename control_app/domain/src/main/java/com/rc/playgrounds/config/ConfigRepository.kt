@@ -25,7 +25,7 @@ class ConfigRepository(
     private val _activeVersion = MutableStateFlow(
         run {
             val version = loadActiveVersionName(persistentStorage)
-                ?: pickNextVersion(_allVersions.value)
+                ?: _allVersions.value.lastOrNull() ?: pickNextVersion(emptyList())
             ConfigVersion(
                 version = version,
                 rawConfig = readVersionConfig(version) ?: DEFAULT_CONFIG
@@ -33,12 +33,6 @@ class ConfigRepository(
         }
     )
     val activeVersion: StateFlow<ConfigVersion> = _activeVersion
-
-    init {
-        scope.launch {
-            switchActive(activeVersion.value.version)
-        }
-    }
 
     fun storeConfig(newVersion: ConfigVersion): Deferred<Result<Unit>> {
         return scope.async {

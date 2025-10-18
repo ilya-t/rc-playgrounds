@@ -21,8 +21,6 @@ import com.rc.playgrounds.presentation.overlay.OverlayModel
 import com.rc.playgrounds.presentation.quickconfig.QuickConfigModel
 import com.rc.playgrounds.remote.OutputEventStream
 import com.rc.playgrounds.remote.StreamCmdHash
-import com.rc.playgrounds.remote.stream.RemoteStreamConfigController
-import com.rc.playgrounds.remote.stream.StreamQualityProvider
 import com.rc.playgrounds.status.gstreamer.FrameDropStatus
 import com.rc.playgrounds.status.gstreamer.StreamerEvents
 import com.rc.playgrounds.status.view.StatusModel
@@ -87,10 +85,6 @@ class AppComponent(app: Application) {
     )
     val streamCmdHash = StreamCmdHash()
 
-    private val streamQualityProvider = StreamQualityProvider(
-        activeConfigProvider,
-        scope,
-    )
     private val quickConfigState = QuickConfigState()
 
     val mainModel = MainModel(
@@ -103,22 +97,14 @@ class AppComponent(app: Application) {
 
     val quickConfigModel = QuickConfigModel(
         scope,
-        activeScreenProvider,
         activeConfigProvider,
-        streamQualityProvider,
         quickConfigState,
-    )
-    private val remoteStreamConfigController = RemoteStreamConfigController(
-        activeConfigProvider,
-        streamQualityProvider,
-        scope,
     )
     private val outputEventStream = OutputEventStream(
         rcEventStream,
         scope,
         activeConfigProvider,
         streamCmdHash,
-        remoteStreamConfigController,
     )
 
     val stopwatchModel = StopwatchModel(
@@ -137,7 +123,6 @@ class AppComponent(app: Application) {
         rcEventStream,
         streamerEvents,
         frameDropStatus,
-        remoteStreamConfigController,
         quickConfigModel,
     )
 
