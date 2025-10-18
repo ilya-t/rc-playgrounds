@@ -12,8 +12,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
@@ -58,7 +58,9 @@ class AnnounceModel(
                     name = profiles.focused,
                     lastActiveElement = profiles.lastActiveElement,
                     time = System.currentTimeMillis(),
-                )
+                ).also {
+                    Log.that(it)
+                }
             }
         }
 
@@ -73,7 +75,9 @@ class AnnounceModel(
         }
 
         scope.launch {
-            profileSwitchEvent.filterNotNull().collect {
+            profileSwitchEvent.filterNotNull()
+                .drop(1)
+                .collect {
                 val now = System.currentTimeMillis()
                 val timePassed = now - it.time
                 if (timePassed > 1000L) {
@@ -85,15 +89,11 @@ class AnnounceModel(
         }
 
         scope.launch {
-            val steerOffset = activeConfigProvider.configFlow.map { it.controlOffsets.steer }
-            var lastValue: Float = steerOffset.first()
-            steerOffset.distinctUntilChanged().collect {
-                if (lastValue == it) {
-                    return@collect
-                }
-                tryMakeAnnounce("steering offset:\n%.3f".format(it))
-                lastValue = it
-            }
+            activeConfigProvider.configFlow
+                .map { it.controlOffsets.steer }
+                .drop(1)
+                .distinctUntilChanged()
+                .collect { tryMakeAnnounce("steering offset:\n%.3f".format(it)) }
         }
     }
 
