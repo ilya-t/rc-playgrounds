@@ -21,8 +21,6 @@ data class Config(
     val stream: StreamConfig,
     @SerialName("control_server")
     val controlServer: NetworkTarget?,
-    @SerialName("stream_target")
-    val streamTarget: NetworkTarget?,
     @SerialName("control_offsets")
     val controlOffsets: ControlOffsets = ControlOffsets(
         pitch = 0f,
@@ -72,7 +70,6 @@ data class Config(
                             localCmd = ""
                         ),
                         controlServer = null,
-                        streamTarget = null,
                         controlOffsets = ControlOffsets(
                             pitch = 0f,
                             yaw = 0f,
@@ -235,7 +232,7 @@ internal const val DEFAULT_CONFIG = """
                     "name": "mobile",
                     "environment_variables": {
                         "fpv_car_server": "192.168.2.2",
-                        "mobile_client_addr": "192.168.2.4"
+                        "mobile_client_addr": "192.168.2.5"
                     }
                 },
                 {
@@ -249,12 +246,12 @@ internal const val DEFAULT_CONFIG = """
         }
     ],
     "stream": {
-        "local_cmd": "udpsrc port=@{mobile_client_port} caps=\"application/x-rtp, media=video, encoding-name=H264, payload=96\" ! rtph264depay ! h264parse ! decodebin ! videoconvert ! autovideosink",
-        "remote_cmd": "raspivid -pf baseline -fl -g 1 -w @{width} -h @{height} --bitrate @{bitrate} --nopreview -fps @{framerate}/1 -t 0 -o - | gst-launch-1.0 fdsrc ! h264parse ! rtph264pay ! udpsink host=@{mobile_client_addr} port=@{mobile_client_port}"
+        "local_cmd": "udpsrc port=@{mobile_client_port} ! jpegparse ! jpegdec ! autovideosink",
+        "remote_cmd": "rpicam-vid -t 0 --codec mjpeg --denoise cdn_off --flush 1 -o udp://@{mobile_client_addr}:@{mobile_client_port} -n --segment 16000 -q 20 --width @{width} --height @{height} -b @{bitrate} --framerate @{framerate} --rotation 180"
     },
-    "stream_target": {
-        "address": "@{mobile_client_addr}",
-        "port": "@{mobile_client_port}"
+    "_stream_on_libcamera-vid_sample_comment_": {
+        "local_cmd": "udpsrc port=@{mobile_client_port} caps=\"application/x-rtp, media=video, encoding-name=H264, payload=96\" ! rtph264depay ! h264parse ! decodebin ! videoconvert ! autovideosink",
+        "remote_cmd": "libcamera-vid --profile baseline --flush --intra 1 --width @{width} --height @{height} --nopreview --framerate @{framerate} --timeout 0 -o - | gst-launch-1.0 fdsrc ! h264parse ! rtph264pay ! udpsink host=@{mobile_client_addr} port=@{mobile_client_port} "
     },
     "control_server": {
         "address": "@{fpv_car_server}",
@@ -296,4 +293,3 @@ internal const val DEFAULT_CONFIG = """
     }
 }
 """
-
