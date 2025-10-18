@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
-private const val ANNOUNCE_DURATION = 2000L
+private const val ANNOUNCE_DURATION = 1000L
 
 class AnnounceModel(
     private val activeConfigProvider: ActiveConfigProvider,
