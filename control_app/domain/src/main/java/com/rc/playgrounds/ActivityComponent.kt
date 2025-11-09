@@ -92,11 +92,9 @@ class ActivityComponent(
         scope = lifecycleScope,
     )
     private val lockView = LockView(
-        activity,
         appComponent.lockModel,
         lifecycleScope,
-        appComponent.gamepadEventStream,
-        appComponent.activeScreenProvider,
+        appComponent.gamepadEventsByConsumer,
     )
 
     private val announceView = AnnounceView(
@@ -110,7 +108,7 @@ class ActivityComponent(
         activity,
         appComponent.quickConfigModel,
         lifecycleScope,
-        appComponent.gamepadEventStream,
+        appComponent.gamepadEventsByConsumer,
     )
     private val overlayView = OverlayView(
         appComponent.overlayModel,

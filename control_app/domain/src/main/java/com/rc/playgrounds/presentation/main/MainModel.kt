@@ -1,7 +1,8 @@
 package com.rc.playgrounds.presentation.main
 
 import com.rc.playgrounds.control.gamepad.GamepadButtonPress
-import com.rc.playgrounds.control.gamepad.GamepadEventStream
+import com.rc.playgrounds.control.gamepad.access.EventConsumer
+import com.rc.playgrounds.control.gamepad.access.GamepadEventsByConsumer
 import com.rc.playgrounds.control.lock.ControlLock
 import com.rc.playgrounds.control.quick.QuickConfigState
 import com.rc.playgrounds.navigation.ActiveScreenProvider
@@ -20,7 +21,7 @@ private const val SHOW_DURATION = 2000L
 class MainModel(
     private val activeScreenProvider: ActiveScreenProvider,
     private val scope: CoroutineScope,
-    private val gamepadEventStream: GamepadEventStream,
+    private val gamepadEventStream: GamepadEventsByConsumer,
     private val lock: ControlLock,
     private val quickConfig: QuickConfigState,
 ) {
@@ -68,12 +69,13 @@ class MainModel(
                 job = null
                 when (viewModel) {
                     MainViewModel.Hidden -> {
-                        Unit
+                        gamepadEventStream.releaseFocus(EventConsumer.MainView)
                     }
                     is MainViewModel.Visible -> {
                         activeScreenProvider.switchTo(Screen.MAIN)
+                        gamepadEventStream.acquireFocus(EventConsumer.MainView)
                         job = scope.launch {
-                            gamepadEventStream.buttonEvents.collect { button ->
+                            gamepadEventStream.buttonEventsFor(EventConsumer.MainView).collect { button ->
                                 when (button) {
                                     GamepadButtonPress.B -> {
                                         viewModel.onBKeyPressed()

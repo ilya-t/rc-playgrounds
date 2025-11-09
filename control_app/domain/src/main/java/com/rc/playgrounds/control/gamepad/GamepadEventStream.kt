@@ -1,7 +1,6 @@
 package com.rc.playgrounds.control.gamepad
 
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,10 +15,12 @@ class GamepadEventStream(
     )
 
     val events: StateFlow<GamepadEvent> = _events
-    private val _buttonEvents = MutableSharedFlow<GamepadButtonPress>(
-        extraBufferCapacity = 1,
-        onBufferOverflow = BufferOverflow.DROP_LATEST)
-    val buttonEvents: Flow<GamepadButtonPress> = _buttonEvents
+    private val _buttonEvents = MutableSharedFlow<GamepadButtonPress>()
+
+    /**
+     * Consider using `GamepadEventsByConsumer` to avoid event conflicts between multiple consumers.
+     */
+    internal val buttonEvents: Flow<GamepadButtonPress> = _buttonEvents
 
     fun emit(event: GamepadEvent) {
         _events.value = event

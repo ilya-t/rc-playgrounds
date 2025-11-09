@@ -1,20 +1,16 @@
 package com.rc.playgrounds.presentation.lock
 
-import androidx.activity.addCallback
-import androidx.appcompat.app.AppCompatActivity
 import com.rc.playgrounds.control.gamepad.GamepadButtonPress
-import com.rc.playgrounds.control.gamepad.GamepadEventStream
-import com.rc.playgrounds.navigation.ActiveScreenProvider
+import com.rc.playgrounds.control.gamepad.access.EventConsumer
+import com.rc.playgrounds.control.gamepad.access.GamepadEventsByConsumer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 class LockView(
-    private val activity: AppCompatActivity,
     private val lockModel: LockModel,
     private val scope: CoroutineScope,
-    private val gamepadEventStream: GamepadEventStream,
-    activeScreenProvider: ActiveScreenProvider,
+    private val gamepadEventStream: GamepadEventsByConsumer,
 ) {
     private var job: Job? = null
 
@@ -24,10 +20,13 @@ class LockView(
                 job?.cancel()
                 job = null
                 when (viewModel) {
-                    LockViewModel.Hidden -> Unit // Do nothing. This is a job for OverlayView.
-                    is LockViewModel.Visible -> {
+                    LockViewModel.Hidden -> {
+                        gamepadEventStream.releaseFocus(EventConsumer.LockView)
+                    }
+                    LockViewModel.Visible -> {
+                        gamepadEventStream.acquireFocus(EventConsumer.LockView)
                         job = scope.launch {
-                            gamepadEventStream.buttonEvents.collect { buttonPress ->
+                            gamepadEventStream.buttonEventsFor(EventConsumer.LockView).collect { buttonPress ->
                                 when (buttonPress) {
                                     GamepadButtonPress.B -> lockModel.onBackPress()
                                     else -> Unit
@@ -37,10 +36,6 @@ class LockView(
                     }
                 }
             }
-        }
-
-        activity.onBackPressedDispatcher.addCallback {
-            lockModel.onBackPress()
         }
     }
 }

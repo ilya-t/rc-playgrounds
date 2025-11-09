@@ -9,6 +9,7 @@ import com.rc.playgrounds.control.ControlTuningProvider
 import com.rc.playgrounds.control.RcEventStream
 import com.rc.playgrounds.control.gamepad.GamePadEventSessionProvider
 import com.rc.playgrounds.control.gamepad.GamepadEventStream
+import com.rc.playgrounds.control.gamepad.access.GamepadEventsByConsumer
 import com.rc.playgrounds.control.lock.ControlLock
 import com.rc.playgrounds.control.quick.QuickConfigState
 import com.rc.playgrounds.control.steering.SteerProvider
@@ -59,6 +60,11 @@ class AppComponent(app: Application) {
         scope,
         gamepadEventStream,
     )
+
+    val gamepadEventsByConsumer = GamepadEventsByConsumer(
+        gamepadEventStream,
+        scope,
+    )
     private val controlLock = ControlLock()
     private val controlTuningProvider = ControlTuningProvider(
         activeConfigProvider,
@@ -90,7 +96,7 @@ class AppComponent(app: Application) {
     val mainModel = MainModel(
         activeScreenProvider,
         scope,
-        gamepadEventStream,
+        gamepadEventsByConsumer,
         controlLock,
         quickConfigState,
     )
