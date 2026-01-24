@@ -12,7 +12,7 @@ if [ ! -f "$TARGET_CONFIG" ]; then
     exit 1
 fi
 
-mkrdir -p ./config
+mkdir -p ./config
 set -e
 cp $TARGET_CONFIG ./config/wg0.conf
 chmod 600 ./config/wg0.conf
