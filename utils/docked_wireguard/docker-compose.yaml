@@ -4,6 +4,7 @@ services:
   wireguard:
     image: linuxserver/wireguard:1.0.20250521-r0-ls93
     container_name: wireguard
+    privileged: true
     cap_add:
       - NET_ADMIN
       - SYS_MODULE
