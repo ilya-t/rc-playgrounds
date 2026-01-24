@@ -1,7 +1,7 @@
 #!/bin/bash
 TARGET_CONFIG=$1
 
-if ["$TARGET_CONFIG" == ""]; then
+if [ "$TARGET_CONFIG" == "" ]; then
     echo "Usage: $0 /path/to/wg.conf"
     exit 1
 fi
