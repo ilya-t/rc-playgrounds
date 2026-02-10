@@ -1,13 +1,13 @@
 # Client remote control app
 
 ## Quick start
-Download gstreamer for android at https://gstreamer.freedesktop.org/download/#android
+Download gstreamer [**1.24.13**](https://gstreamer.freedesktop.org/data/pkg/android/1.24.13/) for android at https://gstreamer.freedesktop.org/download/#android
 At `local.properties` specify path to gstreamer:
 ```
-gstAndroidRoot=/path/to/gstreamer-1.0-android-universal-1.24.12
+gstAndroidRoot=/path/to/gstreamer-1.0-android-universal-1.24.13
 ```
 
-If you don't have GStreamer available locally, 
+If you don't want to build with app with GStreamer 
 set the following flag to build against a no-op stub module instead of the native integration:
 ```
 gstreamer-stub=true
