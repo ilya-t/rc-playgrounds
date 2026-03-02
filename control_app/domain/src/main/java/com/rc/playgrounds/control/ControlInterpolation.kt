@@ -1,10 +1,11 @@
 package com.rc.playgrounds.control
 
 import android.graphics.PointF
-import android.view.animation.AccelerateInterpolator
+import android.view.animation.BaseInterpolator
 import com.rc.playgrounds.config.ActiveConfigProvider
 import com.rc.playgrounds.config.model.MappingZone
 import com.rc.playgrounds.control.steering.SteerValue
+import com.rc.playgrounds.control.tuning.ExponentInterpolator
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlin.math.absoluteValue
@@ -24,9 +25,9 @@ class ControlInterpolationProvider(
 }
 
 class ControlInterpolation(
-    private val pitch: AccelerateInterpolator?,
+    private val pitch: BaseInterpolator?,
     private val pitchTranslator: (Float) -> Float,
-    private val yaw: AccelerateInterpolator?,
+    private val yaw: BaseInterpolator?,
     private val yawTranslator: (Float) -> Float,
     private val steerTranslator: (steer: Float, trigger: Float) -> Float,
     private val longTranslator: (Float) -> Float,
@@ -68,7 +69,7 @@ class ControlInterpolation(
     }
 
     private fun fix(
-        interpolator: AccelerateInterpolator?,
+        interpolator: BaseInterpolator?,
         translator: (Float) -> Float,
         value: Float
     ): Float {
@@ -149,7 +150,7 @@ private fun create(negative: List<MappingZone>, positive: List<MappingZone>): (F
 }
 
 
-private fun create(factor: Float?): AccelerateInterpolator? {
+private fun create(factor: Float?): BaseInterpolator? {
     if (factor == null) {
         return null
     }
@@ -158,7 +159,7 @@ private fun create(factor: Float?): AccelerateInterpolator? {
         return null
     }
 
-    return AccelerateInterpolator((factor))
+    return ExponentInterpolator(factor)
 }
 
 private fun create(zone: PointF?): (Float) -> Float {
