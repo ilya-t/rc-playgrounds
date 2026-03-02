@@ -13,10 +13,10 @@ STREAM_DST_IP = '192.168.2.5'
 # STREAM_DST_IP = '192.168.1.181'
 # STREAM_DST_IP = '0.0.0.0'
 
-PWM_YAW_PIN = 18    # GPIO18 (PWM0)
-PWM_PITCH_PIN = 12  # GPIO19 (PWM1)
-PWM_STEER_PIN = 13  # GPIO12 (PWM0)
-PWM_LONG_PIN = 19   # GPIO13 (PWM1)
+PWM_YAW_PIN = 18
+PWM_PITCH_PIN = 12
+PWM_STEER_PIN = 13
+PWM_LONG_PIN = 19
 PWM_GIMB_MODE = 23
 PWM_GIMB_SENS = 24
 
@@ -24,12 +24,15 @@ GIMB_MODE_VAL = 1000
 GIMB_SENS_VAL = 1000
 
 # PWM options
-PWM_FREQUENCY = 50  
-PWM_MIN = 500      
-PWM_MAX = 2500    
-PWM_MIN_LONG = 1200      
-PWM_MAX_LONG = 1700  
+PWM_FREQUENCY = 50
+PWM_MIN = 500
+PWM_MAX = 2500
+PWM_MIN_STEER = 1000
+PWM_MAX_STEER = 2000
+PWM_MIN_LONG = 1200
+PWM_MAX_LONG = 1700
 NO_DATA_TIMEOUT = 0.25
+
 
 class Controller:
 
@@ -42,13 +45,14 @@ class Controller:
         self._last_stream_cmd = ""
         self._stream_cmd_hash = ""
         self.stream_process = None
-        
+
         if not self._pi_handler.connected():
             print("Error: could not connect to pigpio. Make sure pigpiod is running.")
             exit(1)
         for pin in [PWM_YAW_PIN, PWM_PITCH_PIN, PWM_STEER_PIN, PWM_LONG_PIN]:
-            self._pi_handler.do(lambda pi: pi.set_PWM_frequency(pin, PWM_FREQUENCY))
-        
+            self._pi_handler.do(
+                lambda pi: pi.set_PWM_frequency(pin, PWM_FREQUENCY))
+
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind((UDP_IP, UDP_PORT))
         self.sock.settimeout(0.25)
@@ -57,27 +61,27 @@ class Controller:
     def _get_default_stream_command(self) -> str:
         if self._dry_run:
             return (
-                    'python3 fake_video_stream.py |'
-                    'gst-launch-1.0 --verbose '
-                    '    fdsrc ! '
-                    '    h264parse ! '
-                    '    rtph264pay ! '
-                    '    udpsink '
-                    f'    host={STREAM_DST_IP} '
-                    '    port=12345 '
+                'python3 fake_video_stream.py |'
+                'gst-launch-1.0 --verbose '
+                '    fdsrc ! '
+                '    h264parse ! '
+                '    rtph264pay ! '
+                '    udpsink '
+                f'    host={STREAM_DST_IP} '
+                '    port=12345 '
             )
 
         return (
-                'raspivid -pf baseline -awb cloud -fl -g 1 -w 320 -h 240 '
-                '--nopreview -fps 30/1 -t 0 -o - | '
-                'gst-launch-1.0 fdsrc ! h264parse ! rtph264pay ! '
-                f'udpsink host={STREAM_DST_IP} port=12345'
+            'raspivid -pf baseline -awb cloud -fl -g 1 -w 320 -h 240 '
+            '--nopreview -fps 30/1 -t 0 -o - | '
+            'gst-launch-1.0 fdsrc ! h264parse ! rtph264pay ! '
+            f'udpsink host={STREAM_DST_IP} port=12345'
         )
-    
+
     def start_stream(self, command=None):
         if command is None:
             command = self._get_default_stream_command()
-        
+
         self.stop_stream()
         print(f'===> Starting stream with command: {command}')
         python_script_path = os.path.dirname(__file__)
@@ -91,7 +95,8 @@ class Controller:
         if self.stream_process:
             print("===> Stopping stream")
             try:
-                os.killpg(self.stream_process.pid, signal.SIGTERM)  # Kill the process group
+                # Kill the process group
+                os.killpg(self.stream_process.pid, signal.SIGTERM)
             except ProcessLookupError:
                 pass  # Process may have already exited
 
@@ -100,10 +105,10 @@ class Controller:
 
     def stop_servo_pulse(self):
         for pin in [PWM_YAW_PIN, PWM_PITCH_PIN, PWM_STEER_PIN, PWM_LONG_PIN, PWM_GIMB_MODE, PWM_GIMB_SENS]:
-            self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(pin, 0));
+            self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(pin, 0))
 
-    def scale_pwm(self, value):
-        return int(PWM_MIN + (value + 1) * 0.5 * (PWM_MAX - PWM_MIN))
+    def scale_pwm(self, value, pwm_min=PWM_MIN, pwm_max=PWM_MAX):
+        return int(pwm_min + (value + 1) * 0.5 * (pwm_max - pwm_min))
 
     def handle_data(self, data):
         msg = None
@@ -116,13 +121,13 @@ class Controller:
         except json.JSONDecodeError as e:
             print(f"Failed to parse JSON: {e}")
             traceback.print_exc()
-            return        
+            return
         yaw = msg.get("yaw", 0)       # -1..1
         pitch = msg.get("pitch", 0)   # -1..1
         steer = msg.get("steer", 0)   # -1..1
         long = msg.get("long", 0)    # -1..1
-        stream_cmd = msg.get("stream_cmd", "") 
-        stream_cmd_hash = msg.get("stream_cmd_hash", "") 
+        stream_cmd = msg.get("stream_cmd", "")
+        stream_cmd_hash = msg.get("stream_cmd_hash", "")
 
         if not all(-1 <= v <= 1 for v in [yaw, pitch, steer, long]):
             print(f"Incorrect data: {msg}")
@@ -130,27 +135,33 @@ class Controller:
 
         pwm_yaw = self.scale_pwm(yaw)
         pwm_pitch = self.scale_pwm(pitch)
-        pwm_steer = self.scale_pwm(-steer)
-        pwm_long = int(PWM_MIN_LONG + (long + 1) * 0.5 * (PWM_MAX_LONG - PWM_MIN_LONG))
+        pwm_steer = self.scale_pwm(-steer, PWM_MIN_STEER, PWM_MAX_STEER)
+        pwm_long = self.scale_pwm(long, PWM_MIN_LONG, PWM_MAX_LONG)
 
-        self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(PWM_YAW_PIN, pwm_yaw))
-        self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(PWM_PITCH_PIN, pwm_pitch))
-        self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(PWM_STEER_PIN, pwm_steer))
-        self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(PWM_LONG_PIN, pwm_long))
-        self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(PWM_GIMB_MODE, GIMB_MODE_VAL))
-        self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(PWM_GIMB_SENS, GIMB_SENS_VAL))
-        print(f"Received: yaw={yaw}, pitch={pitch}, steer={steer}, long={long} => PWM: {pwm_yaw}, {pwm_pitch}, {pwm_steer}, {pwm_long}")
+        self._pi_handler.do(
+            lambda pi: pi.set_servo_pulsewidth(PWM_YAW_PIN, pwm_yaw))
+        self._pi_handler.do(
+            lambda pi: pi.set_servo_pulsewidth(PWM_PITCH_PIN, pwm_pitch))
+        self._pi_handler.do(
+            lambda pi: pi.set_servo_pulsewidth(PWM_STEER_PIN, pwm_steer))
+        self._pi_handler.do(
+            lambda pi: pi.set_servo_pulsewidth(PWM_LONG_PIN, pwm_long))
+        self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(
+            PWM_GIMB_MODE, GIMB_MODE_VAL))
+        self._pi_handler.do(lambda pi: pi.set_servo_pulsewidth(
+            PWM_GIMB_SENS, GIMB_SENS_VAL))
+        print(
+            f"Received: yaw={yaw}, pitch={pitch}, steer={steer}, long={long} => PWM: {pwm_yaw}, {pwm_pitch}, {pwm_steer}, {pwm_long}")
 
         self._try_update_stream(stream_cmd, stream_cmd_hash)
-            
 
     def _try_update_stream(self, cmd: str, hash: str) -> None:
         if not cmd or len(cmd) == 0:
             return
-        
+
         if hash == self._stream_cmd_hash and cmd == self._last_stream_cmd:
             return
-        
+
         self._stream_cmd_hash = hash
         self._last_stream_cmd = cmd
         self.start_stream(cmd)
@@ -181,6 +192,7 @@ class Controller:
             self._pi_handler.do(lambda pi: pi.stop())
             print("PWM cleared and pigpio connection closed.")
 
+
 class PiHandler:
     def __init__(self):
         import pigpio
@@ -199,15 +211,16 @@ class EmptyHandler:
 
     def do(self, action):
         pass
-    
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dry-run", action="store_true", help="Run script without controlling pigpio")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="Run script without controlling pigpio")
     args = parser.parse_args()
     controller = Controller(args.dry_run)
     controller.start()
+
 
 if __name__ == "__main__":
     main()
