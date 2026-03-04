@@ -85,10 +85,10 @@ class ControlInterpolation(
 }
 
 private fun ControlTuning.asInterpolation() = ControlInterpolation(
-    pitch = create(pitchFactor),
-    pitchTranslator = create(pitchZone),
-    yaw = create(yawFactor),
-    yawTranslator = create(yawZone),
+    pitch = createInterpolator(pitchFactor),
+    pitchTranslator = createZoneTranslation(pitchZone),
+    yaw = createInterpolator(yawFactor),
+    yawTranslator = createZoneTranslation(yawZone),
     steerTranslator = { steer: Float, rawTrigger: Float ->
         val trigger = rawTrigger.absoluteValue
         steerLimitAtTrigger
@@ -105,52 +105,40 @@ private fun ControlTuning.asInterpolation() = ControlInterpolation(
 
             ?: steer
     },
-    longTranslator = if (forwardLongZones.isNotEmpty()) {
-        val zonesNegative = backwardLongZones.ifEmpty { forwardLongZones }
-/*
-        val zonesNegative = backwardLongZones.ifEmpty { forwardLongZones }.map {
-            NO LUCK
-            MappingZone(
-                src = PointF().apply {
-                    x = -it.src.x.absoluteValue
-                    y = -it.src.y.absoluteValue
-                },
-                dst = PointF().apply {
-                    x = -it.dst.x.absoluteValue
-                    y = -it.dst.y.absoluteValue
-                },
-            )
-        }
-*/        create(negative = zonesNegative, positive = forwardLongZones)
-    } else {
-        create(PointF(0f, 1f))
-    },
+    longTranslator = createLongTranslationByZones(
+        negative = backwardLongZones.ifEmpty { forwardLongZones },
+        positive = forwardLongZones,
+        interpolator = createInterpolator(longFactor),
+    ),
 )
 
-
-private fun create(negative: List<MappingZone>, positive: List<MappingZone>): (Float) -> Float {
-    return { input ->
+private fun createLongTranslationByZones(negative: List<MappingZone>,
+                                         positive: List<MappingZone>,
+                                         interpolator: BaseInterpolator?): (Float) -> Float {
+    return { input: Float ->
         val zones = if (input >= 0) {
             positive
         } else {
             negative
         }
-        val absInput = input.absoluteValue
+        val absInterpolatedInput = interpolator?.getInterpolation(input.absoluteValue)
+            ?: input.absoluteValue
+
         val targetZone: MappingZone? = zones
-            .find { absInput >= it.src.x && absInput <= it.src.y }
+            .find { absInterpolatedInput >= it.src.x && absInterpolatedInput <= it.src.y }
             ?: zones.lastOrNull()
 
         targetZone
             ?.let {
-                translate(absInput, it.src.x, it.src.y, it.dst.x, it.dst.y)
+                translate(absInterpolatedInput, it.src.x, it.src.y, it.dst.x, it.dst.y)
             }
             ?.withSign(input)
-            ?: input
+            ?: absInterpolatedInput.withSign(input)
     }
 }
 
 
-private fun create(factor: Float?): BaseInterpolator? {
+private fun createInterpolator(factor: Float?): BaseInterpolator? {
     if (factor == null) {
         return null
     }
@@ -162,7 +150,7 @@ private fun create(factor: Float?): BaseInterpolator? {
     return ExponentInterpolator(factor)
 }
 
-private fun create(zone: PointF?): (Float) -> Float {
+private fun createZoneTranslation(zone: PointF?): (Float) -> Float {
     if (zone == null) {
         return { it }
     }
