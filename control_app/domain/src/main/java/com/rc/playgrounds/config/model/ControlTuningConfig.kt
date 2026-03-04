@@ -11,6 +11,8 @@ import kotlinx.serialization.Serializable
 data class ControlTuningConfig(
     @SerialName("name")
     val name: String? = "initial",
+    @SerialName("long_factor")
+    val longFactor: String?,
     @SerialName("pitch_factor")
     val pitchFactor: String? = null,
     @SerialName("pitch_zone")
@@ -58,6 +60,10 @@ data class ControlTuningConfig(
 
     fun yawFactor(env: Map<String, String>): Float? {
         return yawFactor?.applyEnv(env)?.toFloat()
+    }
+
+    fun longFactor(env: Map<String, String>): Float? {
+        return longFactor?.applyEnv(env)?.toFloat()
     }
 
     fun pitchZone(env: Map<String, String>): PointF?  {

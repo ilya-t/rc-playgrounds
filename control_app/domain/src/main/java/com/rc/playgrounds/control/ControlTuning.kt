@@ -6,6 +6,7 @@ import com.rc.playgrounds.config.model.WheelConfig
 
 data class ControlTuning(
     val steerMode: String?,
+    val longFactor: Float?,
     val pitchFactor: Float?,
     val yawFactor: Float?,
     val pitchZone: PointF?,

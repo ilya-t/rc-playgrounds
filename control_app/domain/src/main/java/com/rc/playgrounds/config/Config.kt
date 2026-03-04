@@ -31,14 +31,15 @@ data class Config(
     @SerialName("control_tuning")
     val controlTuning: ControlTuningConfig =
         ControlTuningConfig(
-            pitchFactor = "0",
+            pitchFactor = null,
             rawPitchZone = null,
-            yawFactor = "0",
+            yawFactor = null,
             rawYawZone = null,
             rawSteerZone = null,
             rawForwardLongZones = null,
             rawBackwardLongZones = null,
             wheel = null,
+            longFactor = null,
     ),
 ) {
     val env: Map<String, String> = buildEnv(rawEnv, envOverrides)
@@ -77,14 +78,15 @@ data class Config(
                             long = 0f,
                         ),
                         controlTuning = ControlTuningConfig(
-                            pitchFactor = "0",
+                            pitchFactor = null,
                             rawPitchZone = null,
-                            yawFactor = "0",
+                            yawFactor = null,
                             rawYawZone = null,
                             rawSteerZone = null,
                             rawForwardLongZones = null,
                             rawBackwardLongZones = null,
                             wheel = null,
+                            longFactor = null,
                         )
                     )
                 }
@@ -125,6 +127,7 @@ internal const val DEFAULT_CONFIG = """
         "mobile_client_port": "12345",
         "forward_long_zones": "0.28:0.01; 0.5:0.2; 0.9:0.5; 1.0:0.6;",
         "backward_long_zones": "0.0:0.01; 0.9:0.5;",
+        "long_factor": "1",
         "pitch_factor": "1",
         "pitch_zone": "0..0.5",
         "yaw_factor": "1.0",
@@ -265,6 +268,7 @@ internal const val DEFAULT_CONFIG = """
     },
     "control_tuning": {
         "name": "default",
+        "long_factor": "@{long_factor}",
         "pitch_factor": "@{pitch_factor}",
         "pitch_zone": "@{pitch_zone}",
         "yaw_factor": "@{yaw_factor}",

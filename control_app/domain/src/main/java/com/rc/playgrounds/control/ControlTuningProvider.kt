@@ -20,6 +20,7 @@ class ControlTuningProvider(
             activeConfigProvider.configFlow.collect { c: Config ->
                 val new = ControlTuning(
                     steerMode = c.controlTuning.steerMode(c.env),
+                    longFactor = c.controlTuning.longFactor(c.env),
                     pitchFactor = c.controlTuning.pitchFactor(c.env),
                     yawFactor = c.controlTuning.yawFactor(c.env),
                     pitchZone = c.controlTuning.pitchZone(c.env),
