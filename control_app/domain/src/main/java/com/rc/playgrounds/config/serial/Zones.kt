@@ -13,10 +13,9 @@ internal object Zones {
             return null
         }
 
-        val rawPoint = PointF(
-            minAndMax[0].toFloat(),
-            minAndMax[1].toFloat(),
-        )
+        val min = minAndMax[0].toFloatOrNull() ?: return null
+        val max = minAndMax[1].toFloatOrNull() ?: return null
+        val rawPoint = PointF(min, max)
 
         if (rawPoint.x >= rawPoint.y) {
             return null
@@ -36,11 +35,16 @@ internal object Zones {
             }
             val keyAndValue = kvp.split(":")
             if (keyAndValue.size != 2) {
-                throw IllegalArgumentException(
-                    "Invalid format! Excepting pair of numbers at '$zonesStr', got: '$kvp'")
+                IllegalArgumentException(
+                    "Invalid format! Excepting pair of numbers at '$zonesStr', got: '$kvp'"
+                )
+                    .printStackTrace()
+                return@mapNotNull null
             }
 
-            PointF(keyAndValue[0].toFloat(), keyAndValue[1].toFloat())
+            val x = keyAndValue[0].toFloatOrNull() ?: return@mapNotNull null
+            val y = keyAndValue[1].toFloatOrNull() ?: return@mapNotNull null
+            PointF(x, y)
         }
 
         val results = mutableListOf<MappingZone>()
@@ -50,9 +54,9 @@ internal object Zones {
             if (results.isEmpty()) {
                 results.add(
                     MappingZone(
-                    src = PointF(it.x, Float.NaN),
-                    dst = PointF(it.y, Float.NaN),
-                )
+                        src = PointF(it.x, Float.NaN),
+                        dst = PointF(it.y, Float.NaN),
+                    )
                 )
                 return@forEach
             }
@@ -67,9 +71,9 @@ internal object Zones {
 
             results.add(
                 MappingZone(
-                src = PointF(lastResult.src.y, it.x),
-                dst = PointF(lastResult.dst.y, it.y),
-            )
+                    src = PointF(lastResult.src.y, it.x),
+                    dst = PointF(lastResult.dst.y, it.y),
+                )
             )
         }
 

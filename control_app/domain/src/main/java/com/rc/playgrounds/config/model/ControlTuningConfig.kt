@@ -55,15 +55,15 @@ data class ControlTuningConfig(
     val wheel: WheelConfig? = null,
 ) {
     fun pitchFactor(env: Map<String, String>): Float? {
-        return pitchFactor?.applyEnv(env)?.toFloat()
+        return pitchFactor?.applyEnv(env)?.toFloatOrNull()
     }
 
     fun yawFactor(env: Map<String, String>): Float? {
-        return yawFactor?.applyEnv(env)?.toFloat()
+        return yawFactor?.applyEnv(env)?.toFloatOrNull()
     }
 
     fun longFactor(env: Map<String, String>): Float? {
-        return longFactor?.applyEnv(env)?.toFloat()
+        return longFactor?.applyEnv(env)?.toFloatOrNull()
     }
 
     fun pitchZone(env: Map<String, String>): PointF?  {
@@ -79,7 +79,7 @@ data class ControlTuningConfig(
     }
 
     fun steerExponentFactor(env: Map<String, String>): Float? {
-        return steerExponentFactor?.applyEnv(env)?.toFloat()
+        return steerExponentFactor?.applyEnv(env)?.toFloatOrNull()
     }
 
     fun forwardLongZones(env: Map<String, String>): List<MappingZone> =
