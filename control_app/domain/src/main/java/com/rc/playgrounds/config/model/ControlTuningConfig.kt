@@ -12,7 +12,7 @@ data class ControlTuningConfig(
     @SerialName("name")
     val name: String? = "initial",
     @SerialName("long_factor")
-    val longFactor: String?,
+    val longFactor: String? = null,
     @SerialName("pitch_factor")
     val pitchFactor: String? = null,
     @SerialName("pitch_zone")
