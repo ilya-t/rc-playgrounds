@@ -30,7 +30,6 @@ class ControlTuningProvider(
                     forwardLongZones = c.controlTuning.forwardLongZones(c.env),
                     backwardLongZones = c.controlTuning.backwardLongZones(c.env),
                     steerLimitAtTrigger = c.controlTuning.steerLimitAtTrigger(c.env),
-                    wheel = c.controlTuning.wheel,
                 )
 
                 _controlTuning.value = new

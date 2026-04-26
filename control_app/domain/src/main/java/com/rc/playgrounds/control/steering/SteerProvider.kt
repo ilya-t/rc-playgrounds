@@ -49,7 +49,6 @@ class SteerProvider(
                     activeSteeringJob.value = ActiveMode(
                         mode = mode,
                         job = when (mode) {
-                            StreeringMode.WHEEL_EMULATION -> wheelEmulatedSteering(tuning)
                             StreeringMode.LIMITING_BY_TRIGGER -> steerLimitingByLongTrigger()
                             StreeringMode.EXPONENT -> steerByExponent()
                         }
@@ -103,35 +102,6 @@ class SteerProvider(
         return x.sign * a.pow(factor)
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private fun wheelEmulatedSteering(tuning: ControlTuning): Job {
-        // Wheel emulation engine lives in a separate private class (below)
-        val wheelConfig = tuning.wheel
-        val wheel = WheelEmulator(
-            maxWheelAngleDeg = wheelConfig?.maxAngleDeg ?: 28f,
-            maxTurnRateDegPerSec = wheelConfig?.maxTurnRateDegPerSec ?: 420f,
-            centerReturnRateDegPerSec = wheelConfig?.centerReturnRateDegPerSec ?: 140f,
-            deadzone = wheelConfig?.deadzone ?: 0.06f,
-            curveBlend = wheelConfig?.curveBlend ?: 0.55f,
-            emaCutoffHz = wheelConfig?.emaCutoffHz ?: 10f,
-            centerStickThreshold = wheelConfig?.centerStickThreshold ?: 0.02f,
-            damping = wheelConfig?.damping ?: 0.9f,
-        )
-        return scope.launch(Dispatchers.IO.limitedParallelism(1)) {
-            while (isActive) {
-                val event: SessionGamepadEvent? = gamePadEventSessionProvider.lastEvent
-                if (event == null) {
-                    delay(8L)
-                    continue
-                }
-                val raw = event.event.leftStickX
-                val normWheel = wheel.step(raw)          // [-1..1]
-                steerState.value = normWheel                // publish emulated wheel
-                delay(16L)                              // ~60 Hz (dt handled inside)
-            }
-        }
-    }
-
     private fun steerLimitingByLongTrigger(): Job {
         return scope.launch {
             combine(
@@ -160,7 +130,6 @@ private class ActiveMode(
 )
 
 private enum class StreeringMode {
-    WHEEL_EMULATION,
     LIMITING_BY_TRIGGER,
     EXPONENT,
 }
@@ -168,7 +137,6 @@ private enum class StreeringMode {
 private fun ControlTuning.toMode(): StreeringMode {
     return when (this.steerMode) {
         "steer_limit_at_trigger" -> StreeringMode.LIMITING_BY_TRIGGER
-        "wheel" -> StreeringMode.WHEEL_EMULATION
         "exponent" -> StreeringMode.EXPONENT
         else -> StreeringMode.LIMITING_BY_TRIGGER
     }

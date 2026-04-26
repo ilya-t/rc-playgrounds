@@ -38,7 +38,6 @@ data class Config(
             rawSteerZone = null,
             rawForwardLongZones = null,
             rawBackwardLongZones = null,
-            wheel = null,
             longFactor = null,
     ),
 ) {
@@ -85,7 +84,6 @@ data class Config(
                             rawSteerZone = null,
                             rawForwardLongZones = null,
                             rawBackwardLongZones = null,
-                            wheel = null,
                             longFactor = null,
                         )
                     )
@@ -274,7 +272,7 @@ internal const val DEFAULT_CONFIG = """
         "yaw_factor": "@{yaw_factor}",
         "yaw_zone": "@{yaw_zone}",
         "steer_zone": "@{steer_zone}",
-        "_steer_mode_comment_": "available modes 'steer_limit_at_trigger', 'wheel' and 'exponent'",
+        "_steer_mode_comment_": "available modes 'steer_limit_at_trigger' and 'exponent'",
         "steer_mode": "@{steer_mode}",
         "steer_exponent_factor": "@{steer_exponent_factor}",
         "_steer_limit_at_trigger_comment_": "Mapping of trigger value to maximum steer value. Should be sorted in ascending order. Format: 'trigger0:long0;trigger1:long1;'",
@@ -282,18 +280,7 @@ internal const val DEFAULT_CONFIG = """
         "_forward_long_zones_comment_": "Mapping of trigger value to long. Should be sorted in ascending order. Format: 'trigger0:long0;trigger1:long1;'",
         "forward_long_zones": "@{forward_long_zones}",
         "_backward_long_zones_comment_": "Mapping of trigger value to long. Should be sorted in ascending order. Format: 'trigger0:long0;trigger1:long1;'",
-        "backward_long_zones": "@{backward_long_zones}",
-        "wheel": {
-            "_comment_": "All values are optional. See: WheelEmulator.kt",
-            "max_angle_deg": 28.0,
-            "max_turn_rate_deg_per_sec": 420.0,
-            "center_return_rate_deg_per_sec": 140.0,
-            "deadzone": 0.06,
-            "curve_blend": 0.55,
-            "ema_cutoff_hz": 10.0,
-            "center_stick_threshold": 0.02,
-            "damping": 0.9
-        }
+        "backward_long_zones": "@{backward_long_zones}"
     }
 }
 """

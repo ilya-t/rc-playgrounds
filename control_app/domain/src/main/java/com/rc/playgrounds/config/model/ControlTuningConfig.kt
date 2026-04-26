@@ -50,9 +50,6 @@ data class ControlTuningConfig(
      */
     @SerialName("backward_long_zones")
     val rawBackwardLongZones: String? = null,
-
-    @SerialName("wheel")
-    val wheel: WheelConfig? = null,
 ) {
     fun pitchFactor(env: Map<String, String>): Float? {
         return pitchFactor?.applyEnv(env)?.toFloatOrNull()
