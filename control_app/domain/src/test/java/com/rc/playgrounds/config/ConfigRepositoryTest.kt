@@ -119,6 +119,20 @@ internal val MINIMAL_TEST_CONFIG_2 = """{
                 "address": "127.0.0.2", 
                 "port": "7171"
             },
+            "gamepad_mapping": {
+                "steer": {
+                    "axis": "left_stick_X"
+                },
+                "long": {
+                    "axis": "left_right_triggers"
+                },
+                "yaw": {
+                    "axis": "right_stick_X"
+                },
+                "pitch": {
+                    "axis": "right_stick_Y"
+                }
+            },
             "control_offsets": {
                 "pitch": 0.0,
                 "yaw": 0.1,

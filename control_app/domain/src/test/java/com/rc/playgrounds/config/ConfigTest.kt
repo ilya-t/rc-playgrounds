@@ -68,6 +68,20 @@ class ConfigTest {
                 "steer": 0.0,
                 "long": 0.0
             },
+            "gamepad_mapping": {
+                "steer": {
+                    "axis": "left_stick_X"
+                },
+                "long": {
+                    "axis": "left_right_triggers"
+                },
+                "yaw": {
+                    "axis": "right_stick_X"
+                },
+                "pitch": {
+                    "axis": "right_stick_Y"
+                }
+            },
             "control_tuning": {
                 "forward_long_zones": "0:0.01; 0.3:0.21; 0.7:0.4; 0.9:0.5; 1:0.7;"
             }
@@ -199,6 +213,20 @@ internal val MINIMAL_TEST_CONFIG = """{
             "stream_target": {
                 "address": "192.168.0.2", 
                 "port": "8181"
+            },
+            "gamepad_mapping": {
+                "steer": {
+                    "axis": "left_stick_X"
+                },
+                "long": {
+                    "axis": "left_right_triggers"
+                },
+                "yaw": {
+                    "axis": "right_stick_X"
+                },
+                "pitch": {
+                    "axis": "right_stick_Y"
+                }
             },
             "control_offsets": {
                 "pitch": 0.0,
