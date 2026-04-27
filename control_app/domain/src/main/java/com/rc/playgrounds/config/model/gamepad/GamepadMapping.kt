@@ -10,7 +10,20 @@ data class GamepadMapping(
     val steer: GamepadAxisMapping,
     @SerialName("long")
     val long: GamepadAxisMapping,
-)
+    @SerialName("yaw")
+    val yaw: GamepadAxisMapping,
+    @SerialName("pitch")
+    val pitch: GamepadAxisMapping,
+) {
+    companion object {
+        val DEFAULT = GamepadMapping(
+            steer = GamepadAxisMapping(axis = GamepadAxis.LEFT_STICK_X),
+            long = GamepadAxisMapping(axis = GamepadAxis.TRIGGERS),
+            yaw = GamepadAxisMapping(axis = GamepadAxis.RIGHT_STICK_X),
+            pitch = GamepadAxisMapping(axis = GamepadAxis.RIGHT_STICK_Y),
+        )
+    }
+}
 
 @Serializable
 data class GamepadAxisMapping(

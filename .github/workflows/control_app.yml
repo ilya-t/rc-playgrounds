@@ -26,10 +26,13 @@ jobs:
 
     - name: Grant execute permission for gradlew
       run: chmod +x control_app/gradlew
+
     - name: Build with Gradle
       run: cd control_app && ./gradlew assembleDebug
+
     - name: Run tests
-      run: cd control_app && ./gradlew assembleDebug
+      run: cd control_app && ./gradlew testDebug
+
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:

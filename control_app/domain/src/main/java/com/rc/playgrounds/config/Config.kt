@@ -45,7 +45,7 @@ data class Config(
     ),
 
     @SerialName("gamepad_mapping")
-    val gamepadMapping: GamepadMapping
+    val gamepadMapping: GamepadMapping,
 ) {
     val env: Map<String, String> = buildEnv(rawEnv, envOverrides)
 
@@ -92,10 +92,7 @@ data class Config(
                             rawBackwardLongZones = null,
                             longFactor = null,
                         ),
-                        gamepadMapping = GamepadMapping(
-                            steer = GamepadAxisMapping(axis = GamepadAxis.LEFT_STICK_X),
-                            long = GamepadAxisMapping(axis = GamepadAxis.TRIGGERS),
-                        ),
+                        gamepadMapping = GamepadMapping.DEFAULT,
                     )
                 }
         }
@@ -271,6 +268,12 @@ internal const val DEFAULT_CONFIG = """
         },
         "long": {
             "axis": "left_right_triggers"
+        },
+        "yaw": {
+            "axis": "right_stick_X"
+        },
+        "pitch": {
+            "axis": "right_stick_Y"
         }
     },
     "control_server": {

@@ -44,8 +44,8 @@ class RcEventStream(
         val offsets: ControlOffsets = config.controlOffsets
         val gamepadMapping: GamepadMapping = config.gamepadMapping
 
-        val rawPitch = -event.rightStickY
-        val rawYaw = event.rightStickX
+        val rawPitch = -gamepadMapping.pitch.resolveAxis(event)
+        val rawYaw = gamepadMapping.yaw.resolveAxis(event)
         val longTrigger = gamepadMapping.long.resolveAxis(event)
         val rawLong = -longTrigger
 
