@@ -2,7 +2,10 @@ package com.rc.playgrounds.config
 
 import com.rc.playgrounds.config.model.ControlOffsets
 import com.rc.playgrounds.config.model.ControlTuningConfig
+import com.rc.playgrounds.config.model.gamepad.GamepadMapping
 import com.rc.playgrounds.config.model.NetworkTarget
+import com.rc.playgrounds.config.model.gamepad.GamepadAxis
+import com.rc.playgrounds.config.model.gamepad.GamepadAxisMapping
 import com.rc.playgrounds.config.stream.QualityProfile
 import com.rc.playgrounds.config.stream.StreamConfig
 import com.rc.playgrounds.presentation.quickconfig.EnvironmentOverrides
@@ -40,6 +43,9 @@ data class Config(
             rawBackwardLongZones = null,
             longFactor = null,
     ),
+
+    @SerialName("gamepad_mapping")
+    val gamepadMapping: GamepadMapping
 ) {
     val env: Map<String, String> = buildEnv(rawEnv, envOverrides)
 
@@ -85,7 +91,11 @@ data class Config(
                             rawForwardLongZones = null,
                             rawBackwardLongZones = null,
                             longFactor = null,
-                        )
+                        ),
+                        gamepadMapping = GamepadMapping(
+                            steer = GamepadAxisMapping(axis = GamepadAxis.LEFT_STICK_X),
+                            long = GamepadAxisMapping(axis = GamepadAxis.TRIGGERS),
+                        ),
                     )
                 }
         }
@@ -253,6 +263,15 @@ internal const val DEFAULT_CONFIG = """
     "_stream_on_libcamera-vid_sample_comment_": {
         "local_cmd": "udpsrc port=@{mobile_client_port} caps=\"application/x-rtp, media=video, encoding-name=H264, payload=96\" ! rtph264depay ! h264parse ! decodebin ! videoconvert ! autovideosink",
         "remote_cmd": "libcamera-vid --profile baseline --flush --intra 1 --width @{width} --height @{height} --nopreview --framerate @{framerate} --timeout 0 -o - | gst-launch-1.0 fdsrc ! h264parse ! rtph264pay ! udpsink host=@{mobile_client_addr} port=@{mobile_client_port} "
+    },
+    "gamepad_mapping": {
+        "_comment_": "Gamepad controls mapping to controls of rc-car. 'axis' available values: 'left_right_triggers' , 'left_stick_X' , 'left_stick_Y' , 'right_stick_X' , 'right_stick_Y'",    
+        "steer": {
+            "axis": "left_stick_X"
+        },
+        "long": {
+            "axis": "left_right_triggers"
+        }
     },
     "control_server": {
         "address": "@{fpv_car_server}",

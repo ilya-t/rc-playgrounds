@@ -4,24 +4,20 @@ import android.graphics.PointF
 import com.rc.playgrounds.config.ActiveConfigProvider
 import com.rc.playgrounds.config.Config
 import com.rc.playgrounds.config.model.ControlOffsets
+import com.rc.playgrounds.config.model.gamepad.GamepadMapping
 import com.rc.playgrounds.control.ControlInterpolation
 import com.rc.playgrounds.control.ControlInterpolationProvider
 import com.rc.playgrounds.control.ControlTuning
 import com.rc.playgrounds.control.ControlTuningProvider
 import com.rc.playgrounds.control.gamepad.GamePadEventSessionProvider
 import com.rc.playgrounds.control.gamepad.SessionGamepadEvent
-import com.rc.playgrounds.control.longTrigger
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 import kotlin.math.pow
@@ -36,8 +32,8 @@ class SteerProvider(
 ) {
     private val activeSteeringJob = MutableStateFlow<ActiveMode?>(null)
     private val steerState = MutableStateFlow(0f)
-    private val steerWithOffsets = MutableStateFlow(0f)
-    val steer: StateFlow<SteerValue> = steerWithOffsets
+    private val steerWithOffsets = MutableStateFlow(SteeringValues(0f, 0f))
+    val steer: StateFlow<SteeringValues> = steerWithOffsets
 
     init {
         scope.launch {
@@ -67,7 +63,7 @@ class SteerProvider(
                 val steerWithOffsets: Float = steer + offsets.steer
                 val steerZone: PointF? = tuning.steerZone
 
-                if (steerZone != null) {
+                val value = if (steerZone != null) {
                     val limitedSteer = steerWithOffsets.coerceIn(
                         steerZone.x,
                         steerZone.y
@@ -76,8 +72,13 @@ class SteerProvider(
                 } else {
                     steerWithOffsets
                 }
+
+                SteeringValues(
+                    value = value.trim(),
+                    rawValue = steer,
+                )
             }.collect {
-                steerWithOffsets.value = it.trim()
+                steerWithOffsets.value = it
             }
         }
     }
@@ -87,9 +88,11 @@ class SteerProvider(
             combine(
                 gamePadEventSessionProvider.events,
                 controlTuningProvider.controlTuning.map { it.steerExponentFactor?.toDouble() },
+                activeConfigProvider.configFlow.map { it.gamepadMapping },
             ) { sessionEvent: SessionGamepadEvent,
-                exponentFactor: Double? ->
-                val rawSteer = sessionEvent.event.leftStickX.toDouble()
+                exponentFactor: Double?,
+                gamepadMapping: GamepadMapping ->
+                val rawSteer = gamepadMapping.steer.resolveAxis(sessionEvent.event).toDouble()
                 expo(x = rawSteer, exponentFactor ?: 2.0).toFloat()
             }.collect {
                 steerState.value = it
@@ -107,14 +110,17 @@ class SteerProvider(
             combine(
                 gamePadEventSessionProvider.events,
                 controlInterpolationProvider.interpolation,
+                activeConfigProvider.configFlow.map { it.gamepadMapping },
             ) { sessionEvent: SessionGamepadEvent,
-                interpolation: ControlInterpolation ->
-                val steerAtStart = sessionEvent.sessionStart?.leftStickX
-                val rawSteer = sessionEvent.event.leftStickX
+                interpolation: ControlInterpolation,
+                gamepadMapping: GamepadMapping ->
+                val steerAtStart: Float? =
+                    sessionEvent.sessionStart?.let { gamepadMapping.steer.resolveAxis(it) }
+                val rawSteer = gamepadMapping.steer.resolveAxis(sessionEvent.event)
 
                 interpolation.fixSteer(
                     rawSteer,
-                    activeTrigger = sessionEvent.event.longTrigger,
+                    activeTrigger = gamepadMapping.long.resolveAxis(sessionEvent.event),
                     steerAtStart = steerAtStart,
                 )
             }.collect {
@@ -141,3 +147,8 @@ private fun ControlTuning.toMode(): StreeringMode {
         else -> StreeringMode.LIMITING_BY_TRIGGER
     }
 }
+
+class SteeringValues(
+    val value: SteerValue,
+    val rawValue: SteerValue,
+)
