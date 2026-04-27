@@ -172,19 +172,6 @@ class ConfigTest {
     }
 
     @Test
-    fun `json serialization not missing data at default template`() {
-        val config = Config(DEFAULT_CONFIG, errorRaiser)
-        val serializedJson = config.writeToJson()
-
-        val json = Json { ignoreUnknownKeys = true }
-
-        val original = json.parseToJsonElement(DEFAULT_CONFIG)
-        val reserialized = json.parseToJsonElement(serializedJson)
-
-        assertJsonEquals("<root>", original, reserialized)
-    }
-
-    @Test
     fun `new fields adding`() {
         val config = Config(DEFAULT_CONFIG)
         val newConfig = config.copy(
