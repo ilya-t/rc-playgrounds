@@ -45,7 +45,7 @@ data class Config(
     ),
 
     @SerialName("gamepad_mapping")
-    val gamepadMapping: GamepadMapping,
+    val gamepadMapping: GamepadMapping = GamepadMapping.DEFAULT,
 ) {
     val env: Map<String, String> = buildEnv(rawEnv, envOverrides)
 
