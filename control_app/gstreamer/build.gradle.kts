@@ -9,6 +9,7 @@ android {
     namespace = "com.rc.playgrounds.gstreamer"
     compileSdk = Dependencies.targetSdkVersion
     buildToolsVersion = Dependencies.buildToolsVersion
+    ndkVersion = "25.2.9519653"
 
     defaultConfig {
         minSdk = Dependencies.minSdkVersion
@@ -31,7 +32,7 @@ android {
                 if (gstRoot == null)
                     throw GradleException("""
                         GSTREAMER_ROOT_ANDROID must be set in env, or 'gstAndroidRoot' must be defined in your local.properties.
-                        Property value example: /path/to/gstreamer-1.0-android-universal-1.24.12
+                        Property value example: /path/to/gstreamer-1.0-android-universal-1.24.13
                     """.trimIndent()
                         )
 
