@@ -254,6 +254,10 @@ internal const val DEFAULT_CONFIG = """
         }
     ],
     "stream": {
+        "remote_cmd": "rpicam-vid -t 0 -n --codec libav --libav-video-codec h264_v4l2m2m --libav-format h264 --denoise cdn_off --width @{width} --height @{height} --bitrate @{bitrate} --framerate @{framerate} --rotation 180 -o 'udp:\/\/@{mobile_client_addr}:@{mobile_client_port}?pkt_size=1200'",
+        "local_cmd": "udpsrc port=@{mobile_client_port} caps=\"video\/x-h264,stream-format=(string)byte-stream\" ! h264parse ! decodebin ! videoconvert ! autovideosink sync=false"
+    },
+    "_stream_on_mjpeg_sample": {
         "local_cmd": "udpsrc port=@{mobile_client_port} ! jpegparse ! jpegdec ! autovideosink",
         "remote_cmd": "rpicam-vid -t 0 --codec mjpeg --denoise cdn_off --flush 1 -o udp://@{mobile_client_addr}:@{mobile_client_port} -n --segment 16000 -q 20 --width @{width} --height @{height} -b @{bitrate} --framerate @{framerate} --rotation 180"
     },
