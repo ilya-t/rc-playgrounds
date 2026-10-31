@@ -35,10 +35,10 @@ class GamepadEventEmitter(
 //                "\n- Right Stick: (${e.rightStickX}, ${e.rightStickY})"+
 //                "\n- Triggers: L=${e.leftTrigger} R=${e.rightTrigger}"
 //            )
-            return false
+            return true
         }
 //        Static.output(MotionEvent.actionToString(event.action))
-        return false
+        return true
     }
 
     fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
