@@ -5,36 +5,101 @@ on:
     branches: [ "master" ]
     paths:
       - 'control_app/**'
+      - '.github/workflows/control_app.yml'
   pull_request:
     branches: [ "master" ]
     paths:
       - 'control_app/**'
+      - '.github/workflows/control_app.yml'
+
+defaults:
+  run:
+    shell: bash
+    working-directory: control_app
 
 jobs:
-  build:
-
+  tests:
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
-    - name: set up JDK 17
+    - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
         cache: gradle
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x control_app/gradlew
+    - name: Configure GStreamer stub
+      run: printf '%s\n' 'gstreamer-stub=true' > local.properties
+
+    - name: Run unit tests
+      run: bash ./gradlew testDebugUnitTest
+
+  build:
+    needs: tests
+    runs-on: ubuntu-latest
+
+    env:
+      GSTREAMER_VERSION: '1.24.13'
+      GSTREAMER_SHA256: 'f420ab69f252e01dcf1b447d128b36ddeddf02ddc7e9e8104ddcfb830dd395b7'
+      GSTREAMER_ROOT_ANDROID: ${{ github.workspace }}/.cache/gstreamer-android
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: Set up Android SDK and NDK r25c
+      uses: android-actions/setup-android@v3
+      with:
+        packages: 'platform-tools platforms;android-35 build-tools;34.0.0 ndk;25.2.9519653'
+
+    - name: Restore GStreamer SDK
+      id: gstreamer-sdk
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.GSTREAMER_ROOT_ANDROID }}
+        key: gstreamer-android-${{ runner.os }}-${{ runner.arch }}-${{ env.GSTREAMER_VERSION }}
+
+    - name: Download GStreamer SDK
+      if: steps.gstreamer-sdk.outputs.cache-hit != 'true'
+      working-directory: ${{ runner.temp }}
+      run: |
+        archive="gstreamer-1.0-android-universal-${GSTREAMER_VERSION}.tar.xz"
+        curl --fail --location --retry 3 --output "$archive" \
+          "https://gstreamer.freedesktop.org/data/pkg/android/${GSTREAMER_VERSION}/$archive"
+        printf '%s  %s\n' "$GSTREAMER_SHA256" "$archive" | sha256sum --check --strict
+        mkdir -p "$GSTREAMER_ROOT_ANDROID"
+        tar -xJf "$archive" -C "$GSTREAMER_ROOT_ANDROID"
+        rm "$archive"
+
+    - name: Configure native GStreamer
+      run: |
+        for abi in armv7 arm64 x86; do
+          test -f "$GSTREAMER_ROOT_ANDROID/$abi/share/gst-android/ndk-build/gstreamer-1.0.mk"
+        done
+        printf '%s\n' "gstAndroidRoot=$GSTREAMER_ROOT_ANDROID" 'gstreamer-stub=false' > local.properties
 
     - name: Build with Gradle
-      run: cd control_app && ./gradlew assembleDebug
+      run: bash ./gradlew assembleDebug
 
-    - name: Run tests
-      run: cd control_app && ./gradlew testDebug
+    - name: Verify GStreamer libraries in APK
+      run: |
+        unzip -Z1 app/build/outputs/apk/debug/app-debug.apk > "$RUNNER_TEMP/apk-contents.txt"
+        for abi in armeabi-v7a arm64-v8a x86; do
+          for library in libgstreamer_android.so librtsp-example.so; do
+            grep -Fx "lib/$abi/$library" "$RUNNER_TEMP/apk-contents.txt"
+          done
+        done
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: app-debug-apk
         path: control_app/app/build/outputs/apk/debug/app-debug.apk
+        if-no-files-found: error
