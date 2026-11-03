@@ -66,11 +66,11 @@ class MainActivity : AppCompatActivity() {
         return super.onGenericMotionEvent(event)
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
-        if (component.onKeyDown(keyCode, event)) {
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.action == KeyEvent.ACTION_DOWN && component.onKeyDown(event.keyCode, event)) {
             return true
         }
-        return super.onKeyDown(keyCode, event)
+        return super.dispatchKeyEvent(event)
     }
 
     override fun onResume() {
