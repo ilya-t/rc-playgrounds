@@ -35,10 +35,10 @@ class GamepadEventEmitter(
 //                "\n- Right Stick: (${e.rightStickX}, ${e.rightStickY})"+
 //                "\n- Triggers: L=${e.leftTrigger} R=${e.rightTrigger}"
 //            )
-            return true
         }
 //        Static.output(MotionEvent.actionToString(event.action))
-        return true
+        // Android synthesizes D-pad keys from unhandled joystick and hat motion.
+        return false
     }
 
     fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
