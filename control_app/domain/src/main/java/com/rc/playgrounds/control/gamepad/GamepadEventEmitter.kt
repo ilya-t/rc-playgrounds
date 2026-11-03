@@ -41,7 +41,26 @@ class GamepadEventEmitter(
         return false
     }
 
-    fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+    fun onKeyEvent(event: KeyEvent): Boolean {
+        val isNavigationKey = when (event.keyCode) {
+            KeyEvent.KEYCODE_DPAD_UP,
+            KeyEvent.KEYCODE_DPAD_DOWN,
+            KeyEvent.KEYCODE_DPAD_LEFT,
+            KeyEvent.KEYCODE_DPAD_RIGHT,
+            KeyEvent.KEYCODE_DPAD_CENTER -> true
+            else -> false
+        }
+        if (!isNavigationKey && !KeyEvent.isGamepadButton(event.keyCode)) {
+            return false
+        }
+        if (event.action == KeyEvent.ACTION_DOWN) {
+            onKeyDown(event.keyCode)
+        }
+        // Consume both phases so Android cannot turn gamepad buttons into view clicks.
+        return true
+    }
+
+    private fun onKeyDown(keyCode: Int): Boolean {
         when (keyCode) {
             KeyEvent.KEYCODE_DPAD_UP -> {
                 eventStream.emit(GamepadButtonPress.Up)

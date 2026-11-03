@@ -67,7 +67,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (event.action == KeyEvent.ACTION_DOWN && component.onKeyDown(event.keyCode, event)) {
+        if (component.onKeyEvent(event)) {
             return true
         }
         return super.dispatchKeyEvent(event)

@@ -1,12 +1,18 @@
 package com.rc.playgrounds.control.gamepad
 
 import android.view.InputDevice
+import android.view.KeyEvent
 import android.view.MotionEvent
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -14,6 +20,7 @@ import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
+@OptIn(ExperimentalCoroutinesApi::class)
 class GamepadEventEmitterTest {
     private val scope = TestScope()
     private val eventStream = GamepadEventStream(scope)
@@ -52,6 +59,43 @@ class GamepadEventEmitterTest {
 
         assertFalse(emitter.onGenericMotionEvent(event))
         assertEquals(GamepadEvent.INITIAL, eventStream.events.value)
+    }
+
+    @Test
+    fun `left stick click and release do not reach Android views`() {
+        assertTrue(emitter.onKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BUTTON_THUMBL)))
+        assertTrue(emitter.onKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_BUTTON_THUMBL)))
+    }
+
+    @Test
+    fun `right stick click and release do not reach Android views`() {
+        assertTrue(emitter.onKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BUTTON_THUMBR)))
+        assertTrue(emitter.onKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_BUTTON_THUMBR)))
+    }
+
+    @Test
+    fun `A click is emitted once and both key phases are consumed`() = scope.runTest {
+        // Arrange
+        val buttons = mutableListOf<GamepadButtonPress>()
+        val collector = launch { eventStream.buttonEvents.collect { buttons.add(it) } }
+        runCurrent()
+
+        // Act
+        val pressHandled = emitter.onKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BUTTON_A))
+        val releaseHandled = emitter.onKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_BUTTON_A))
+        runCurrent()
+        collector.cancel()
+
+        // Assert
+        assertTrue(pressHandled)
+        assertTrue(releaseHandled)
+        assertEquals(listOf(GamepadButtonPress.A), buttons)
+    }
+
+    @Test
+    fun `keyboard enter remains available to Android views`() {
+        assertFalse(emitter.onKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER)))
+        assertFalse(emitter.onKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER)))
     }
 
     private fun createMotionEvent(
