@@ -174,7 +174,7 @@ class ActivityComponent(
         return gamepadEventEmitter.onGenericMotionEvent(event)
     }
 
-    fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
-        return gamepadEventEmitter.onKeyDown(keyCode, event)
+    fun onKeyEvent(event: KeyEvent): Boolean {
+        return gamepadEventEmitter.onKeyEvent(event)
     }
 }
