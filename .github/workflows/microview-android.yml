@@ -28,7 +28,6 @@ jobs:
           # Another project on master contains an unrecognized wrapper JAR.
           # This job uses a pinned installed Gradle, not that wrapper.
           validate-wrappers: false
-      - uses: android-actions/setup-android@v3
       - name: Install Android SDK 35
         run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
       - name: Test command protocol and MicroView watchdog
