@@ -1,13 +1,20 @@
 package dev.rcplaygrounds.microview;
 
-/** Mutable joystick state, synchronized because the serial thread reads it at ~30 Hz. */
+import java.util.Arrays;
+
+/** Mutable control state. Access is synchronized between the UI and serial I/O thread. */
 public final class ControlState {
     public static final int CHANNELS = 6;
     public static final int NEUTRAL = 1500;
     public static final int MIN_PWM = 1000;
     public static final int MAX_PWM = 2000;
+    public static final int TRIM_STEP_US = 5;
+    public static final int MAX_TRIM_US = 200;
 
-    // Replace with verified CH5 PWM values and mode labels for your gimbal.
+    public static final String[] CHANNEL_LABELS = {
+            "CH1 GAS", "CH2 STEER", "CH3 YAW", "CH4 PITCH", "CH5 MODE", "CH6 SMOOTH"
+    };
+    // Replace with the verified PWM mode positions of the particular gimbal.
     public static final int[] MODE_PWM = {1100, 1500, 1900};
     public static final String[] MODE_LABELS = {"HORIZON", "FOLLOW", "LOCK"};
 
@@ -17,10 +24,15 @@ public final class ControlState {
     private float pitch = 0f;
     private float smoothness = 0.5f;
     private int mode = 0;
+    // Pause/disconnect must send an absolute neutral ESC signal even with CH1 trim.
+    private boolean motorNeutralOverride = false;
+    private final int[] trimUs = new int[CHANNELS];
+    private final boolean[] inverted = new boolean[CHANNELS];
 
     public synchronized void setLeft(float steer, float throttle) {
         this.steer = clamp(steer);
         this.throttle = clamp(throttle);
+        motorNeutralOverride = false;
     }
 
     public synchronized void setRight(float yaw, float pitch) {
@@ -36,13 +48,41 @@ public final class ControlState {
         this.smoothness = Math.max(0f, Math.min(1f, value));
     }
 
-    /** Release the sticks when the app loses focus or the link closes. */
+    /** On Android pause/disconnect, return sticks to their centered positions. */
     public synchronized void emergencyNeutral() {
         steer = throttle = yaw = pitch = 0f;
+        motorNeutralOverride = true;
+    }
+
+    /** Trim is applied AFTER inversion, in physical PWM microseconds. */
+    public synchronized void setTrim(int channel, int offsetUs) {
+        requireChannel(channel);
+        trimUs[channel] = Math.max(-MAX_TRIM_US, Math.min(MAX_TRIM_US, offsetUs));
+    }
+
+    public synchronized int adjustTrim(int channel, int steps) {
+        requireChannel(channel);
+        setTrim(channel, trimUs[channel] + steps * TRIM_STEP_US);
+        return trimUs[channel];
+    }
+
+    public synchronized int getTrim(int channel) {
+        requireChannel(channel);
+        return trimUs[channel];
+    }
+
+    public synchronized void setInverted(int channel, boolean reverse) {
+        requireChannel(channel);
+        inverted[channel] = reverse;
+    }
+
+    public synchronized boolean isInverted(int channel) {
+        requireChannel(channel);
+        return inverted[channel];
     }
 
     public synchronized Snapshot snapshot() {
-        int[] pwm = new int[]{
+        int[] pwm = {
                 axisToPwm(throttle),
                 axisToPwm(steer),
                 axisToPwm(yaw),
@@ -50,17 +90,28 @@ public final class ControlState {
                 MODE_PWM[mode],
                 MIN_PWM + Math.round(smoothness * (MAX_PWM - MIN_PWM))
         };
-        return new Snapshot(pwm, steer, throttle, yaw, pitch, mode, smoothness);
+        for (int i = 0; i < CHANNELS; i++) {
+            int delta = pwm[i] - NEUTRAL;
+            pwm[i] = clampPwm(NEUTRAL + (inverted[i] ? -delta : delta) + trimUs[i]);
+        }
+        if (motorNeutralOverride) pwm[0] = NEUTRAL;
+        return new Snapshot(pwm, Arrays.copyOf(trimUs, CHANNELS),
+                Arrays.copyOf(inverted, CHANNELS), steer, throttle, yaw, pitch, mode, smoothness);
     }
 
     public static final class Snapshot {
         public final int[] pwm;
+        public final int[] trimUs;
+        public final boolean[] inverted;
         public final float steer, throttle, yaw, pitch, smoothness;
         public final int mode;
 
-        private Snapshot(int[] pwm, float steer, float throttle,
-                         float yaw, float pitch, int mode, float smoothness) {
+        private Snapshot(int[] pwm, int[] trimUs, boolean[] inverted,
+                         float steer, float throttle, float yaw, float pitch,
+                         int mode, float smoothness) {
             this.pwm = pwm;
+            this.trimUs = trimUs;
+            this.inverted = inverted;
             this.steer = steer;
             this.throttle = throttle;
             this.yaw = yaw;
@@ -75,7 +126,17 @@ public final class ControlState {
         return NEUTRAL + Math.round(clamp(axis) * 500f);
     }
 
-    private static float clamp(float v) {
-        return Math.max(-1f, Math.min(1f, v));
+    private static int clampPwm(int value) {
+        return Math.max(MIN_PWM, Math.min(MAX_PWM, value));
+    }
+
+    private static float clamp(float value) {
+        return Math.max(-1f, Math.min(1f, value));
+    }
+
+    private static void requireChannel(int channel) {
+        if (channel < 0 || channel >= CHANNELS) {
+            throw new IllegalArgumentException("Invalid channel: " + channel);
+        }
     }
 }

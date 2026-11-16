@@ -25,10 +25,26 @@ separate suitable power supply; do not supply them from MicroView pins.
   and Gradle 8.9. APK: `android/app/build/outputs/apk/debug/app-debug.apk`.
 - MicroView: flash `firmware/rc_microview/rc_microview.ino` using the SparkFun
   MicroView library and Arduino Servo library.
-- CI: GitHub Actions produces the downloadable `RC-MicroView-debug-apk` artifact.
+- CI: GitHub Actions produces the downloadable `RC-MicroView-v2-debug-apk` artifact.
 
 **Important:** app and firmware must both be protocol v2; old versions are
 incompatible. See [PROTOCOL.md](PROTOCOL.md).
+
+## Android trim and inversion (0.2.0)
+
+- On the main landscape screen, the **TRIMS** strip shows all six channels.
+  Each row uses `-`/`+` to shift the channel in **5 us** increments, up to
+  **-200..+200 us**. Tap the displayed signed number (e.g. `+15`) to reset
+  *that channel* to zero. Tap the **TRIMS** header button to collapse/expand
+  the panel and gain more joystick space. Long-press **TRIMS** to reset all six.
+- Tap **INVERT** in the header to open six independent inversion checkboxes.
+  The settings dialog also has **Reset all**.
+- The resulting PWM is `clamp(1500 + (inverted ? -(base-1500) : base-1500)
+  + trim, 1000, 2000)`. The base comes from the joystick, gimbal mode or
+  smoothness slider. Inversion of CH5 reverses the gimbal mode PWM order.
+- Both trims and inversion settings are saved with Android `SharedPreferences`
+  and restored on the next launch. They are applied on Android **before** the
+  UART command is sent. **The MicroView firmware does not need to change.**
 
 ## Safety
 
@@ -36,3 +52,9 @@ No ARM step: throttle outputs are live when commands are received.
 Release the joystick to center it. App loses focus/disconnect -> neutral.
 Arduino hardware-side watchdog defaults to 350 ms without fresh commands.
 Test with the drive wheels off the ground and set ESC neutral appropriately.
+
+CAUTION: A nonzero **CH1 GAS trim** shifts the active ESC neutral away from
+1500 us and can spin the wheels with the stick released. The app warns on the
+first nonzero CH1 trim. On pause/disconnect the app sends an absolute 1500 us
+for CH1 regardless of trim. A sudden broken USB link invokes MicroView's
+firmware-side watchdog, which also sends its configured failsafe value.

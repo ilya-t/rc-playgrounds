@@ -31,6 +31,56 @@ public final class ProtocolSelfTest {
         check(Protocol.parseStatus(status.replace(",32,", ",33,")) == null, "bad checksum rejected");
         check(Protocol.parseStatus(Protocol.wrap("S,99,12,10,3")) == null, "invalid state rejected");
         check(Protocol.parseStatus(Protocol.wrap("S,99,12,10,0")) == null, "reserved state rejected");
-        System.out.println("OK: v2 control state / serial protocol assertions");
+        check(state.snapshot().pwm[0] == 1500, "motor remains neutral before stick resumes");
+
+        // Independent channel inversion, before applying trim.
+        ControlState cal = new ControlState();
+        cal.setLeft(0.4f, 0.6f);
+        check(cal.snapshot().pwm[0] == 1800, "unmodified throttle");
+        check(cal.snapshot().pwm[1] == 1700, "unmodified steer");
+        cal.setInverted(0, true);
+        check(cal.snapshot().pwm[0] == 1200, "throttle inversion");
+        check(cal.snapshot().pwm[1] == 1700, "steering independently unaffected");
+        cal.adjustTrim(0, 3);
+        check(cal.getTrim(0) == 15, "three trim steps = 15 us");
+        check(cal.snapshot().pwm[0] == 1215, "trim applied after inversion");
+        cal.setInverted(1, true);
+        cal.setTrim(1, -20);
+        check(cal.snapshot().pwm[1] == 1280, "steering inverted and trimmed");
+        cal.setLeft(0, 0);
+        check(cal.snapshot().pwm[0] == 1515, "throttle trim shifts active center");
+        cal.emergencyNeutral();
+        check(cal.snapshot().pwm[0] == 1500, "pause overrides motor trim for safe ESC stop");
+        cal.setLeft(0, 0);
+        check(cal.snapshot().pwm[0] == 1515, "left stick restores active throttle trim");
+        cal.setTrim(0, 500);
+        check(cal.getTrim(0) == ControlState.MAX_TRIM_US, "trim clamped positive");
+        cal.setTrim(0, -500);
+        check(cal.getTrim(0) == -ControlState.MAX_TRIM_US, "trim clamped negative");
+        cal.setInverted(0, false);
+        cal.setLeft(0, -1f);
+        check(cal.snapshot().pwm[0] == ControlState.MIN_PWM, "PWM clamped to 1000");
+        cal.setLeft(0, 1f);
+        cal.setTrim(0, 200);
+        check(cal.snapshot().pwm[0] == ControlState.MAX_PWM, "PWM clamped to 2000");
+
+        cal.setMode(0);
+        cal.setInverted(4, true);
+        cal.setTrim(4, 10);
+        check(cal.snapshot().pwm[4] == 1910, "mode PWM reversed and trimmed");
+        cal.setSmoothness(0f);
+        cal.setInverted(5, true);
+        check(cal.snapshot().pwm[5] == 2000, "smoothness reversed");
+        cal.setTrim(5, -25);
+        check(cal.snapshot().pwm[5] == 1975, "smoothness trim");
+        check(cal.snapshot().trimUs[5] == -25 && cal.snapshot().inverted[4],
+                "snapshot includes calibration for UI");
+
+        byte[] adjustedPacket = Protocol.command(8, cal.snapshot());
+        String adjusted = new String(adjustedPacket,
+                java.nio.charset.StandardCharsets.US_ASCII);
+        check(adjusted.startsWith("C,8,2000,1480,1500,1500,1910,1975*"),
+                "calibration reflected in UART frame");
+        System.out.println("OK: v2 control state / trim / inversion / UART protocol assertions");
     }
 }
