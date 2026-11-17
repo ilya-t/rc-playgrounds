@@ -46,6 +46,9 @@ public final class MainActivity extends Activity {
     private Button videoButton;
     private UvcPreviewController uvc;
     private TextView videoStatus;
+    private TextView diagnosticStatus;
+    private FrameLayout previewFrame;
+    private boolean videoOnly = false;
     private TextView videoDiagnostics;
     private FrameLayout previewFrame;
     private boolean videoOnly = false;
@@ -156,7 +159,7 @@ public final class MainActivity extends Activity {
         });
 
         videoButton = new Button(this);
-        videoButton.setText("VIDEO");
+        videoButton.setText("VIDEO ON");
         videoButton.setTextSize(11);
         bar.addView(videoButton, new LinearLayout.LayoutParams(dp(88), dp(44)));
         videoButton.setOnClickListener(v -> {
@@ -168,9 +171,16 @@ public final class MainActivity extends Activity {
         videoButton.setOnLongClickListener(v -> {
             if (uvc == null) return true;
             String[] options = {"640×480 YUYV", "640×480 MJPEG",
-                    "720×576 YUYV", "720×576 MJPEG"};
+                    "720×576 YUYV", "720×576 MJPEG", "VIDEO ONLY / CONTROLS"};
             new AlertDialog.Builder(this).setTitle("Формат USB-видео")
                     .setItems(options, (dialog, which) -> {
+                        if (which == 4) {
+                            videoOnly = !videoOnly;
+                            surface.setVisibility(videoOnly ? View.GONE : View.VISIBLE);
+                            trimPanel.setVisibility(videoOnly ? View.GONE : View.VISIBLE);
+                            if (videoOnly) controls.emergencyNeutral();
+                            return;
+                        }
                         uvc.setSize(which < 2 ? 640 : 720, which < 2 ? 480 : 576);
                         uvc.setFormat((which % 2) == 1);
                     }).show();
@@ -206,6 +216,14 @@ public final class MainActivity extends Activity {
         FrameLayout.LayoutParams videoLabel = new FrameLayout.LayoutParams(-2, -2,
                 Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
         previewFrame.addView(videoStatus, videoLabel);
+        diagnosticStatus = new TextView(this);
+        diagnosticStatus.setTextColor(0xffffffff);
+        diagnosticStatus.setTextSize(10);
+        diagnosticStatus.setPadding(dp(7), dp(3), dp(7), dp(3));
+        diagnosticStatus.setBackgroundColor(0xbb000000);
+        FrameLayout.LayoutParams diagParams = new FrameLayout.LayoutParams(-2, -2,
+                Gravity.TOP | Gravity.LEFT);
+        previewFrame.addView(diagnosticStatus, diagParams);
         videoDiagnostics = new TextView(this);
         videoDiagnostics.setTextColor(Color.YELLOW);
         videoDiagnostics.setTextSize(10);
