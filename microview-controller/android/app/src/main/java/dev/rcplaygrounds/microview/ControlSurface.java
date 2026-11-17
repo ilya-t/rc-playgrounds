@@ -26,7 +26,7 @@ public final class ControlSurface extends View {
         super(context);
         this.controls = controls;
         setLayerType(View.LAYER_TYPE_SOFTWARE, null);
-        setBackgroundColor(BACKGROUND);
+        setBackgroundColor(android.graphics.Color.TRANSPARENT);
     }
 
     private float dp(float value) {
@@ -43,7 +43,7 @@ public final class ControlSurface extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         ControlState.Snapshot s = controls.snapshot();
-        canvas.drawColor(BACKGROUND);
+        // Transparent canvas: video is composited underneath this control overlay.
         text(canvas, "ГАЗ / РУЛЬ", leftX(), dp(26), dp(17), LABEL, true);
         text(canvas, "YAW / PITCH", rightX(), dp(26), dp(17), LABEL, true);
         drawStick(canvas, leftX(), centerY(), radius(), s.steer, s.throttle,
@@ -59,7 +59,7 @@ public final class ControlSurface extends View {
     private void drawStick(Canvas c, float cx, float cy, float radius,
                            float x, float y, int knobColor) {
         paint.setStyle(Paint.Style.FILL);
-        paint.setColor(PANEL);
+        paint.setColor(0x99202d46);
         c.drawCircle(cx, cy, radius, paint);
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeWidth(dp(1.5f));
@@ -80,7 +80,7 @@ public final class ControlSurface extends View {
         for (int i = 0; i < 3; i++) {
             float top = modeTop(i);
             float bottom = modeBottom(i);
-            roundedRect(c, x1, top, x2, bottom, s.mode == i ? ACCENT : PANEL);
+            roundedRect(c, x1, top, x2, bottom, s.mode == i ? ACCENT : 0xcc202d46);
             text(c, ControlState.MODE_LABELS[i], (x1 + x2) * .5f,
                     (top + bottom) * .5f + dp(5), dp(12),
                     s.mode == i ? BACKGROUND : LABEL, true);
