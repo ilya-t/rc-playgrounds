@@ -12,7 +12,7 @@ class ServerAppComponent(app: Application) {
     val scope: CoroutineScope = CoroutineScope(
         SupervisorJob() + Dispatchers.Default + CoroutineName("ServerAppScope"),
     )
-    val activeConfigProvider = ServerActiveConfigProvider()
+    val controlReceiver = ServerControlReceiver(scope)
 
     companion object {
         lateinit var app: Application

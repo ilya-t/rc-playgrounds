@@ -16,7 +16,7 @@ import java.nio.ByteBuffer
 import java.util.concurrent.atomic.AtomicReference
 
 class AndroidServerVideoSender(
-    private val configs: StateFlow<ServerStreamConfig>,
+    private val target: StateFlow<VideoTarget?>,
     private val scope: CoroutineScope,
 ) : ServerVideoSender {
     private val pending = AtomicReference<CameraFrame?>(null)
@@ -43,8 +43,12 @@ class AndroidServerVideoSender(
         running = true
         scope.launch {
             socket = DatagramSocket()
-            val current = configs.value
-            Log.i(TAG, "udp ${current.host}:${current.port}")
+            val current = target.value
+            if (current == null) {
+                Log.i(TAG, "udp waiting for client")
+            } else {
+                Log.i(TAG, "udp ${current.host}:${current.port}")
+            }
         }
     }
 
@@ -181,7 +185,7 @@ class AndroidServerVideoSender(
     private fun format(width: Int, height: Int, color: Int, withProfile: Boolean): MediaFormat {
         return MediaFormat.createVideoFormat(MIME, width, height).apply {
             setInteger(MediaFormat.KEY_COLOR_FORMAT, color)
-            setInteger(MediaFormat.KEY_BIT_RATE, configs.value.bitrate)
+            setInteger(MediaFormat.KEY_BIT_RATE, BITRATE)
             setInteger(MediaFormat.KEY_FRAME_RATE, FRAME_RATE)
             setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1)
             setInteger(MediaFormat.KEY_PREPEND_HEADER_TO_SYNC_FRAMES, 1)
@@ -259,8 +263,8 @@ class AndroidServerVideoSender(
 
     private fun send(annex: ByteArray) {
         val udp = socket ?: return
-        val current = configs.value
-        val target = resolve(current.host) ?: return
+        val current = target.value ?: return
+        val destination = resolve(current.host) ?: return
         if (!loggedFormat || loggedHost != current.host || loggedPort != current.port) {
             loggedFormat = true
             loggedHost = current.host
@@ -268,7 +272,7 @@ class AndroidServerVideoSender(
             Log.i(TAG, "h264 ${encodedWidth}x${encodedHeight} -> ${current.host}:${current.port}")
         }
         for (chunk in H264Packets.packets(annex)) {
-            udp.send(DatagramPacket(chunk, chunk.size, target, current.port))
+            udp.send(DatagramPacket(chunk, chunk.size, destination, current.port))
         }
     }
 
@@ -319,6 +323,7 @@ class AndroidServerVideoSender(
     private companion object {
         const val TAG = "ServerVideo"
         const val MIME = MediaFormat.MIMETYPE_VIDEO_AVC
+        const val BITRATE = 2_000_000
         const val FRAME_RATE = 30
         const val ENQUEUE_TIMEOUT_US = 10_000L
         const val SYNC_FRAME_INTERVAL = 10L
