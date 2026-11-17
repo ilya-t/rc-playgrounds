@@ -19,10 +19,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.herohan.uvcapp.CameraHelper
 import com.herohan.uvcapp.ICameraHelper
+import com.serenegiant.usb.IFrameCallback
 import com.serenegiant.usb.Size
 import com.serenegiant.usb.UVCCamera
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import java.nio.ByteBuffer
 import kotlin.math.abs
 
 class AndroidServerCamera(
@@ -44,6 +46,9 @@ class AndroidServerCamera(
     private var pendingDevice: UsbDevice? = null
     private var usbRequestInFlight = false
     private var askedForCameraPermission = false
+    private var frameWidth = 0
+    private var frameHeight = 0
+    @Volatile private var frameListener: ServerCameraFrames? = null
 
     private val cameraPermissionLauncher = activity.registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
@@ -121,6 +126,8 @@ class AndroidServerCamera(
             val size = previewSize(cameraHelper?.supportedSizeList)
             if (size != null) {
                 Log.i(TAG, "preview ${size.width}x${size.height}@${size.fps} type=${size.type}")
+                frameWidth = size.width
+                frameHeight = size.height
                 cameraHelper?.previewSize = size
             }
             attachPreview()
@@ -194,7 +201,13 @@ class AndroidServerCamera(
         deviceChosen = false
         cameraOpened = false
         pendingDevice = null
+        frameWidth = 0
+        frameHeight = 0
         states.value = ServerCameraState.Stopped
+    }
+
+    override fun setFrameListener(listener: ServerCameraFrames?) {
+        frameListener = listener
     }
 
     private fun choose(device: UsbDevice) {
@@ -294,6 +307,7 @@ class AndroidServerCamera(
         if (!preview.holder.surface.isValid) {
             return
         }
+        helper.setFrameCallback(frameCallback, UVCCamera.PIXEL_FORMAT_NV21)
         helper.addSurface(preview, false)
         helper.startPreview()
         previewAttached = true
@@ -304,8 +318,33 @@ class AndroidServerCamera(
         if (!previewAttached) {
             return
         }
+        cameraHelper?.setFrameCallback(null, UVCCamera.PIXEL_FORMAT_NV21)
         cameraHelper?.removeSurface(preview)
         previewAttached = false
+    }
+
+    private val frameCallback = IFrameCallback { frame ->
+        publishFrame(frame)
+    }
+
+    private fun publishFrame(frame: ByteBuffer) {
+        val listener = frameListener ?: return
+        val width = frameWidth
+        val height = frameHeight
+        if (width <= 0 || height <= 0) {
+            return
+        }
+        val size = width * height * 3 / 2
+        val bytes = frame.duplicate()
+        if (bytes.remaining() < size) {
+            bytes.clear()
+        }
+        if (bytes.remaining() < size) {
+            return
+        }
+        val copy = ByteArray(size)
+        bytes.get(copy)
+        listener.onFrame(copy, width, height)
     }
 
     private fun isVideoDevice(device: UsbDevice): Boolean {

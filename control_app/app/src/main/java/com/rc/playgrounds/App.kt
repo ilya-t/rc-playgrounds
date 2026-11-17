@@ -1,11 +1,12 @@
 package com.rc.playgrounds
 
 import android.app.Application
-import com.rc.playgrounds.AppComponent.Companion.instance
+import com.rc.playgrounds.server.ServerAppComponent
 
 class App : Application() {
     override fun onCreate() {
         super.onCreate()
-        instance = AppComponent(this)
+        AppComponent.app = this
+        ServerAppComponent.app = this
     }
 }
