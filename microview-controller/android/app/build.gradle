@@ -10,8 +10,8 @@ android {
         applicationId 'dev.rcplaygrounds.microview'
         minSdk 26
         targetSdk 35
-        versionCode 2
-        versionName '0.2.0'
+        versionCode 3
+        versionName '0.3.0'
     }
 
     compileOptions {
@@ -28,4 +28,5 @@ android {
 
 dependencies {
     implementation 'com.github.mik3y:usb-serial-for-android:3.12.0'
+    implementation 'com.github.jiangdongguo.AndroidUSBCamera:libausbc:3.3.3'
 }
