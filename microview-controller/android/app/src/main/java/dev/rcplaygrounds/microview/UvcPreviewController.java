@@ -172,7 +172,8 @@ public final class UvcPreviewController implements IDeviceConnectCallBack, ICame
     }
     public void onCameraPermissionGranted() { if (started && enabled) findCamera(); }
     private void applyVisibility() {
-        surface.setVisibility(enabled && renderer == Renderer.SURFACE ? View.VISIBLE : View.GONE);
+        // Keep native capture surface alive even when software output is selected.
+        surface.setVisibility(enabled ? View.VISIBLE : View.GONE);
         softwareView.setVisibility(enabled && renderer == Renderer.SOFTWARE ? View.VISIBLE : View.GONE);
     }
     private void reconnect() {
