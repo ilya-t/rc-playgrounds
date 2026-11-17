@@ -2,10 +2,12 @@ package com.rc.playgrounds.server
 
 class ServerSession(
     private val screenWake: ScreenWake,
+    private val keepAlive: ServerKeepAlive,
     private val pictureInPicture: ServerPictureInPicture,
 ) {
     fun start() {
         screenWake.acquire()
+        keepAlive.start()
     }
 
     fun onUserLeave() {
@@ -14,5 +16,6 @@ class ServerSession(
 
     fun onClosed() {
         screenWake.release()
+        keepAlive.stop()
     }
 }

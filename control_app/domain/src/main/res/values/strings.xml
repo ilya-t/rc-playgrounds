@@ -2,4 +2,5 @@
 <resources>
     <string name="controls_lock">Vehicle controls locked!</string>
     <string name="rc_server">rc-server</string>
+    <string name="rc_server_running">rc-server is running</string>
 </resources>
