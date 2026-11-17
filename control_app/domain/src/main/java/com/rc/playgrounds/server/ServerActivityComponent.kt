@@ -12,7 +12,7 @@ class ServerActivityComponent(
 ) {
     init {
         activity.setContentView(R.layout.server_activity)
-        val configs = appComponent.activeConfigProvider
+        val receiver = appComponent.controlReceiver
         val camera = AndroidServerCamera(
             activity = activity,
             preview = activity.findViewById(R.id.server_preview),
@@ -22,12 +22,16 @@ class ServerActivityComponent(
             keepAlive = AndroidServerKeepAlive(activity),
             pictureInPicture = AndroidServerPictureInPicture(activity),
             camera = camera,
-            videoSender = AndroidServerVideoSender(configs.config, appComponent.scope),
+            videoSender = AndroidServerVideoSender(receiver.videoTarget, appComponent.scope),
         )
-        val viewModelProvider = ServerViewModelProvider(camera, configs)
+        val viewModelProvider = ServerViewModelProvider(
+            camera,
+            receiver.controls,
+            receiver.videoTarget,
+        )
         ServerView(
             titleView = activity.findViewById(R.id.server_title),
-            targetView = activity.findViewById(R.id.server_target),
+            controlsView = activity.findViewById(R.id.server_controls),
             viewModel = viewModelProvider.viewModel,
             scope = activity.lifecycleScope,
         )
