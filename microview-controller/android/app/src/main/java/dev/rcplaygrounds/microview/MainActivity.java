@@ -46,6 +46,9 @@ public final class MainActivity extends Activity {
     private Button videoButton;
     private UvcPreviewController uvc;
     private TextView videoStatus;
+    private TextView videoDiagnostics;
+    private FrameLayout previewFrame;
+    private boolean videoOnly = false;
     private boolean cameraPermissionRequested;
     private Button trimToggleButton;
     private LinearLayout trimPanel;
@@ -57,7 +60,7 @@ public final class MainActivity extends Activity {
     private final Runnable tick = new Runnable() {
         @Override public void run() {
             refreshUi();
-            ui.postDelayed(this, 200);
+            ui.postDelayed(this, 1000);
         }
     };
 
@@ -159,6 +162,7 @@ public final class MainActivity extends Activity {
         videoButton.setOnClickListener(v -> {
             if (uvc == null) return;
             uvc.setEnabled(!uvc.isEnabled());
+            previewFrame.setBackgroundColor(uvc.isEnabled() ? 0xff333333 : 0xffaa2255);
             videoButton.setText(uvc.isEnabled() ? "VIDEO ON" : "VIDEO OFF");
         });
         videoButton.setOnLongClickListener(v -> {
@@ -181,10 +185,11 @@ public final class MainActivity extends Activity {
             else connect();
         });
 
-        FrameLayout previewFrame = new FrameLayout(this);
+        previewFrame = new FrameLayout(this);
+        previewFrame.setBackgroundColor(0xff333333);
         root.addView(previewFrame, new LinearLayout.LayoutParams(-1, 0, 1));
         TextureView preview = new TextureView(this);
-        preview.setOpaque(true);
+        preview.setOpaque(false);
         previewFrame.addView(preview, new FrameLayout.LayoutParams(-1, -1));
         uvc = new UvcPreviewController(this, preview, value ->
                 runOnUiThread(() -> {
@@ -201,6 +206,20 @@ public final class MainActivity extends Activity {
         FrameLayout.LayoutParams videoLabel = new FrameLayout.LayoutParams(-2, -2,
                 Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
         previewFrame.addView(videoStatus, videoLabel);
+        videoDiagnostics = new TextView(this);
+        videoDiagnostics.setTextColor(Color.YELLOW);
+        videoDiagnostics.setTextSize(10);
+        videoDiagnostics.setPadding(dp(8), dp(3), dp(8), dp(3));
+        videoDiagnostics.setBackgroundColor(0xaa000000);
+        FrameLayout.LayoutParams diagnosticLabel = new FrameLayout.LayoutParams(-2, -2,
+                Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+        previewFrame.addView(videoDiagnostics, diagnosticLabel);
+        videoDiagnostics.setOnClickListener(v -> {
+            videoOnly = !videoOnly;
+            surface.setVisibility(videoOnly ? View.INVISIBLE : View.VISIBLE);
+            trimPanel.setVisibility(videoOnly ? View.GONE : View.VISIBLE);
+            if (videoOnly) surface.resetTouches();
+        });
 
         trimPanel = new LinearLayout(this);
         trimPanel.setOrientation(LinearLayout.VERTICAL);
@@ -457,6 +476,8 @@ public final class MainActivity extends Activity {
         title.setText(status);
         usbButton.setText(linked ? "DISCONNECT" : "USB CONNECT");
         surface.invalidate();
+        if (uvc != null && videoDiagnostics != null)
+            videoDiagnostics.setText(uvc.diagnostics() + "\\nTap here: VIDEO ONLY");
     }
 
     @Override
