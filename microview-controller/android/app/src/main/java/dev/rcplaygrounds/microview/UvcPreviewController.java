@@ -241,7 +241,7 @@ public final class UvcPreviewController implements IDeviceConnectCallBack, ICame
         if (state == ICameraStateCallBack.State.OPENED) {
             try {
                 deviceDetails = "VID:PID=" + selectedDevice.getVendorId() + ":" + selectedDevice.getProductId()
-                        + " modes=" + camera.getAllPreviewSizes().toString();
+                        + " modes=" + camera.getAllPreviewSizes(null).toString();
             } catch (Exception e) {
                 deviceDetails = "modes unavailable: " + e.getMessage();
             }
