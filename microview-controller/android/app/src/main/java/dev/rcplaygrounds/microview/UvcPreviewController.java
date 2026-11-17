@@ -2,6 +2,8 @@ package dev.rcplaygrounds.microview;
 
 import android.content.Context;
 import android.graphics.SurfaceTexture;
+import android.os.SystemClock;
+import com.jiangdg.ausbc.callback.IPreviewDataCallBack;
 import android.hardware.usb.UsbConstants;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbInterface;
@@ -44,6 +46,16 @@ public final class UvcPreviewController implements IDeviceConnectCallBack, ICame
     private int desiredWidth = 640;
     private int desiredHeight = 480;
     private String status = "Видеокамера не подключена";
+    private volatile long decodedFrames;
+    private volatile long renderedFrames;
+    private volatile long lastFrameTimeMs;
+    private long sampledDecoded, sampledRendered;
+    private long sampleTimeMs = SystemClock.elapsedRealtime();
+    private String deviceDetails = "no UVC device";
+    private final IPreviewDataCallBack frameCallback = (data, width, height, format) -> {
+        decodedFrames++;
+        lastFrameTimeMs = SystemClock.elapsedRealtime();
+    };
 
     public UvcPreviewController(Context context, TextureView video, Listener listener) {
         this.context = context;
@@ -60,7 +72,7 @@ public final class UvcPreviewController implements IDeviceConnectCallBack, ICame
                 if (camera != null) camera.closeCamera();
                 return true;
             }
-            @Override public void onSurfaceTextureUpdated(SurfaceTexture surface) {}
+            @Override public void onSurfaceTextureUpdated(SurfaceTexture surface) { renderedFrames++; }
         });
         updateStatus(status);
     }
@@ -157,6 +169,7 @@ public final class UvcPreviewController implements IDeviceConnectCallBack, ICame
     private void closeCamera() {
         requestInFlight = false;
         if (camera != null) {
+            camera.removePreviewDataCallBack(frameCallback);
             camera.setCameraStateCallBack(null);
             camera.closeCamera();
             camera = null;
@@ -186,6 +199,7 @@ public final class UvcPreviewController implements IDeviceConnectCallBack, ICame
         camera = new CameraUVC(context, device);
         camera.setUsbControlBlock(block);
         camera.setCameraStateCallBack(this);
+        camera.addPreviewDataCallBack(frameCallback);
         if (video.isAvailable()) {
             openPreview();
         } else {
@@ -213,6 +227,7 @@ public final class UvcPreviewController implements IDeviceConnectCallBack, ICame
                 .setPreviewHeight(desiredHeight)
                 .setPreviewFormat(useMjpeg ? CameraRequest.PreviewFormat.FORMAT_MJPEG
                         : CameraRequest.PreviewFormat.FORMAT_YUYV)
+                .setRawPreviewData(true)
                 .setRenderMode(CameraRequest.RenderMode.NORMAL)
                 .setAudioSource(CameraRequest.AudioSource.NONE)
                 .create();
@@ -224,6 +239,12 @@ public final class UvcPreviewController implements IDeviceConnectCallBack, ICame
                                         ICameraStateCallBack.State state, String msg) {
         if (!started || !enabled || self != camera) return;
         if (state == ICameraStateCallBack.State.OPENED) {
+            try {
+                deviceDetails = "VID:PID=" + selectedDevice.getVendorId() + ":" + selectedDevice.getProductId()
+                        + " modes=" + camera.getAllPreviewSizes().toString();
+            } catch (Exception e) {
+                deviceDetails = "modes unavailable: " + e.getMessage();
+            }
             updateStatus("UVC LIVE • " + desiredWidth + "×" + desiredHeight
                     + (useMjpeg ? " MJPEG" : " YUYV"));
         } else if (state == ICameraStateCallBack.State.ERROR) {
@@ -239,4 +260,17 @@ public final class UvcPreviewController implements IDeviceConnectCallBack, ICame
     }
 
     public String getStatus() { return status; }
+
+    public String diagnostics() {
+        long now = SystemClock.elapsedRealtime();
+        long interval = Math.max(1, now - sampleTimeMs);
+        long decodeFps = (decodedFrames - sampledDecoded) * 1000 / interval;
+        long displayFps = (renderedFrames - sampledRendered) * 1000 / interval;
+        sampledDecoded = decodedFrames;
+        sampledRendered = renderedFrames;
+        sampleTimeMs = now;
+        long age = lastFrameTimeMs == 0 ? -1 : now - lastFrameTimeMs;
+        return "RAW " + decodeFps + "fps (" + decodedFrames + ") DRAW "
+                + displayFps + "fps (" + renderedFrames + ") age=" + age + "ms\n" + deviceDetails;
+    }
 }
