@@ -28,5 +28,5 @@ android {
 
 dependencies {
     implementation 'com.github.mik3y:usb-serial-for-android:3.12.0'
-    implementation 'com.github.jiangdongguo.AndroidUSBCamera:libausbc:3.3.3'
+    implementation 'com.github.chenyeju295.AndroidUSBCamera:libausbc:3.3.6'
 }
