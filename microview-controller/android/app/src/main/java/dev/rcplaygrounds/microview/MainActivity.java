@@ -50,8 +50,6 @@ public final class MainActivity extends Activity {
     private FrameLayout previewFrame;
     private boolean videoOnly = false;
     private TextView videoDiagnostics;
-    private FrameLayout previewFrame;
-    private boolean videoOnly = false;
     private boolean cameraPermissionRequested;
     private Button trimToggleButton;
     private LinearLayout trimPanel;
@@ -170,19 +168,26 @@ public final class MainActivity extends Activity {
         });
         videoButton.setOnLongClickListener(v -> {
             if (uvc == null) return true;
-            String[] options = {"640×480 YUYV", "640×480 MJPEG",
-                    "720×576 YUYV", "720×576 MJPEG", "VIDEO ONLY / CONTROLS"};
+            String[] options = {"Renderer: SurfaceView (native)", "Renderer: CPU NV21/RGBA",
+                    "640×480 YUYV", "640×480 MJPEG", "720×576 YUYV",
+                    "720×576 MJPEG", "VIDEO ONLY / CONTROLS"};
             new AlertDialog.Builder(this).setTitle("Формат USB-видео")
                     .setItems(options, (dialog, which) -> {
-                        if (which == 4) {
+                        if (which == 0 || which == 1) {
+                            uvc.setRenderer(which == 0 ? UvcPreviewController.Renderer.SURFACE
+                                    : UvcPreviewController.Renderer.SOFTWARE);
+                            return;
+                        }
+                        if (which == 6) {
                             videoOnly = !videoOnly;
                             surface.setVisibility(videoOnly ? View.GONE : View.VISIBLE);
                             trimPanel.setVisibility(videoOnly ? View.GONE : View.VISIBLE);
                             if (videoOnly) controls.emergencyNeutral();
                             return;
                         }
-                        uvc.setSize(which < 2 ? 640 : 720, which < 2 ? 480 : 576);
-                        uvc.setFormat((which % 2) == 1);
+                        int mode = which - 2;
+                        uvc.setSize(mode < 2 ? 640 : 720, mode < 2 ? 480 : 576);
+                        uvc.setFormat((mode % 2) == 1);
                     }).show();
             return true;
         });
@@ -198,10 +203,7 @@ public final class MainActivity extends Activity {
         previewFrame = new FrameLayout(this);
         previewFrame.setBackgroundColor(0xff333333);
         root.addView(previewFrame, new LinearLayout.LayoutParams(-1, 0, 1));
-        TextureView preview = new TextureView(this);
-        preview.setOpaque(false);
-        previewFrame.addView(preview, new FrameLayout.LayoutParams(-1, -1));
-        uvc = new UvcPreviewController(this, preview, value ->
+        uvc = new UvcPreviewController(this, previewFrame, value ->
                 runOnUiThread(() -> {
                     if (videoStatus != null) videoStatus.setText(value);
                 }));
@@ -495,7 +497,7 @@ public final class MainActivity extends Activity {
         usbButton.setText(linked ? "DISCONNECT" : "USB CONNECT");
         surface.invalidate();
         if (uvc != null && videoDiagnostics != null)
-            videoDiagnostics.setText(uvc.diagnostics() + "\\nTap here: VIDEO ONLY");
+            videoDiagnostics.setText(uvc.diagnostics() + "\nTap here: VIDEO ONLY");
     }
 
     @Override
