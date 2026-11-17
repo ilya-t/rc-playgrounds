@@ -5,6 +5,7 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.rc.playgrounds.domain.R
 import com.rc.playgrounds.server.AndroidScreenWake
+import com.rc.playgrounds.server.AndroidServerKeepAlive
 import com.rc.playgrounds.server.AndroidServerPictureInPicture
 import com.rc.playgrounds.server.ServerSession
 
@@ -16,6 +17,7 @@ class ServerActivityComponent(
         activity.setContentView(R.layout.server_activity)
         val session = ServerSession(
             screenWake = AndroidScreenWake(activity),
+            keepAlive = AndroidServerKeepAlive(activity),
             pictureInPicture = AndroidServerPictureInPicture(activity),
         )
         session.start()
