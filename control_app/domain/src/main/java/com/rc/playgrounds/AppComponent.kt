@@ -152,6 +152,9 @@ class AppComponent(app: Application) {
     )
 
     companion object {
-        lateinit var instance: AppComponent
+        lateinit var app: Application
+        val instance: AppComponent by lazy {
+            AppComponent(app)
+        }
     }
 }

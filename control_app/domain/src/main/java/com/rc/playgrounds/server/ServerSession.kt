@@ -5,10 +5,13 @@ class ServerSession(
     private val keepAlive: ServerKeepAlive,
     private val pictureInPicture: ServerPictureInPicture,
     private val camera: ServerCamera,
+    private val videoSender: ServerVideoSender,
 ) {
     fun start() {
         screenWake.acquire()
         keepAlive.start()
+        videoSender.start()
+        camera.setFrameListener(videoSender)
         camera.start()
     }
 
@@ -17,7 +20,9 @@ class ServerSession(
     }
 
     fun onClosed() {
+        camera.setFrameListener(null)
         camera.stop()
+        videoSender.stop()
         screenWake.release()
         keepAlive.stop()
     }

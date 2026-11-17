@@ -1,5 +1,7 @@
 package com.rc.playgrounds.server
 
-data class ServerViewModel(
+class ServerViewModel(
     val title: String,
+    val target: String,
+    val onTargetChanged: (String) -> Unit,
 )
