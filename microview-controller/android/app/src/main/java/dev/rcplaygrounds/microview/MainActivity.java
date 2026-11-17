@@ -20,6 +20,10 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.FrameLayout;
+import android.view.TextureView;
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.widget.TextView;
 
 import com.hoho.android.usbserial.driver.UsbSerialDriver;
@@ -39,6 +43,10 @@ public final class MainActivity extends Activity {
     private ControlSurface surface;
     private TextView title;
     private Button usbButton;
+    private Button videoButton;
+    private UvcPreviewController uvc;
+    private TextView videoStatus;
+    private boolean cameraPermissionRequested;
     private Button trimToggleButton;
     private LinearLayout trimPanel;
     private final TextView[] trimValues = new TextView[ControlState.CHANNELS];
@@ -62,6 +70,8 @@ public final class MainActivity extends Activity {
         restoreCalibration();
         buildUi();
         handlePermissionIntent(getIntent());
+        if (uvc != null) uvc.start();
+        requestVideoCameraPermission();
         ui.post(tick);
     }
 
@@ -78,6 +88,24 @@ public final class MainActivity extends Activity {
         intent.removeExtra(UsbPermissionReceiver.EXTRA_PERMISSION_RESULT);
         if (granted) connect();
         else { infoText = "Доступ к USB отклонён"; refreshUi(); }
+    }
+
+    private void requestVideoCameraPermission() {
+        if (android.os.Build.VERSION.SDK_INT >= 23 &&
+                checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED &&
+                !cameraPermissionRequested) {
+            cameraPermissionRequested = true;
+            requestPermissions(new String[]{Manifest.permission.CAMERA}, 403);
+        }
+    }
+
+    @Override public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grants) {
+        super.onRequestPermissionsResult(requestCode, permissions, grants);
+        if (requestCode == 403 && uvc != null) {
+            if (grants.length > 0 && grants[0] == PackageManager.PERMISSION_GRANTED)
+                uvc.onCameraPermissionGranted();
+            else if (videoStatus != null) videoStatus.setText("UVC: доступ к камере запрещён");
+        }
     }
 
     private void buildUi() {
@@ -124,6 +152,26 @@ public final class MainActivity extends Activity {
             return true;
         });
 
+        videoButton = new Button(this);
+        videoButton.setText("VIDEO");
+        videoButton.setTextSize(11);
+        bar.addView(videoButton, new LinearLayout.LayoutParams(dp(88), dp(44)));
+        videoButton.setOnClickListener(v -> {
+            if (uvc == null) return;
+            uvc.setEnabled(!uvc.isEnabled());
+            videoButton.setText(uvc.isEnabled() ? "VIDEO ON" : "VIDEO OFF");
+        });
+        videoButton.setOnLongClickListener(v -> {
+            if (uvc == null) return true;
+            String[] options = {"640×480 YUYV", "640×480 MJPEG",
+                    "720×576 YUYV", "720×576 MJPEG"};
+            new AlertDialog.Builder(this).setTitle("Формат USB-видео")
+                    .setItems(options, (dialog, which) -> {
+                        uvc.setSize(which < 2 ? 640 : 720, which < 2 ? 480 : 576);
+                        uvc.setFormat((which % 2) == 1);
+                    }).show();
+            return true;
+        });
         usbButton = new Button(this);
         usbButton.setText("USB CONNECT");
         usbButton.setTextSize(11);
@@ -133,8 +181,26 @@ public final class MainActivity extends Activity {
             else connect();
         });
 
+        FrameLayout previewFrame = new FrameLayout(this);
+        root.addView(previewFrame, new LinearLayout.LayoutParams(-1, 0, 1));
+        TextureView preview = new TextureView(this);
+        preview.setOpaque(true);
+        previewFrame.addView(preview, new FrameLayout.LayoutParams(-1, -1));
+        uvc = new UvcPreviewController(this, preview, value ->
+                runOnUiThread(() -> {
+                    if (videoStatus != null) videoStatus.setText(value);
+                }));
         surface = new ControlSurface(this, controls);
-        root.addView(surface, new LinearLayout.LayoutParams(-1, 0, 1));
+        previewFrame.addView(surface, new FrameLayout.LayoutParams(-1, -1));
+        videoStatus = new TextView(this);
+        videoStatus.setTextColor(Color.WHITE);
+        videoStatus.setTextSize(11);
+        videoStatus.setPadding(dp(8), dp(3), dp(8), dp(3));
+        videoStatus.setBackgroundColor(0x99111a2c);
+        videoStatus.setText("UVC: ожидание камеры");
+        FrameLayout.LayoutParams videoLabel = new FrameLayout.LayoutParams(-2, -2,
+                Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
+        previewFrame.addView(videoStatus, videoLabel);
 
         trimPanel = new LinearLayout(this);
         trimPanel.setOrientation(LinearLayout.VERTICAL);
@@ -397,11 +463,18 @@ public final class MainActivity extends Activity {
     protected void onPause() {
         // Lost focus, phone call, task switch: immediately re-center all axes.
         if (surface != null) surface.resetTouches();
+        if (uvc != null) uvc.stop();
         super.onPause();
+    }
+
+    @Override protected void onResume() {
+        super.onResume();
+        if (uvc != null) uvc.start();
     }
 
     @Override
     protected void onDestroy() {
+        if (uvc != null) uvc.destroy();
         ui.removeCallbacks(tick);
         disconnect();
         super.onDestroy();
