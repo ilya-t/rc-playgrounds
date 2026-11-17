@@ -39,6 +39,7 @@ android {
 
 dependencies {
     implementation("androidx.core:core-ktx:1.10.1")
+    implementation("com.herohan:UVCAndroid:1.0.13")
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("com.google.android.material:material:1.10.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:${Dependencies.kotlinxSerializationJson}")
