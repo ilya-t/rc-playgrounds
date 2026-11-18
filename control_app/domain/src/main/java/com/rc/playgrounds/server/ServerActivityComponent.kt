@@ -28,6 +28,8 @@ class ServerActivityComponent(
             camera,
             receiver.controls,
             receiver.videoTarget,
+            appComponent.microviewLink.state,
+            appComponent.microviewLink.problems,
         )
         ServerView(
             titleView = activity.findViewById(R.id.server_title),
@@ -35,13 +37,20 @@ class ServerActivityComponent(
             viewModel = viewModelProvider.viewModel,
             scope = activity.lifecycleScope,
         )
+        val usbPermissionRequester = UsbPermissionRequester(activity)
+        usbPermissionRequester.connect(appComponent.usbPermissionHandler)
         session.start()
         activity.lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onResume(owner: LifecycleOwner) {
+                usbPermissionRequester.onResume()
+            }
+
             override fun onPause(owner: LifecycleOwner) {
                 session.onUserLeave()
             }
 
             override fun onDestroy(owner: LifecycleOwner) {
+                usbPermissionRequester.disconnect()
                 if (!activity.isChangingConfigurations) {
                     session.onClosed()
                 }
