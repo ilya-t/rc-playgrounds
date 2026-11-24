@@ -139,6 +139,7 @@ class AppComponent(app: Application) {
         streamerEvents,
         frameDropStatus,
         quickConfigModel,
+        telemetryProvider.state,
     )
 
     val lockModel = LockModel(

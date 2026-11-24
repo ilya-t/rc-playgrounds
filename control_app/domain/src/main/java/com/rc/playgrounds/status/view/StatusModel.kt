@@ -11,6 +11,7 @@ import com.rc.playgrounds.status.PingService
 import com.rc.playgrounds.status.gstreamer.Event
 import com.rc.playgrounds.status.gstreamer.FrameDropStatus
 import com.rc.playgrounds.status.gstreamer.StreamerEvents
+import com.rc.playgrounds.telemetry.Telemetry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,6 +29,7 @@ class StatusModel(
     private val streamerEvents: StreamerEvents,
     private val frameDropStatus: FrameDropStatus,
     private val quickConfigModel: QuickConfigModel,
+    telemetry: Flow<Telemetry?>,
 ) {
     private val lastStreamerError = MutableStateFlow<Event.Error?>(null)
     private val pingTarget: Flow<String?> = config.configFlow.map { it.controlServer?.address(it.env) }
@@ -71,6 +73,7 @@ class StatusModel(
                 lastStreamerError,
                 //TODO: maybe bring back? frameDropStatus.frameDropsPerSecond,
                 config.configFlow.map { it.envOverrides },
+                telemetry,
                 ::asStatus
             )
 
@@ -91,6 +94,7 @@ private fun asStatus(
     ping: String,
     streamerEvent: Event.Error?,
     envOverrides: List<EnvironmentOverrides>,
+    telemetry: Telemetry?,
 ): String {
     return buildString {
         appendLine("- $ping")
@@ -109,7 +113,15 @@ private fun asStatus(
                 ?: return@forEach
             appendLine("- ${overrides.name}: ${activeProfile.name}")
         }
+
+        telemetry?.control?.let { appendLine(controlLine(it)) }
     }
+}
+
+private fun controlLine(control: Telemetry.Control): String {
+    val status = control.status.take(CONTROL_STATUS_LIMIT)
+    val message = if (control.error) "$CONTROL_ERROR_EMOJI $status" else status
+    return "- $message"
 }
 
 private class StatusCollector(
@@ -136,6 +148,9 @@ private class StatusCollector(
         statusJob.cancel()
     }
 }
+
+private const val CONTROL_STATUS_LIMIT = 25
+private const val CONTROL_ERROR_EMOJI = "❌"
 
 private val SAD_EMOJI = listOf(
     "🥲",
