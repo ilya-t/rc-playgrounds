@@ -16,13 +16,11 @@ import android.os.SystemClock
 import com.hoho.android.usbserial.driver.UsbSerialDriver
 import com.hoho.android.usbserial.driver.UsbSerialPort
 import com.hoho.android.usbserial.driver.UsbSerialProber
+import com.rc.playgrounds.server.ErrorLogger
 import com.rc.playgrounds.server.ServerControlState
 import com.rc.playgrounds.server.UsbPermissionHandler
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
@@ -36,15 +34,12 @@ class AndroidMicroviewLink(
     controls: StateFlow<ServerControlState>,
     scope: CoroutineScope,
     private val usbPermissionHandler: UsbPermissionHandler,
+    private val errors: ErrorLogger,
 ) {
     private val states = MutableStateFlow(MicroviewLinkState.NoAdapter)
     val state: StateFlow<MicroviewLinkState> = states
-    private val problemEvents = MutableSharedFlow<String>(
-        replay = PROBLEM_REPLAY,
-        extraBufferCapacity = PROBLEM_BUFFER,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST,
-    )
-    val problems: SharedFlow<String> = problemEvents
+    private val statuses = MutableStateFlow<MicroviewProtocol.Status?>(null)
+    val status: StateFlow<MicroviewProtocol.Status?> = statuses
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private val running = AtomicBoolean(false)
@@ -217,6 +212,7 @@ class AndroidMicroviewLink(
             }
             openDeviceName = null
             running.set(false)
+            statuses.value = null
             states.value = MicroviewLinkState.NoAdapter
             mainHandler.postDelayed(reopen, REOPEN_DELAY_MS)
         }
@@ -233,9 +229,10 @@ class AndroidMicroviewLink(
         }
         if (symbol == '\n') {
             if (!ignoreUntilNewline) {
-                val status = MicroviewProtocol.parseStatus(receiveLine.toString())
-                if (status != null) {
-                    val next = if (status.deviceState == 2) {
+                val received = MicroviewProtocol.parseStatus(receiveLine.toString())
+                if (received != null) {
+                    statuses.value = received
+                    val next = if (received.deviceState == DeviceState.FAILSAFE) {
                         MicroviewLinkState.Failsafe
                     } else {
                         MicroviewLinkState.Open
@@ -295,9 +292,7 @@ class AndroidMicroviewLink(
     }
 
     private fun report(where: String, error: Exception) {
-        val detail = error.message?.orEmpty()
-        val text = "$where: $detail"
-        problemEvents.tryEmit(text)
+        errors.report("microview/$where", error)
     }
 
     private companion object {
@@ -310,7 +305,5 @@ class AndroidMicroviewLink(
         const val MAX_LINE = 95
         const val WATCH_MS = 1000L
         const val REOPEN_DELAY_MS = 1000L
-        const val PROBLEM_REPLAY = 8
-        const val PROBLEM_BUFFER = 16
     }
 }

@@ -1,5 +1,6 @@
 package com.rc.playgrounds.server
 
+import com.rc.playgrounds.server.controllink.DeviceState
 import com.rc.playgrounds.server.controllink.MicroviewProtocol
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -53,7 +54,7 @@ class MicroviewProtocolTest {
         assertEquals(77, parsed?.sequence)
         assertEquals(123456L, parsed?.uptimeMs)
         assertEquals(32, parsed?.commandAgeMs)
-        assertEquals(1, parsed?.deviceState)
+        assertEquals(DeviceState.RECEIVING, parsed?.deviceState)
         assertNull(MicroviewProtocol.parseStatus(status.replace(",32,", ",33,")))
         assertNull(MicroviewProtocol.parseStatus(MicroviewProtocol.wrap("S,99,12,10,0")))
         assertNull(MicroviewProtocol.parseStatus(MicroviewProtocol.wrap("S,99,12,10,3")))

@@ -130,6 +130,7 @@ internal const val DEFAULT_CONFIG = """
         "fpv_car_server_port": "12346",
         "mobile_client_addr": "192.168.4.13",
         "mobile_client_port": "12345",
+        "mobile_client_telemetry_port": "12347",
         "forward_long_zones": "0.28:0.01; 0.5:0.2; 0.9:0.5; 1.0:0.6;",
         "backward_long_zones": "0.0:0.01; 0.9:0.5;",
         "long_factor": "1",

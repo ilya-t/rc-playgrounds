@@ -29,7 +29,7 @@ class ServerActivityComponent(
             receiver.controls,
             receiver.videoTarget,
             appComponent.microviewLink.state,
-            appComponent.microviewLink.problems,
+            appComponent.errorLogger.errors,
         )
         ServerView(
             titleView = activity.findViewById(R.id.server_title),

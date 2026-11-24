@@ -82,6 +82,8 @@ private class EventEmitter(
             event,
             streamCmd = config.stream.remoteCmd(config.env),
             streamCmdHash = streamHash,
+            clientAddr = config.env.getValue("mobile_client_addr"),
+            telemetryPort = config.env.getValue("mobile_client_telemetry_port").toInt(),
         )
     }
 
@@ -117,15 +119,18 @@ private class EventEmitter(
         event: RcEvent,
         streamCmd: String,
         streamCmdHash: String,
+        clientAddr: String,
+        telemetryPort: Int,
     ): JSONObject {
-        val json = JSONObject()
+        return JSONObject()
             .put("pitch", event.pitch) // -1..1
             .put("yaw", event.yaw)
             .put("steer", event.steer) // -1..1
             .put("long", event.long) // -1..1
             .put("stream_cmd", streamCmd)
             .put("stream_cmd_hash", streamCmdHash)
-        return json
+            .put("client_addr", clientAddr)
+            .put("telemetry_port", telemetryPort)
     }
 
     fun stop() {
