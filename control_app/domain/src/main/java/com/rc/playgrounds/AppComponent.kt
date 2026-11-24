@@ -28,6 +28,8 @@ import com.rc.playgrounds.status.view.StatusModel
 import com.rc.playgrounds.stopwatch.StopwatchModel
 import com.rc.playgrounds.storage.AndroidPersistentStorage
 import com.rc.playgrounds.storage.PersistentStorage
+import com.rc.playgrounds.telemetry.TelemetryProvider
+import com.rc.playgrounds.telemetry.TelemetryReceiver
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -112,6 +114,12 @@ class AppComponent(app: Application) {
         scope,
         activeConfigProvider,
         streamCmdHash,
+    )
+    val telemetryProvider = TelemetryProvider()
+    private val telemetryReceiver = TelemetryReceiver(
+        scope = scope,
+        config = activeConfigProvider,
+        provider = telemetryProvider,
     )
 
     val stopwatchModel = StopwatchModel(

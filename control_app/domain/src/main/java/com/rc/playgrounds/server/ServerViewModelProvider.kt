@@ -12,10 +12,10 @@ class ServerViewModelProvider(
     controls: Flow<ServerControlState>,
     videoTarget: Flow<VideoTarget?>,
     linkState: Flow<MicroviewLinkState>,
-    problems: Flow<String>,
+    problems: Flow<Error>,
 ) {
-    private val problemLines: Flow<List<String>> = problems
-        .scan(emptyList<String>()) { lines, line ->
+    private val problemLines: Flow<List<Error>> = problems
+        .scan(emptyList<Error>()) { lines, line ->
             (lines + line).takeLast(PROBLEM_LINES)
         }
         .onStart { emit(emptyList()) }
@@ -55,7 +55,7 @@ private fun titleFor(state: ServerCameraState, target: VideoTarget?): String {
 private fun controlsText(
     control: ServerControlState,
     link: MicroviewLinkState,
-    problems: List<String>,
+    problems: List<Error>,
 ): String {
     val axes = if (!control.live) {
         "no control"
@@ -74,7 +74,13 @@ private fun controlsText(
     if (problems.isEmpty()) {
         return status
     }
-    return "$status\n${problems.joinToString("\n")}"
+    return "$status\n${problems.joinToString("\n", transform = ::problemLine)}"
+}
+
+private fun problemLine(reported: Error): String {
+    val detail = reported.error.message?.takeIf { it.isNotEmpty() }
+        ?: reported.error.javaClass.simpleName
+    return "${reported.service}: $detail"
 }
 
 private fun uartText(link: MicroviewLinkState): String {

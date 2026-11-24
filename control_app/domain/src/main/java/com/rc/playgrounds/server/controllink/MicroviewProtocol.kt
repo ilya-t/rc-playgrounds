@@ -69,7 +69,7 @@ object MicroviewProtocol {
         val age = fields[3].toIntOrNull() ?: return null
         val state = fields[4].toIntOrNull() ?: return null
         if (seq !in 0..65535 || uptime !in 0..4294967295L || age !in 0..65535 ||
-            (state != 1 && state != 2)
+            (state != DeviceState.RECEIVING && state != DeviceState.FAILSAFE)
         ) {
             return null
         }
@@ -80,8 +80,7 @@ object MicroviewProtocol {
         val sequence: Int,
         val uptimeMs: Long,
         val commandAgeMs: Int,
-        /** 1 = receiving, 2 = failsafe. */
-        val deviceState: Int,
+        @DeviceState val deviceState: Int,
     )
 
     private fun axisToPwm(axis: Float): Int {

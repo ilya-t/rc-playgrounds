@@ -11,13 +11,21 @@ class ServerAppComponent(app: Application) {
     val scope: CoroutineScope = CoroutineScope(
         SupervisorJob() + Dispatchers.Default + CoroutineName("ServerAppScope"),
     )
-    val controlReceiver = ServerControlReceiver(scope)
+    val errorLogger = ErrorLogger(scope)
+    val controlReceiver = ServerControlReceiver(scope, errorLogger)
     val usbPermissionHandler = UsbPermissionHandler()
     val microviewLink = AndroidMicroviewLink(
         app = app,
         controls = controlReceiver.controls,
         scope = scope,
         usbPermissionHandler = usbPermissionHandler,
+        errors = errorLogger,
+    )
+    val telemetrySender = ServerTelemetrySender(
+        target = controlReceiver.telemetryTarget,
+        status = microviewLink.status,
+        errorLogger = errorLogger,
+        scope = scope,
     )
 
     companion object {

@@ -35,11 +35,14 @@ data class VideoTarget(
 
 class ServerControlReceiver(
     scope: CoroutineScope,
+    private val errors: ErrorLogger,
 ) {
     private val state = MutableStateFlow(ServerControlState())
     private val target = MutableStateFlow<VideoTarget?>(null)
+    private val telemetry = MutableStateFlow<TelemetryTarget?>(null)
     val controls: StateFlow<ServerControlState> = state
     val videoTarget: StateFlow<VideoTarget?> = target
+    val telemetryTarget: StateFlow<TelemetryTarget?> = telemetry
 
     init {
         scope.launch(Dispatchers.IO) {
@@ -61,11 +64,22 @@ class ServerControlReceiver(
                     try {
                         packet.length = buffer.size
                         socket.receive(packet)
-                        val next = parse(packet) ?: continue
+                        val text = decode(packet) ?: continue
+                        val json = try {
+                            JSONObject(text)
+                        } catch (e: JSONException) {
+                            errors.report(SERVICE, e)
+                            continue
+                        }
+                        val next = parse(json) ?: continue
                         state.value = next
                         val destination = parseVideoTarget(next.streamCmd)
                         if (destination != null) {
                             target.value = destination
+                        }
+                        val telemetryDestination = parseTelemetryTarget(json)
+                        if (telemetryDestination != null) {
+                            telemetry.value = telemetryDestination
                         }
                     } catch (_: SocketTimeoutException) {
                         if (state.value.live) {
@@ -86,21 +100,16 @@ class ServerControlReceiver(
         }
     }
 
-    private companion object {
-        const val TAG = "ServerControl"
-        const val PORT = 12346
-        const val BUFFER_SIZE = 1024
-        const val TIMEOUT_MS = 250
+    companion object {
+        const val SERVICE = "control"
+        private const val TAG = "ServerControl"
+        private const val PORT = 12346
+        private const val BUFFER_SIZE = 1024
+        private const val TIMEOUT_MS = 250
     }
 }
 
-private fun parse(packet: DatagramPacket): ServerControlState? {
-    val text = decode(packet) ?: return null
-    val json = try {
-        JSONObject(text)
-    } catch (_: JSONException) {
-        return null
-    }
+private fun parse(json: JSONObject): ServerControlState? {
     val yaw = axis(json, "yaw") ?: return null
     val pitch = axis(json, "pitch") ?: return null
     val steer = axis(json, "steer") ?: return null
