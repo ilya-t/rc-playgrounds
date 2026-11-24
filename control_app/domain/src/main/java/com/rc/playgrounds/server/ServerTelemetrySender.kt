@@ -5,7 +5,6 @@ import com.rc.playgrounds.server.controllink.MicroviewProtocol
 import com.rc.playgrounds.telemetry.Telemetry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.net.DatagramPacket
@@ -22,29 +21,10 @@ class ServerTelemetrySender(
         scope.launch(Dispatchers.IO) {
             val socket = DatagramSocket()
             try {
-                coroutineScope {
-                    launch {
-                        status.collect { current ->
-                            val destination = target.value ?: return@collect
-                            val payload = telemetry(current) ?: return@collect
-                            send(socket, destination, payload)
-                        }
-                    }
-                    launch {
-                        errorLogger.errors.collect { reported ->
-                            if (reported.service != ServerControlReceiver.SERVICE) {
-                                return@collect
-                            }
-                            val destination = target.value ?: return@collect
-                            val message = reported.error.message?.takeIf { it.isNotEmpty() }
-                                ?: reported.error.javaClass.simpleName
-                            send(
-                                socket,
-                                destination,
-                                Telemetry(Telemetry.Control(status = message, error = true)),
-                            )
-                        }
-                    }
+                status.collect { current ->
+                    val destination = target.value ?: return@collect
+                    val payload = telemetry(current) ?: return@collect
+                    send(socket, destination, payload)
                 }
             } finally {
                 socket.close()
