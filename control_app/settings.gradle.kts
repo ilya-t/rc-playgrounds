@@ -11,7 +11,9 @@ val useGStreamerStub: Boolean = properties.getProperty("gstreamer-stub")?.toBool
         properties.getProperty("gstAndroidRoot").orEmpty().isEmpty()
 
 include(":app")
-include(":domain")
+include(":domain-client")
+include(":domain-server")
+include(":common")
 
 if (useGStreamerStub) {
     include(":gstreamer-stub")

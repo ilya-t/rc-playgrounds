@@ -59,7 +59,8 @@ android {
 
 dependencies {
     implementation(project(gStreamerModule))
-    implementation(project(":domain"))
+    implementation(project(":domain-client"))
+    implementation(project(":domain-server"))
     implementation("androidx.media3:media3-ui:1.5.1")
     implementation("androidx.media3:media3-exoplayer:1.5.1")
     implementation("androidx.media3:media3-exoplayer-rtsp:1.5.1")
