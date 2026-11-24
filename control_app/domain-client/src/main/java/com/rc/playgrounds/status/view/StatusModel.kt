@@ -115,6 +115,8 @@ private fun asStatus(
         }
 
         telemetry?.control?.let { appendLine(controlLine(it)) }
+        telemetry?.cellular?.let { appendLine(cellularLine(it)) }
+        telemetry?.battery?.let { appendLine(batteryLine(it)) }
     }
 }
 
@@ -122,6 +124,15 @@ private fun controlLine(control: Telemetry.Control): String {
     val status = control.status.take(CONTROL_STATUS_LIMIT)
     val message = if (control.error) "$CONTROL_ERROR_EMOJI $status" else status
     return "- $message"
+}
+
+internal fun cellularLine(cellular: Telemetry.Cellular): String {
+    val strength = cellular.strength
+    return if (strength == null) "- ${cellular.generation}" else "- $strength% ${cellular.generation}"
+}
+
+internal fun batteryLine(battery: Telemetry.Battery): String {
+    return if (battery.charging) "- ${battery.charge}% charging" else "- ${battery.charge}%"
 }
 
 private class StatusCollector(
