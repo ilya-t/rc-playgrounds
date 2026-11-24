@@ -1,0 +1,148 @@
+package com.rc.playgrounds.remote
+
+import com.rc.playgrounds.common.ControlSignal
+import com.rc.playgrounds.config.ActiveConfigProvider
+import com.rc.playgrounds.config.Config
+import com.rc.playgrounds.control.RcEvent
+import com.rc.playgrounds.control.RcEventStream
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import org.json.JSONObject
+import java.net.DatagramPacket
+import java.net.DatagramSocket
+import java.net.InetAddress
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class OutputEventStream(
+    private val rcEventStream: RcEventStream,
+    private val scope: CoroutineScope,
+    private val activeConfigProvider: ActiveConfigProvider,
+    private val streamCmdHash: StreamCmdHash,
+) {
+
+    private val controlServer = MutableStateFlow<ControlServer?>(null)
+    private var emitter: EventEmitter? = null
+
+    init {
+        scope.launch {
+            activeConfigProvider.configFlow.collect {
+                val cs = it.controlServer ?: run {
+                    controlServer.value = null
+                    return@collect
+                }
+                controlServer.value = ControlServer(
+                    server = cs.address(it.env),
+                    port = cs.port(it.env),
+                )
+            }
+        }
+
+        scope.launch(Dispatchers.IO.limitedParallelism(1)) {
+            controlServer.collect {
+                restart(it)
+            }
+        }
+    }
+
+    private fun restart(c: ControlServer?) {
+        emitter?.stop()
+        emitter = null
+        c?.let {
+            emitter = EventEmitter(
+                c,
+                scope,
+                rcEventStream,
+                activeConfigProvider.configFlow,
+                streamCmdHash.hash,
+            )
+        }
+    }
+}
+
+private class EventEmitter(
+    val config: ControlServer,
+    private val scope: CoroutineScope,
+    private val rcEventStream: RcEventStream,
+    private val configFlow: Flow<Config>,
+    private val streamCmdHash: Flow<String>,
+) {
+    private val messages: Flow<JSONObject> = combine(
+        configFlow,
+        rcEventStream.events,
+        streamCmdHash,
+    ) { config: Config, event: RcEvent, streamHash: String ->
+        asJson(
+            event,
+            streamCmd = config.stream.remoteCmd(config.env),
+            streamCmdHash = streamHash,
+            clientAddr = config.env.getValue("mobile_client_addr"),
+            telemetryPort = config.env.getValue("mobile_client_telemetry_port").toInt(),
+        )
+    }
+
+    private var messageStream: Job? = null
+    private val job = scope.launch {
+        messages.collect { m ->
+            messageStream?.cancel()
+            messageStream = scope.launch {
+                while (isActive) {
+                    m.put("time", System.currentTimeMillis().toString())
+                    send(m.toString())
+                    //TODO: to config
+                    delay(50L) // 20hz
+                }
+            }
+        }
+    }
+
+    private fun send(message: String) {
+        try {
+            val socket = DatagramSocket()
+            val address = InetAddress.getByName(config.server)
+            val buffer = message.toByteArray()
+            val packet = DatagramPacket(buffer, buffer.size, address, config.port)
+            socket.send(packet)
+            socket.close()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun asJson(
+        event: RcEvent,
+        streamCmd: String,
+        streamCmdHash: String,
+        clientAddr: String,
+        telemetryPort: Int,
+    ): JSONObject {
+        return ControlSignal(
+            pitch = event.pitch, // -1..1
+            yaw = event.yaw,
+            steer = event.steer, // -1..1
+            long = event.long, // -1..1
+            streamCmd = streamCmd,
+            streamCmdHash = streamCmdHash,
+        ).toJson()
+            .put("client_addr", clientAddr)
+            .put("telemetry_port", telemetryPort)
+    }
+
+    fun stop() {
+        messageStream?.cancel()
+        messageStream = null
+        job.cancel()
+    }
+}
+
+private data class ControlServer(
+    val server: String,
+    val port: Int,
+)
