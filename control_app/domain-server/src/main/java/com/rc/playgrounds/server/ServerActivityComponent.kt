@@ -27,6 +27,7 @@ class ServerActivityComponent(
             camera,
             receiver.controls,
             receiver.videoTarget,
+            receiver.telemetryTarget,
             appComponent.microviewLink.state,
             appComponent.errorLogger.errors,
         )
