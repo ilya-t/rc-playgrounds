@@ -32,7 +32,7 @@ class TelemetryReceiver(
             var listenJob: Job? = null
             try {
                 config.configFlow
-                    .map { it.env[PORT_ENV]?.toIntOrNull() }
+                    .map { it.mobileClient?.telemetryPort(it.env) }
                     .distinctUntilChanged()
                     .collect { port ->
                         listenJob?.cancelAndJoin()
@@ -99,7 +99,6 @@ class TelemetryReceiver(
 
     private companion object {
         const val TAG = "Telemetry"
-        const val PORT_ENV = "mobile_client_telemetry_port"
         const val BUFFER_SIZE = 1024
         const val TIMEOUT_MS = 250
     }

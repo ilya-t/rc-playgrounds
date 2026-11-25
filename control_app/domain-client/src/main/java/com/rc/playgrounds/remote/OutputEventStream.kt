@@ -79,12 +79,13 @@ private class EventEmitter(
         rcEventStream.events,
         streamCmdHash,
     ) { config: Config, event: RcEvent, streamHash: String ->
+        val mobileClient = config.mobileClient
         asJson(
             event,
             streamCmd = config.stream.remoteCmd(config.env),
             streamCmdHash = streamHash,
-            clientAddr = config.env.getValue("mobile_client_addr"),
-            telemetryPort = config.env.getValue("mobile_client_telemetry_port").toInt(),
+            clientAddr = mobileClient?.address(config.env),
+            telemetryPort = mobileClient?.telemetryPort(config.env),
         )
     }
 
@@ -120,8 +121,8 @@ private class EventEmitter(
         event: RcEvent,
         streamCmd: String,
         streamCmdHash: String,
-        clientAddr: String,
-        telemetryPort: Int,
+        clientAddr: String?,
+        telemetryPort: Int?,
     ): JSONObject {
         return ControlSignal(
             pitch = event.pitch, // -1..1
@@ -130,8 +131,8 @@ private class EventEmitter(
             long = event.long, // -1..1
             streamCmd = streamCmd,
             streamCmdHash = streamCmdHash,
-            clientAddr = clientAddr,
-            telemetryPort = telemetryPort,
+            clientAddr = clientAddr.orEmpty(),
+            telemetryPort = telemetryPort ?: ControlSignal.DEFAULT_TELEMETRY_PORT,
         ).toJson()
     }
 

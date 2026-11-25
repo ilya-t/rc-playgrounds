@@ -3,6 +3,7 @@ package com.rc.playgrounds.config
 import com.rc.playgrounds.config.model.ControlOffsets
 import com.rc.playgrounds.config.model.ControlTuningConfig
 import com.rc.playgrounds.config.model.gamepad.GamepadMapping
+import com.rc.playgrounds.config.model.MobileClient
 import com.rc.playgrounds.config.model.NetworkTarget
 import com.rc.playgrounds.config.model.gamepad.GamepadAxis
 import com.rc.playgrounds.config.model.gamepad.GamepadAxisMapping
@@ -24,6 +25,8 @@ data class Config(
     val stream: StreamConfig,
     @SerialName("control_server")
     val controlServer: NetworkTarget?,
+    @SerialName("mobile_client")
+    val mobileClient: MobileClient? = null,
     @SerialName("control_offsets")
     val controlOffsets: ControlOffsets = ControlOffsets(
         pitch = 0f,
@@ -284,6 +287,10 @@ internal const val DEFAULT_CONFIG = """
     "control_server": {
         "address": "@{fpv_car_server}",
         "port": "@{fpv_car_server_port}"
+    },
+    "mobile_client": {
+        "address": "@{mobile_client_addr}",
+        "telemetry_port": "@{mobile_client_telemetry_port}"
     },
     "control_offsets": {
         "pitch": 0.0,
