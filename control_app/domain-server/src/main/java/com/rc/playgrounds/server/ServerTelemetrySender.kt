@@ -6,6 +6,7 @@ import com.rc.playgrounds.telemetry.Telemetry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import java.net.DatagramPacket
 import java.net.DatagramSocket
@@ -14,6 +15,8 @@ import java.net.InetAddress
 class ServerTelemetrySender(
     private val target: StateFlow<TelemetryTarget?>,
     private val status: StateFlow<MicroviewProtocol.Status?>,
+    private val cellular: StateFlow<Telemetry.Cellular?>,
+    private val battery: StateFlow<Telemetry.Battery?>,
     private val errorLogger: ErrorLogger,
     scope: CoroutineScope,
 ) {
@@ -21,10 +24,14 @@ class ServerTelemetrySender(
         scope.launch(Dispatchers.IO) {
             val socket = DatagramSocket()
             try {
-                status.collect { current ->
-                    val destination = target.value ?: return@collect
-                    val payload = telemetry(current) ?: return@collect
-                    send(socket, destination, payload)
+                combine(target, status, cellular, battery) { destination, current, cell, batt ->
+                    val payload = serverTelemetry(current, cell, batt) ?: return@combine null
+                    destination?.let { it to payload }
+                }.collect { ready ->
+                    if (ready == null) {
+                        return@collect
+                    }
+                    send(socket, ready.first, ready.second)
                 }
             } finally {
                 socket.close()
@@ -50,14 +57,18 @@ class ServerTelemetrySender(
 
     private companion object {
         const val SERVICE = "telemetry"
-
-        fun telemetry(current: MicroviewProtocol.Status?): Telemetry? {
-            val control = when (current?.deviceState) {
-                DeviceState.RECEIVING -> Telemetry.Control(status = "receiving", error = false)
-                DeviceState.FAILSAFE -> Telemetry.Control(status = "failsafe", error = true)
-                else -> return null
-            }
-            return Telemetry(control)
-        }
     }
+}
+
+internal fun serverTelemetry(
+    current: MicroviewProtocol.Status?,
+    cellular: Telemetry.Cellular?,
+    battery: Telemetry.Battery?,
+): Telemetry? {
+    val control = when (current?.deviceState) {
+        DeviceState.RECEIVING -> Telemetry.Control(status = "receiving", error = false)
+        DeviceState.FAILSAFE -> Telemetry.Control(status = "failsafe", error = true)
+        else -> return null
+    }
+    return Telemetry(control = control, cellular = cellular, battery = battery)
 }

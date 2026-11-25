@@ -21,9 +21,13 @@ class ServerAppComponent(app: Application) {
         usbPermissionHandler = usbPermissionHandler,
         errors = errorLogger,
     )
+    val batteryMonitor = ServerBatteryMonitor(app)
+    val cellularMonitor = ServerCellularMonitor(app)
     val telemetrySender = ServerTelemetrySender(
         target = controlReceiver.telemetryTarget,
         status = microviewLink.status,
+        cellular = cellularMonitor.cellular,
+        battery = batteryMonitor.battery,
         errorLogger = errorLogger,
         scope = scope,
     )

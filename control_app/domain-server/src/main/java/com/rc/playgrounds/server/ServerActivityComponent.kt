@@ -38,10 +38,12 @@ class ServerActivityComponent(
         )
         val usbPermissionRequester = UsbPermissionRequester(activity)
         usbPermissionRequester.connect(appComponent.usbPermissionHandler)
+        val phoneState = ServerPhoneState(activity, appComponent.cellularMonitor)
         session.start()
         activity.lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onResume(owner: LifecycleOwner) {
                 usbPermissionRequester.onResume()
+                phoneState.onResume()
             }
 
             override fun onPause(owner: LifecycleOwner) {
