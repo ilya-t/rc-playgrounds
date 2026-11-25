@@ -98,6 +98,13 @@ private fun asStatus(
 ): String {
     return buildString {
         appendLine("- $ping")
+        if (telemetry == null) {
+            appendLine("- telemetry: $CONTROL_ERROR_EMOJI")
+        } else {
+            appendLine(controlLine(telemetry.control))
+            telemetry.cellular?.let { appendLine(cellularLine(it)) }
+            telemetry.battery?.let { appendLine(batteryLine(it)) }
+        }
 
         appendLine("- long: %.2f (raw: %.2f) ".format(event.long, event.rawLong))
         appendLine("- steer: %.3f (raw: %.2f) ".format(event.steer, event.rawSteer))
@@ -113,26 +120,24 @@ private fun asStatus(
                 ?: return@forEach
             appendLine("- ${overrides.name}: ${activeProfile.name}")
         }
-
-        telemetry?.control?.let { appendLine(controlLine(it)) }
-        telemetry?.cellular?.let { appendLine(cellularLine(it)) }
-        telemetry?.battery?.let { appendLine(batteryLine(it)) }
     }
 }
 
 private fun controlLine(control: Telemetry.Control): String {
     val status = control.status.take(CONTROL_STATUS_LIMIT)
     val message = if (control.error) "$CONTROL_ERROR_EMOJI $status" else status
-    return "- $message"
+    return "- control: $message"
 }
 
 internal fun cellularLine(cellular: Telemetry.Cellular): String {
     val strength = cellular.strength
-    return if (strength == null) "- ${cellular.generation}" else "- $strength% ${cellular.generation}"
+    val data = if (strength == null) "${cellular.generation}" else "$strength% ${cellular.generation}"
+    return "- signal: $data"
 }
 
 internal fun batteryLine(battery: Telemetry.Battery): String {
-    return if (battery.charging) "- ${battery.charge}% charging" else "- ${battery.charge}%"
+    val charging = if (battery.charging) " charging" else ""
+    return "- server.battery: ${battery.charge}%$charging"
 }
 
 private class StatusCollector(
