@@ -116,6 +116,11 @@ fun EditText.updateTextKeepingCursor(newText: String) {
 
     setText(newText)
 
+    if (oldText.isEmpty()) {
+        setSelection(0)
+        return
+    }
+
     val newLength = newText.length
 
     // Try to keep the same relative cursor position
