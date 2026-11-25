@@ -11,7 +11,9 @@ import com.rc.playgrounds.status.PingService
 import com.rc.playgrounds.status.gstreamer.Event
 import com.rc.playgrounds.status.gstreamer.FrameDropStatus
 import com.rc.playgrounds.status.gstreamer.StreamerEvents
+import com.rc.playgrounds.common.Clock
 import com.rc.playgrounds.telemetry.Telemetry
+import com.rc.playgrounds.telemetry.TelemetrySignal
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,7 +31,8 @@ class StatusModel(
     private val streamerEvents: StreamerEvents,
     private val frameDropStatus: FrameDropStatus,
     private val quickConfigModel: QuickConfigModel,
-    telemetry: Flow<Telemetry?>,
+    telemetry: Flow<TelemetrySignal>,
+    private val clock: Clock,
 ) {
     private val lastStreamerError = MutableStateFlow<Event.Error?>(null)
     private val pingTarget: Flow<String?> = config.configFlow.map { it.controlServer?.address(it.env) }
@@ -71,11 +74,11 @@ class StatusModel(
                 rcEventStream.events,
                 _ping,
                 lastStreamerError,
-                //TODO: maybe bring back? frameDropStatus.frameDropsPerSecond,
                 config.configFlow.map { it.envOverrides },
                 telemetry,
-                ::asStatus
-            )
+            ) { event, ping, streamerError, envOverrides, telemetry ->
+                asStatus(event, ping, streamerError, envOverrides, telemetry, clock)
+            }
 
             combine(
                 statusText,
@@ -94,13 +97,16 @@ private fun asStatus(
     ping: String,
     streamerEvent: Event.Error?,
     envOverrides: List<EnvironmentOverrides>,
-    telemetry: Telemetry?,
+    telemetrySignal: TelemetrySignal?,
+    clock: Clock,
 ): String {
     return buildString {
         appendLine("- $ping")
-        if (telemetry == null) {
+        val telemetry = telemetrySignal?.telemetry
+        if (telemetry == null || !telemetrySignal.isUpToDate(clock)) {
             appendLine("- telemetry: $CONTROL_ERROR_EMOJI")
-        } else {
+        }
+        if (telemetry != null) {
             appendLine(controlLine(telemetry.control))
             telemetry.cellular?.let { appendLine(cellularLine(it)) }
             telemetry.battery?.let { appendLine(batteryLine(it)) }

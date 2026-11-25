@@ -28,6 +28,7 @@ import com.rc.playgrounds.status.view.StatusModel
 import com.rc.playgrounds.stopwatch.StopwatchModel
 import com.rc.playgrounds.storage.AndroidPersistentStorage
 import com.rc.playgrounds.storage.PersistentStorage
+import com.rc.playgrounds.common.SystemClock
 import com.rc.playgrounds.telemetry.TelemetryProvider
 import com.rc.playgrounds.telemetry.TelemetryReceiver
 import kotlinx.coroutines.CoroutineName
@@ -115,7 +116,7 @@ class AppComponent(app: Application) {
         activeConfigProvider,
         streamCmdHash,
     )
-    val telemetryProvider = TelemetryProvider()
+    val telemetryProvider = TelemetryProvider(SystemClock)
     private val telemetryReceiver = TelemetryReceiver(
         scope = scope,
         config = activeConfigProvider,
@@ -139,7 +140,8 @@ class AppComponent(app: Application) {
         streamerEvents,
         frameDropStatus,
         quickConfigModel,
-        telemetryProvider.state,
+        telemetryProvider.getState(),
+        SystemClock,
     )
 
     val lockModel = LockModel(
