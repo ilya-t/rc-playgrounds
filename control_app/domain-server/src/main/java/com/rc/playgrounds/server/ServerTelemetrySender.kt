@@ -5,8 +5,11 @@ import com.rc.playgrounds.server.controllink.MicroviewProtocol
 import com.rc.playgrounds.telemetry.Telemetry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.net.DatagramPacket
 import java.net.DatagramSocket
@@ -21,17 +24,20 @@ class ServerTelemetrySender(
     scope: CoroutineScope,
 ) {
     init {
+        val ready = MutableStateFlow<Pair<TelemetryTarget, Telemetry>?>(null)
+        scope.launch {
+            combine(target, status, cellular, battery) { destination, current, cell, batt ->
+                destination?.let { it to serverTelemetry(current, cell, batt) }
+            }.collect { ready.value = it }
+        }
         scope.launch(Dispatchers.IO) {
             val socket = DatagramSocket()
             try {
-                combine(target, status, cellular, battery) { destination, current, cell, batt ->
-                    val payload = serverTelemetry(current, cell, batt) ?: return@combine null
-                    destination?.let { it to payload }
-                }.collect { ready ->
-                    if (ready == null) {
-                        return@collect
+                while (isActive) {
+                    ready.value?.let { (destination, payload) ->
+                        send(socket, destination, payload)
                     }
-                    send(socket, ready.first, ready.second)
+                    delay(INTERVAL_MS)
                 }
             } finally {
                 socket.close()
@@ -57,6 +63,7 @@ class ServerTelemetrySender(
 
     private companion object {
         const val SERVICE = "telemetry"
+        const val INTERVAL_MS = 500L
     }
 }
 
@@ -64,11 +71,11 @@ internal fun serverTelemetry(
     current: MicroviewProtocol.Status?,
     cellular: Telemetry.Cellular?,
     battery: Telemetry.Battery?,
-): Telemetry? {
+): Telemetry {
     val control = when (current?.deviceState) {
         DeviceState.RECEIVING -> Telemetry.Control(status = "receiving", error = false)
         DeviceState.FAILSAFE -> Telemetry.Control(status = "failsafe", error = true)
-        else -> return null
+        else -> Telemetry.Control(status = "no link", error = true)
     }
     return Telemetry(control = control, cellular = cellular, battery = battery)
 }

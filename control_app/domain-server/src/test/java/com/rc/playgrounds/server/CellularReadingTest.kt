@@ -104,8 +104,13 @@ class ServerTelemetryTest {
     }
 
     @Test
-    fun `missing control drops the datagram`() {
-        assertNull(
+    fun `missing link still sends battery and signal`() {
+        assertEquals(
+            Telemetry(
+                control = Telemetry.Control(status = "no link", error = true),
+                cellular = Telemetry.Cellular(strength = null, generation = "2G"),
+                battery = Telemetry.Battery(charge = 10, charging = false),
+            ),
             serverTelemetry(
                 current = null,
                 cellular = Telemetry.Cellular(strength = null, generation = "2G"),
