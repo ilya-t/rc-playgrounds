@@ -72,16 +72,14 @@ class ServerControlReceiver(
                             errors.report(SERVICE, e)
                             continue
                         }
-                        val next = parse(json) ?: continue
+                        val signal = ControlSignal.fromJson(json) ?: continue
+                        val next = controlState(signal)
                         state.value = next
                         val destination = parseVideoTarget(next.streamCmd)
                         if (destination != null) {
                             target.value = destination
                         }
-                        val telemetryDestination = parseTelemetryTarget(json)
-                        if (telemetryDestination != null) {
-                            telemetry.value = telemetryDestination
-                        }
+                        telemetry.value = parseTelemetryTarget(signal)
                     } catch (_: SocketTimeoutException) {
                         if (state.value.live) {
                             state.value = ServerControlState()
@@ -110,8 +108,7 @@ class ServerControlReceiver(
     }
 }
 
-private fun parse(json: JSONObject): ServerControlState? {
-    val signal = ControlSignal.fromJson(json) ?: return null
+private fun controlState(signal: ControlSignal): ServerControlState {
     return ServerControlState(
         yaw = signal.yaw,
         pitch = signal.pitch,
