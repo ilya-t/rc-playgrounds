@@ -63,7 +63,7 @@ class ServerTelemetrySender(
 
     private companion object {
         const val SERVICE = "telemetry"
-        const val INTERVAL_MS = 500L
+        const val INTERVAL_MS = 100L
     }
 }
 
