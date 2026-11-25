@@ -10,10 +10,10 @@ data class ControlSignal(
     val streamCmd: String,
     val streamCmdHash: String,
     val clientAddr: String = "",
-    val telemetryPort: Int = DEFAULT_TELEMETRY_PORT,
+    val telemetryPort: Int? = null,
 ) {
     fun toJson(): JSONObject {
-        return JSONObject()
+        val json = JSONObject()
             .put("pitch", pitch)
             .put("yaw", yaw)
             .put("steer", steer)
@@ -21,7 +21,8 @@ data class ControlSignal(
             .put("stream_cmd", streamCmd)
             .put("stream_cmd_hash", streamCmdHash)
             .put("client_addr", clientAddr)
-            .put("telemetry_port", telemetryPort)
+        telemetryPort?.let { json.put("telemetry_port", it) }
+        return json
     }
 
     companion object {
@@ -45,24 +46,24 @@ data class ControlSignal(
             )
         }
 
-        private fun telemetryPort(json: JSONObject): Int {
+        private fun telemetryPort(json: JSONObject): Int? {
             if (!json.has("telemetry_port") || json.isNull("telemetry_port")) {
-                return DEFAULT_TELEMETRY_PORT
+                return null
             }
             val value = json.get("telemetry_port")
             val parsed = when (value) {
                 is Number -> {
                     val asLong = value.toLong()
                     if (value.toDouble() != asLong.toDouble()) {
-                        return DEFAULT_TELEMETRY_PORT
+                        return null
                     }
                     asLong
                 }
-                is String -> value.toLongOrNull() ?: return DEFAULT_TELEMETRY_PORT
-                else -> return DEFAULT_TELEMETRY_PORT
+                is String -> value.toLongOrNull() ?: return null
+                else -> return null
             }
             if (parsed !in 1..65535) {
-                return DEFAULT_TELEMETRY_PORT
+                return null
             }
             return parsed.toInt()
         }
@@ -84,7 +85,5 @@ data class ControlSignal(
         private fun inRange(value: Double): Boolean {
             return value in -1.0..1.0
         }
-
-        const val DEFAULT_TELEMETRY_PORT = 12347
     }
 }

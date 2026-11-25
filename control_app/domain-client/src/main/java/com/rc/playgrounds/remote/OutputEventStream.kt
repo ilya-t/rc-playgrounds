@@ -112,8 +112,7 @@ private class EventEmitter(
             val packet = DatagramPacket(buffer, buffer.size, address, config.port)
             socket.send(packet)
             socket.close()
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (_: Exception) {
         }
     }
 
@@ -132,7 +131,7 @@ private class EventEmitter(
             streamCmd = streamCmd,
             streamCmdHash = streamCmdHash,
             clientAddr = clientAddr.orEmpty(),
-            telemetryPort = telemetryPort ?: ControlSignal.DEFAULT_TELEMETRY_PORT,
+            telemetryPort = telemetryPort,
         ).toJson()
     }
 
