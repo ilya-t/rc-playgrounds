@@ -18,6 +18,8 @@ class ControlSignalTest {
             long = 0f,
             streamCmd = "udp://10.0.0.2:5000",
             streamCmdHash = "abc",
+            clientAddr = "10.0.0.2",
+            telemetryPort = 12347,
         )
 
         val decoded = ControlSignal.fromJson(signal.toJson())
