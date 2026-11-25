@@ -130,9 +130,9 @@ private class EventEmitter(
             long = event.long, // -1..1
             streamCmd = streamCmd,
             streamCmdHash = streamCmdHash,
+            clientAddr = clientAddr,
+            telemetryPort = telemetryPort,
         ).toJson()
-            .put("client_addr", clientAddr)
-            .put("telemetry_port", telemetryPort)
     }
 
     fun stop() {

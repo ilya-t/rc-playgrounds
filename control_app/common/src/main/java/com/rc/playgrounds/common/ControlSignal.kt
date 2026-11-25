@@ -9,6 +9,8 @@ data class ControlSignal(
     val long: Float,
     val streamCmd: String,
     val streamCmdHash: String,
+    val clientAddr: String = "",
+    val telemetryPort: Int = DEFAULT_TELEMETRY_PORT,
 ) {
     fun toJson(): JSONObject {
         return JSONObject()
@@ -18,6 +20,8 @@ data class ControlSignal(
             .put("long", long)
             .put("stream_cmd", streamCmd)
             .put("stream_cmd_hash", streamCmdHash)
+            .put("client_addr", clientAddr)
+            .put("telemetry_port", telemetryPort)
     }
 
     companion object {
@@ -36,7 +40,31 @@ data class ControlSignal(
                 long = longValue.toFloat(),
                 streamCmd = json.optString("stream_cmd", ""),
                 streamCmdHash = json.optString("stream_cmd_hash", ""),
+                clientAddr = json.optString("client_addr", ""),
+                telemetryPort = telemetryPort(json),
             )
+        }
+
+        private fun telemetryPort(json: JSONObject): Int {
+            if (!json.has("telemetry_port") || json.isNull("telemetry_port")) {
+                return DEFAULT_TELEMETRY_PORT
+            }
+            val value = json.get("telemetry_port")
+            val parsed = when (value) {
+                is Number -> {
+                    val asLong = value.toLong()
+                    if (value.toDouble() != asLong.toDouble()) {
+                        return DEFAULT_TELEMETRY_PORT
+                    }
+                    asLong
+                }
+                is String -> value.toLongOrNull() ?: return DEFAULT_TELEMETRY_PORT
+                else -> return DEFAULT_TELEMETRY_PORT
+            }
+            if (parsed !in 1..65535) {
+                return DEFAULT_TELEMETRY_PORT
+            }
+            return parsed.toInt()
         }
 
         private fun axis(json: JSONObject, name: String): Double? {
@@ -56,5 +84,7 @@ data class ControlSignal(
         private fun inRange(value: Double): Boolean {
             return value in -1.0..1.0
         }
+
+        const val DEFAULT_TELEMETRY_PORT = 12347
     }
 }
