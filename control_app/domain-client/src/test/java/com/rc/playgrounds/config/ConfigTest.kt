@@ -35,6 +35,8 @@ class ConfigTest {
         Assert.assertNotNull(config.stream.localCmd(config.env))
         Assert.assertNotNull(config.stream.remoteCmd(config.env))
         Assert.assertNotNull(config.controlServer)
+        Assert.assertEquals("192.168.2.5", config.mobileClient?.address(config.env))
+        Assert.assertEquals(12347, config.mobileClient?.telemetryPort(config.env))
         Assert.assertNotNull(config.controlOffsets)
         Assert.assertNotNull(config.controlTuning)
     }
