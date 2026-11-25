@@ -11,6 +11,7 @@ class ServerViewModelProvider(
     camera: ServerCamera,
     controls: Flow<ServerControlState>,
     videoTarget: Flow<VideoTarget?>,
+    telemetryTarget: Flow<TelemetryTarget?>,
     linkState: Flow<MicroviewLinkState>,
     problems: Flow<Error>,
 ) {
@@ -27,12 +28,22 @@ class ServerViewModelProvider(
         linkState,
         problemLines,
     ) { state, control, target, link, reported ->
+        ServerSnapshot(state, control, target, link, reported)
+    }.combine(telemetryTarget) { snapshot, telemetry ->
         ServerViewModel(
-            title = titleFor(state, target),
-            controls = controlsText(control, link, reported),
+            title = titleFor(snapshot.state, snapshot.video),
+            controls = controlsText(snapshot.control, snapshot.link, snapshot.problems, telemetry),
         )
     }
 }
+
+private data class ServerSnapshot(
+    val state: ServerCameraState,
+    val control: ServerControlState,
+    val video: VideoTarget?,
+    val link: MicroviewLinkState,
+    val problems: List<Error>,
+)
 
 private fun titleFor(state: ServerCameraState, target: VideoTarget?): String {
     return when (state) {
@@ -56,6 +67,7 @@ private fun controlsText(
     control: ServerControlState,
     link: MicroviewLinkState,
     problems: List<Error>,
+    telemetry: TelemetryTarget?,
 ): String {
     val axes = if (!control.live) {
         "no control"
@@ -70,11 +82,19 @@ private fun controlsText(
         )
         if (control.streamCmdHash.isEmpty()) text else "$text\n${control.streamCmdHash}"
     }
-    val status = "$axes\n${uartText(link)}"
+    val status = "$axes\n${uartText(link)}\n${telemetryText(telemetry)}"
     if (problems.isEmpty()) {
         return status
     }
     return "$status\n${problems.joinToString("\n", transform = ::problemLine)}"
+}
+
+private fun telemetryText(target: TelemetryTarget?): String {
+    return if (target == null) {
+        "telemetry: —"
+    } else {
+        "telemetry → ${target.host}:${target.port}"
+    }
 }
 
 private fun problemLine(reported: Error): String {
