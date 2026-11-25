@@ -15,10 +15,13 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.net.DatagramPacket
 import java.net.DatagramSocket
+import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.SocketException
 import java.net.SocketTimeoutException
+import java.net.StandardProtocolFamily
 import java.nio.ByteBuffer
+import java.nio.channels.DatagramChannel
 import java.nio.charset.CharacterCodingException
 import java.nio.charset.CodingErrorAction
 
@@ -50,11 +53,7 @@ class TelemetryReceiver(
 
     private suspend fun listen(port: Int) {
         val socket = try {
-            DatagramSocket(null).apply {
-                reuseAddress = true
-                bind(InetSocketAddress(port))
-                soTimeout = TIMEOUT_MS
-            }
+            ipv4Socket(port)
         } catch (e: Exception) {
             Log.e(TAG, "bind $port", e)
             return
@@ -97,8 +96,19 @@ class TelemetryReceiver(
         }
     }
 
+    private fun ipv4Socket(port: Int): DatagramSocket {
+        val channel = DatagramChannel.open(StandardProtocolFamily.INET)
+        channel.configureBlocking(true)
+        val socket = channel.socket()
+        socket.reuseAddress = true
+        channel.bind(InetSocketAddress(InetAddress.getByName(IPV4_WILDCARD), port))
+        socket.soTimeout = TIMEOUT_MS
+        return socket
+    }
+
     private companion object {
         const val TAG = "Telemetry"
+        const val IPV4_WILDCARD = "0.0.0.0"
         const val BUFFER_SIZE = 1024
         const val TIMEOUT_MS = 250
     }
