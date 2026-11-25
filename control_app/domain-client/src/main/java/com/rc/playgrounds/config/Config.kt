@@ -129,11 +129,7 @@ private fun buildEnv(rawEnv: Map<String, String>,
 internal const val DEFAULT_CONFIG = """
 {
     "environment_variables": {
-        "fpv_car_server": "192.168.4.1",
-        "fpv_car_server_port": "12346",
-        "mobile_client_addr": "192.168.4.13",
         "mobile_client_port": "12345",
-        "mobile_client_telemetry_port": "12347",
         "forward_long_zones": "0.28:0.01; 0.5:0.2; 0.9:0.5; 1.0:0.6;",
         "backward_long_zones": "0.0:0.01; 0.9:0.5;",
         "long_factor": "1",
@@ -286,11 +282,11 @@ internal const val DEFAULT_CONFIG = """
     },
     "control_server": {
         "address": "@{fpv_car_server}",
-        "port": "@{fpv_car_server_port}"
+        "port": "12346"
     },
     "mobile_client": {
         "address": "@{mobile_client_addr}",
-        "telemetry_port": "@{mobile_client_telemetry_port}"
+        "telemetry_port": "12347"
     },
     "control_offsets": {
         "pitch": 0.0,
