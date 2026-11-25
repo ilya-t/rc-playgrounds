@@ -106,6 +106,17 @@ class ConfigTest {
     }
 
     @Test
+    fun `missing telemetry port uses the default`() {
+        val json = """{
+            "stream": { "local_cmd": "pwd", "remote_cmd": "ls" },
+            "control_server": null,
+            "mobile_client": { "address": "10.0.0.2" }
+        }"""
+        val config = Config(json, errorRaiser)
+        Assert.assertEquals(12347, config.mobileClient?.telemetryPort(config.env))
+    }
+
+    @Test
     fun testControlServer_ValidJson() {
         val config = Config(MINIMAL_TEST_CONFIG)
         val server = config.controlServer
